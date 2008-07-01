@@ -37,7 +37,7 @@ public class AllTests {
 			if (sub.isDirectory()) {
 				scan(res, sub);
 			}
-			else if (sub.isFile()) {
+			else if (sub.isFile() && sub.getName().endsWith(".xml")) {
 				res.add(sub);
 			}
 		}
