@@ -1,0 +1,149 @@
+<testsuite name="Basic cclass inheritance tests" package="mixin.old.inheritance">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixininheritance001" description="Simple multiple inheritance">
+		<code>
+			public cclass test1 {
+				public void f() { System.out.println("f1"); }
+			}
+			public cclass test2 {
+				public void f() { System.out.println("f2"); }
+				public void g() { System.out.println("g2"); }
+			}
+			public cclass test extends test1 &amp; test2 {
+				public void t() {
+					f();
+					g();
+				}
+
+				static public void main(String[] args) {
+					test t = new test();
+					t.t();
+					test.main(null);
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixininheritance002" description="Simple super usage">
+		<code>
+			public cclass test {
+				public int f;
+			}
+			public cclass test2 extends test {
+				public void x() { int g = super.f; }
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="mixininheritance003" description="Simple multiple inheritance">
+		<test>
+			new InheritsFromBoth().callDoAction();
+		</test>
+		<code>
+			public cclass A {
+				public void doA() {
+					System.out.println("a");
+				}
+			}
+
+			public abstract cclass B {
+				public void doB() {
+					System.out.println("b");
+				}
+				public abstract void doAction();
+				public int b = 42;
+			}
+
+			public cclass InheritsFromBoth extends A &amp; B {
+				public void doB() {
+					System.out.println("new b = " + b);
+				}
+				public void doAction() {
+					doA();
+					doB();
+				}
+				public void callDoAction() {
+					doAction();
+				}
+				private void callCallDoAction() {
+					callDoAction();
+				}
+			}
+		</code>
+	</compile-run>
+
+	<compile id="mixininheritance004" description="super keyword">
+		<code>
+			public cclass A {
+				public void doA() {
+					System.out.println("a");
+				}
+			}
+
+			public abstract cclass B {
+				public void doB() {
+					System.out.println("b");
+				}
+				public abstract void doAction();
+				public int b = 42;
+			}
+
+			public cclass InheritsFromBoth extends A &amp; B {
+				public void doAction() {
+					super.doA();
+					super.doB();
+					super.b = 43;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixininheritance005" description="Diamond inheritance">
+		<code>
+			public abstract cclass A {
+				protected void doA() {
+					System.out.println("diamond.a");
+				}
+				public abstract void doAction();
+			}
+
+			public cclass B extends A {
+				public void doAction() {
+					doA();
+					doB();
+				}
+				private void doB() {
+					System.out.println("diamond.b");
+				}
+			}
+
+			public cclass C extends A {
+				public void doAction() {
+					doA();
+					doC();
+				}
+				private void doC() {
+					System.out.println("diamond.C");
+				}
+			}
+
+			public cclass D extends B &amp; C {
+				private void doD() {
+					System.out.println("diamond.d");
+				}
+				public void doAction() {
+					super.doAction();
+					doD();
+				}
+				public static void main(String args[]) {
+					new D().doAction();
+				}
+			}
+		</code>
+	</compile>
+
+</testsuite>

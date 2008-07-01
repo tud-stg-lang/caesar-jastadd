@@ -1,0 +1,605 @@
+<testsuite name="Test Member visibility modifiers" package="mixin.check.visibility">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcvisibility001" error="CCLASS_NOT_PUBLIC" 
+		                 description="test cclass package visibility not allowed">
+        <code>
+        	cclass AAA { }			
+        </code>
+    </compile-check-error>
+	
+    <compile-check-error id="stcvisibility002" error="CCLASS_MEMBER_OF_PACKAGE_VIS" 
+		                 description="test field package visibility not allowed">
+        <code>
+        	public cclass AAA {	
+			   String m;
+			}			
+        </code>
+    </compile-check-error>
+	
+    <compile-check-error id="stcvisibility003" error="CCLASS_MEMBER_OF_PACKAGE_VIS" 
+		                 description="test method package visibility not allowed">
+        <code>
+        	public cclass AAA {	
+			   void m();
+			}			
+        </code>
+    </compile-check-error>
+	
+    <compile id="stcvisibility004" description="test cclass must have public visibility">
+        <code>
+        	public cclass AAA {	}			
+        </code>
+    </compile>
+	
+    <compile-check-error id="stcvisibility005" error="CCLASS_NOT_PUBLIC" 
+		                 description="test cclass can not have protected visibility">
+        <code>
+        	protected cclass AAA {	}			
+        </code>
+    </compile-check-error>
+	
+    <compile-check-error id="stcvisibility006" error="CCLASS_NOT_PUBLIC" 
+		                 description="test cclass can not have private visibility">
+        <code>
+        	private cclass AAA {	}			
+        </code>
+    </compile-check-error>
+	
+	<compile-check-error id="stcvisibility007" error="TOP_LEVEL_PROTECTED_AND_PRIVATE" 
+		                 description="test cclass can not have more than one visibility modifier">
+        <code>
+        	public public private cclass AAA {	}			
+        </code>
+    </compile-check-error>
+	
+    <compile id="stcvisibility010f" description="test access to public field from inside of cclass">
+        <code>
+        	public cclass BBB {
+				public String sb;
+				public void test() {
+				   sb = "";
+				}
+			}		
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility011f" description="test access to public field from outside of cclass">
+        <code>
+        	public cclass BBB {
+				public String sb;
+			}
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.sb = "";
+				}
+			}
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility012f" description="test access to public field from subclass of cclass">
+        <code>
+        	public cclass BBB {
+				public String sb;
+			}
+			public cclass CCC extends BBB {
+				public void test() {
+				   sb = "";
+				}
+			}		
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility013f" description="test access to protected field from inside of cclass">
+        <code>
+        	public cclass BBB {
+				protected String sb;
+				public void test() {
+				   sb = "";
+				}
+			}		
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility014f" description="test access to protected field from outside of cclass">
+        <code>
+        	public cclass BBB {
+				protected String sb;
+			}
+			public cclass Test { // can test if this class in other package
+				public void test() {
+				   BBB b = null;
+				   b.sb = "";
+				}
+			}		
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility015f" description="test access to protected field from subclass of cclass">
+        <code>
+        	public cclass BBB {
+				protected String sb;
+			}
+			public cclass CCC extends BBB {
+				public void test() {
+				   sb = "";
+				}
+			}		
+        </code>
+    </compile>
+
+    <compile id="stcvisibility016f" description="test access to private field from inside of cclass">
+        <code>
+        	public cclass BBB {
+				private String sb;
+				public void test() {
+				   sb = "";
+				}
+			}		
+        </code>
+    </compile>
+	
+	<compile-check-error id="stcvisibility017f" error="UNDEF_MESSAGE"
+						 description="test access to private field from outside of cclass">
+        <code>
+        	public cclass BBB {
+				private String sb;
+			}
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.sb = "";
+				}
+			}		
+        </code>
+    </compile-check-error>
+	
+	<compile-check-error id="stcvisibility018f" error="UNDEF_MESSAGE" 
+						 description="test access to private field from subclass of cclass">
+        <code>
+        	public cclass BBB {
+				private String sb;
+			}
+			public cclass CCC extends BBB {
+				public void test() {
+				   sb = "";
+				}
+			}		
+        </code>
+    </compile-check-error>
+	
+	<compile id="stcvisibility010m" description="test access to public method from inside of cclass">
+        <code>
+        	public cclass BBB {
+				public void m() { };
+				public void test() {
+				   m();
+				}
+			}		
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility011m" description="test access to public method from outside of cclass">
+        <code>
+        	public cclass BBB {
+				public void m() { };
+			}
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility012m" description="test access to public method from subclass of cclass">
+        <code>
+        	public cclass BBB {
+				public void m() { };
+			}
+			public cclass CCC extends BBB {
+				public void test() {
+				   m();
+				}
+			}		
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility013m" description="test access to protected method from inside of cclass">
+        <code>
+        	public cclass BBB {
+				protected void m() { };
+				public void test() {
+				   m();
+				}
+			}		
+        </code>
+    </compile>
+	
+    <!--compile-check-error id="stcvisibility014m" error="UNDEF_MESSAGE"
+		description="test access to protected method from outside of cclass">
+        <code>
+        	public cclass BBB {
+				protected void m() { };
+			}
+			public cclass Test { // can test if this class in other package
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}		
+        </code>
+    </compile-check-error-->
+	
+    <compile id="stcvisibility015m" description="test access to protected method from subclass of cclass">
+        <code>
+        	public cclass BBB {
+				protected void m() { };
+			}
+			public cclass CCC extends BBB {
+				public void test() {
+				   m();
+				}
+			}		
+        </code>
+    </compile>
+
+    <compile id="stcvisibility016m" description="test access to private method from inside of cclass">
+        <code>
+        	public cclass BBB {
+				private void m() { };
+				public void test() {
+				   m();
+				}
+			}		
+        </code>
+    </compile>
+	
+	<compile-check-error id="stcvisibility017m" error="UNDEF_MESSAGE"
+						 description="test access to private method from outside of cclass">
+        <code>
+        	public cclass BBB {
+				private void m() { };
+			}
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}		
+        </code>
+    </compile-check-error>
+	
+	<compile-check-error id="stcvisibility018m" error="UNDEF_MESSAGE" 
+						 description="test access to private method from subclass of cclass">
+        <code>
+        	public cclass BBB {
+				private void m() { };
+			}
+			public cclass CCC extends BBB {
+				public void test() {
+				   m();
+				}
+			}		
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcvisibility020f" description="test narrowing public to protected simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   public String s;
+			}			
+			public cclass BBB extends AAA {	
+			   protected String s; // is interpreted as different field
+			}
+		    public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s = "";
+				}
+			}
+        </code>
+    </compile>
+	
+    <compile id="stcvisibility021f" description="test narrowing protected to private simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   protected String s;
+			}			
+			public cclass BBB extends AAA {	
+			    private String s; // is interpreted as different field
+				public void test() {
+					s = "";
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile id="stcvisibility022f" description="test narrowing public to private simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   public String s;
+			}			
+			public cclass BBB extends AAA {	
+ 			    private String s;
+				public void test() {
+				   s = "" ;
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile  id="stcvisibility023f" description="test widening protected to public simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   protected String s;
+			}			
+			public cclass BBB extends AAA {	
+			   public String s;
+			}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s = "";
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile  id="stcvisibility024f" description="test widening private to public simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   private String s;
+			}			
+			public cclass BBB extends AAA {	
+			   public String s;
+			}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s = "";
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile  id="stcvisibility025f" description="test widening private to protected simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   private String s;
+			}			
+			public cclass BBB extends AAA {	
+			   protected String s;
+			}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s = "";
+				}
+			}
+        </code>
+    </compile>
+	
+    <compile-check-error id="stcvisibility020m" error="METHOD_ACCESS_DIFFERENT" 
+		                 description="test narrowing public -> protected simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   public void m() { }
+			}			
+			public cclass BBB extends AAA {	
+			   protected void m() {} 
+			}
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile-check-error>
+	
+    <compile-check-error id="stcvisibility021m" error="METHOD_ACCESS_DIFFERENT" 
+						 description="test narrowing protected -> private simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   protected void m() { }
+			}			
+			public cclass BBB extends AAA {	
+			    private void m() {} ;
+				public void test() {
+				   m();
+				}
+			}
+        </code>
+    </compile-check-error>
+	
+	<compile-check-error id="stcvisibility022m" error="METHOD_ACCESS_DIFFERENT" 
+						 description="test narrowing public -> private simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   public void m() { }
+			}			
+			public cclass BBB extends AAA {	
+			    private void m() {} ;
+				public void test() {
+				   m();
+				}
+			}
+        </code>
+    </compile-check-error>
+	
+	<compile  id="stcvisibility023m" description="test widening protected -> public simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   protected void m() { }
+			}			
+			public cclass BBB extends AAA {	
+			   public void m() {} ;
+			}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile  id="stcvisibility024m" description="test widening private -> public simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   private void m() { }
+			}			
+			public cclass BBB extends AAA {	
+			   public void m() {} ;
+			}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile  id="stcvisibility025m" description="test widening private to protected simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   private void m() { }
+			}			
+			public cclass BBB extends AAA {	
+			   protected void m() {} ;
+			}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile>
+	
+	<compile id="stcvisibility030f" description="test simple indirect inheritance of protected field">
+		<code>
+			public cclass AAA {	protected String s; }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.s = "";
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="stcvisibility031f" error="VAR_UNKNOWN"
+						 description="test simple indirect inheritance of private field">
+		<code>
+			public cclass AAA {	private String s; }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.s = "";
+				}
+			}
+		</code>
+	</compile-check-error>
+		
+	<compile id="stcvisibility030m" description="test simple indirect inheritance of protected method">
+		<code>
+			public cclass AAA {	protected void m() {} }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="stcvisibility031m" error="METHOD_NOT_FOUND"
+						 description="test simple indirect inheritance of private method">
+		<code>
+			public cclass AAA {	private void m() {} }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile id="stcvisibility040f" description="test multiple inheritance of protected field">
+		<code>
+			public cclass AAA {	protected String s; }	
+			public cclass BBB {	protected String t; }	
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.s = "";
+				   c.t = "";
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="stcvisibility041f" error="VAR_UNKNOWN"
+						 description="test multiple inheritance of private field">
+		<code>
+			public cclass AAA {	private String s; }	
+			public cclass BBB {	private String t; }	
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.s = "";
+				   c.t = "";
+				}
+			}
+		</code>
+	</compile-check-error>
+		
+	<compile id="stcvisibility040m" description="test multiple inheritance of protected method">
+		<code>
+			public cclass AAA {	protected void m() {} }	
+			public cclass BBB { protected void n() {} }
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				   c.n();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="stcvisibility041m" error="METHOD_NOT_FOUND"
+						 description="test multiple inheritance of private method">
+		<code>
+			public cclass AAA {	private void m() {} }	
+			public cclass BBB { private void n() {} }
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				   c.n();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+</testsuite>

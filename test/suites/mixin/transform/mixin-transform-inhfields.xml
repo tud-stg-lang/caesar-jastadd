@@ -1,0 +1,72 @@
+<testsuite name="Test Inheritance of Fields" package="mixin.transform.inhfields">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mitinhfields001" description="test simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   public String s1 = "a";
+			}			
+			public cclass BBB extends AAA {	}
+		</code>
+		<test>
+			String expected = "ab";
+			BBB b = new BBB();
+			String r = b.s1;
+			b.s1 = "b";
+			String result = r + b.s1;
+			assertEquals(expected, result);
+		</test>
+    </compile-run>
+	
+	<compile-run id="mitinhfields002" description="test multiple field inheritance">
+		<test>
+			String expected = "ab";
+			CCC c = new CCC();
+			c.sa = "a";
+			c.sb = "b";
+			String result = c.sa + c.sb;
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String sa; }	
+			public cclass BBB { public String sb; }
+			public cclass CCC extends AAA &amp; BBB { }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitinhfields003" description="test simple indirect field inheritance">
+		<test>
+			String expected = "ab";
+			CCC c = new CCC();
+			String r1 = c.sa;
+			c.sa = "b";
+			String result = r1 + c.sa;
+			assertEquals(expected, result);		
+		</test>
+		<code>
+			public cclass AAA {	public String sa = "a"; }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitinhfields004" description="test multiple indirect field inheritance">
+		<test>
+			String expected = "abcd";
+			DDD d = new DDD();
+			String r1 = d.sa;
+			String r2 = d.sb;
+			d.sa = "c";
+			d.sb = "d";
+			String result = r1 + r2 + d.sa + d.sb;
+			assertEquals(expected, result);		
+		</test>
+		<code>
+			public cclass AAA {	public String sa = "a"; }
+			public cclass BBB {	public String sb = "b"; }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { }
+		</code>
+	</compile-run>	
+		
+</testsuite>

@@ -1,0 +1,136 @@
+<testsuite name="Test Subtyping" package="mixin.transform.subtyping">
+	
+	<compile-run id="mitsubtyping001" description="test simple inheritance">
+		<test>
+			String expected = "aa";
+			BBB b = new BBB();
+			AAA a = b;
+			String result = b.s + a.s;
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String s = "a"; }			
+			public cclass BBB extends AAA {	}
+		</code>
+	</compile-run>
+		
+	<compile-run id="mitsubtyping002" description="test multiple inheritance">
+		<test>
+			String expected = "abab";
+			CCC c = new CCC();
+			AAA a = c;
+			BBB b = c;
+			String result = a.sa + b.sb + c.sa + c.sb;
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String sa = "a"; }	
+			public cclass BBB { public String sb = "b"; }
+			public cclass CCC extends AAA &amp; BBB { }
+		</code>
+	</compile-run>
+		
+	<compile-run id="mitsubtyping003" description="test simple indirect inheritance">
+		<test>
+			String expected = "aaa";
+			CCC c = new CCC();
+			AAA a = c;
+			BBB b = c;
+			String result = a.s + b.s + c.s;
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA { public String s = "a"; }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+		</code>
+	</compile-run>
+		
+	<compile-run id="mitsubtyping004" description="test multiple indirect inheritance">
+		<test>
+			String expected = "ababab";
+			DDD d = new DDD();
+			CCC c = d;
+			AAA a = d;
+			BBB b = d;
+			String result = a.sa + b.sb + c.sa + c.sb + d.sa + d.sb;
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String sa = "a"; }
+			public cclass BBB {	public String sb = "b"; }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsubtyping005" description="test mixin copy in assignment to a variable">
+		<test>
+		    String expected = "ab";
+			AAA a = new CCC();
+			BBB b = new CCC();
+			String result = a.a() + b.b();	
+			assertEquals(expected, result);	
+		</test>
+		<code>
+		    public cclass AAA {	public String a() { return "a"; } }
+			public cclass BBB {	public String b() { return "b"; } }
+			public cclass CCC extends AAA &amp; BBB { }			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsubtyping006" description="test mixin copy in assignment to a field">
+		<test>
+		    String expected = "ab";			
+			XXX x = new XXX();
+			String result = x.a.a() + x.b.b();
+			assertEquals(expected, result);			
+		</test>
+		<code>
+		    public cclass XXX {
+		       public AAA a = new CCC();
+		       public BBB b = new CCC();
+		    }
+			public cclass AAA { public String a() { return "a"; } }
+			public cclass BBB {	public String b() { return "b"; } }
+			public cclass CCC extends AAA &amp; BBB { }			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsubtyping007" description="test mixin copy as a return value">
+		<test>
+		    String expected = "ab";			
+			XXX x = new XXX();
+			String result = x.xa().a() + x.xb().b();
+			assertEquals(expected, result);
+		</test>
+		<code>
+		    public cclass XXX {
+		       public AAA xa() { return new CCC(); }
+		       public BBB xb() { return new CCC(); }
+		    }
+			public cclass AAA {	public String a() { return "a"; } }
+			public cclass BBB {	public String b() { return "b"; } }
+			public cclass CCC extends AAA &amp; BBB { }			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsubtyping008" description="test mixin copy in argument passing">
+		<test>
+		    String expected = "ab";			
+			XXX x = new XXX();
+			String result = x.xa(new CCC()) + x.xb(new CCC());	
+			assertEquals(expected, result);		
+		</test>
+		<code>
+		    public cclass XXX {
+		       public String xa(AAA a) { return a.a(); }
+		       public String xb(BBB b) { return b.b(); }
+		    }
+			public cclass AAA { public String a() { return "a"; } }
+			public cclass BBB { public String b() { return "b"; } }
+			public cclass CCC extends AAA &amp; BBB { }			
+		</code>
+	</compile-run>
+		
+</testsuite>

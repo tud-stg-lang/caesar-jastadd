@@ -1,0 +1,129 @@
+<testsuite name="Test Implicit Dependent Types" package="typesys.implicit">
+
+	<common-code-base>		
+	</common-code-base>
+
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit001" description="Check dependent types with implicit family paths.">
+        <code>
+			public cclass G {
+				public N n;
+				public cclass N {
+					public N n = G.this.n;
+					public void foo() {
+						n = G.this.n;
+					}
+				}
+			}
+        </code>
+    </compile>
+    
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit002a" description="Check dependent types with implicit family paths.">
+        <code>
+			public cclass G {
+				public N n = null;
+				public void foo() {
+					n = n.bar( n );
+				}
+				public cclass N {
+					public N bar(N n) { return n; }
+				}				
+			}
+        </code>
+    </compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit002b" description="Check dependent types with implicit family paths.">
+        <code>
+			public cclass G {
+				public N n = new N();
+				public final G g = new G();
+				public void foo() {					
+					g.N nn = g.n.x().y();
+				}
+				public cclass N {
+					public M x() { return null; }
+				}				
+				public cclass M {
+					public N y() { return null; }
+				}
+			}
+        </code>
+    </compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit002c" description="Check dependent types with implicit family paths.">
+        <code>
+			public cclass GL {
+				public cclass G {
+					public N createN() {
+						return new N().init();
+					}
+				}
+				public cclass N {
+					public N init() {return this;}
+				}
+			}
+        </code>
+    </compile>  
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit003" description="Check dependent types with implicit family paths.">
+        <code>
+			public cclass GL {
+				public cclass G {
+					public N createN() {
+						return new N();
+					}
+				}
+				public cclass N {}
+			}
+        </code>
+    </compile>  
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit004" description="Check dependent types with implicit family paths.">
+        <code>
+			public cclass GL {
+				public cclass G {
+					public N createN() {
+						return new N().init();
+					}
+				}
+				public cclass N {
+					public N init() {return this;}
+				}
+			}
+        </code>
+    </compile>  	
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="implicit005" description="Check dependent type of super expression.">
+        <code>
+			public cclass GL {
+				public cclass G {
+					public N createN() {
+						return new N().init();
+					}
+				}
+				public cclass N {
+					public N init() {return this;}
+				}
+			}
+			public cclass GL2 extends GL {
+				public cclass G {
+					public N createN() {
+					    N n;
+					    n = super.createN();
+					    return n;
+					}
+				}
+				public cclass N {
+				}
+			}
+        </code>
+    </compile>  
+
+</testsuite>

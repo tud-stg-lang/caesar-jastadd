@@ -1,0 +1,319 @@
+<testsuite name="Test relationships between Caesar classes" package="vc.inheritance">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="CLASS_CIRCULARITY"  id="vcinheritance001" description="outer inheritance cycle">
+        <code>
+        	public class X {
+			    public X(String p1, int p2) {}
+			}
+			
+			public cclass A extends B {}
+			
+			public cclass B extends C &amp; D {}
+			
+			public cclass C extends A {}
+			
+			public cclass D extends A {}
+        </code>
+    </compile-check-error>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="CLASS_CIRCULARITY"  id="vcinheritance002" description="inner inheritance cycle through different branches of mixin combination">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+				public cclass InnerB {
+				}
+			}
+			public cclass OuterB extends OuterA {
+				public cclass InnerA {
+				}
+				public cclass InnerB extends InnerA {
+				}
+			}
+			public cclass OuterC extends OuterA {
+				public cclass InnerB {
+				}
+				public cclass InnerA extends InnerB {
+				}
+			}
+			public cclass OuterD extends OuterB &amp; OuterC {
+			}
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcinheritance003" description="mixing classes">
+        <code>
+        	public class ClassA {
+			}
+			public class ClassB {
+			}
+			public cclass CclassA extends ClassA &amp; ClassB {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="vcinheritance004" description="repeated mixing">
+		<!-- this should be error-check ?? -->
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+				public cclass InnerB extends InnerA &amp; InnerA {
+				}
+			}
+        </code>
+    </compile>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcinheritance005" description="mixing outer with inner">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+			public cclass OuterB extends OuterA &amp; OuterA.InnerA {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcinheritance006" description="mixing interfaces">
+        <code>
+        	public interface IfcA {
+			}
+			public interface IfcB {
+			}
+			public cclass ClassA extends IfcA &amp; IfcB {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="vcinheritance007" description="changing mixing order">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+				public cclass InnerB {
+				}
+				public cclass InnerC {
+				}
+			}
+			public cclass OuterB extends OuterA {
+			    public cclass InnerA {}
+			    public cclass InnerB {}
+				public cclass InnerC extends InnerA &amp; InnerB {
+				}
+			}
+			public cclass OuterC extends OuterA {
+			    public cclass InnerA {}
+			    public cclass InnerB {}
+			    public cclass InnerC extends InnerB &amp; InnerA {
+				}
+			}
+			public cclass OuterD extends OuterB &amp; OuterC {}
+        </code>
+    </compile>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="vcinheritance008" description="mixing conflicting sequences">
+        <code>
+        	public cclass OuterA {
+			}
+			public cclass OuterB {
+			}
+			public cclass OuterC extends OuterB &amp; OuterA {
+			}
+			public cclass OuterD extends OuterA &amp; OuterB {
+			}
+			public cclass OuterE extends OuterC &amp; OuterD {
+			}			
+        </code>
+    </compile>
+    
+     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vcinheritance009" error="METHOD_NOT_FOUND" description="Cannot access method in sibling">
+        <code>
+			public cclass G {
+				public cclass N {
+					int n() { return 42; }
+				}
+			}
+			public cclass D extends G {
+				public cclass N {
+					int m() { return n() + 1; }
+				}
+			}
+			public cclass D2 extends G {
+				public cclass N {
+					int o() { return m() + 1; }
+				}
+			}
+			public cclass X extends D &amp; D2 {
+				public cclass N {
+					int p() { return n() + m() + o(); }
+				}
+			}
+		</code>		
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="vcinheritance010" description="Access methods from inner classes">
+        <code>
+			public cclass G {
+				public cclass N {
+					public int n() { return 42; }
+				}
+			}
+			public cclass D extends G {
+				public cclass N {
+					public int m() { return n() + 1; }
+				}
+			}
+			public cclass D2 extends G {
+				public cclass N {
+					public int o() { return n() + 1; }
+				}
+			}
+			public cclass X extends D &amp; D2 {
+				public cclass N {
+					public int p() { return n() + m() + o(); }
+				}
+			}
+		</code>		
+    </compile>
+
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vcinheritance015" description="Test outer field access">
+		<test>			
+		    OuterA.InnerA a = new OuterA().new InnerA();
+			assertEquals(a.m(), 5);
+		</test>
+        <code>
+        	public cclass OuterA {
+				protected int a = 5;
+				public cclass InnerA {
+					public int m() {
+						return a;
+					}
+				}
+			}
+        </code>
+    </compile-run>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vcinheritance016" description="Test outer field access with param">
+		<test>			
+		    OuterA.InnerA a = new OuterA().new InnerA();
+			assertEquals(a.m(null), 5);
+		</test>
+        <code>
+        	public cclass OuterA {
+				protected int a = 5;
+				public cclass InnerA {
+					public int m(String args[]) {
+						return a;
+					}
+				}
+			}
+        </code>
+    </compile-run>
+    
+    
+    <!--  Note on the following tests
+          ***************************************************************************
+    	  Currently the tests reflect the (old) CaesarJ spec:
+    	  "(inh.gener.6) Generalization relationships between Caesar classes 
+    					 with different nesting level are disallowed."
+
+		  We might well decide to allow such nesting generalizations *), so the tests
+		  may need to be changed.
+    	  
+    	  *) possible allowing generalizations of virtual class A extends B if
+    	  	 either     B.out <: A.out     or     B.out = null
+    	  ***************************************************************************
+     -->
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <!--  <compile id="vcinheritance011" description="Inherit inner from outer"> -->
+    <compile-check-error id="vcinheritance011" error="WRONG_INHERITANCE_RELATIONSHIP"
+    						description="Inherit inner from outer">
+        <code>
+			public cclass G {
+				public cclass N {
+					public int n() { return 42; }
+				}
+			}
+			
+			public cclass X extends G {
+				public cclass N extends G {
+					public int p() { return n(); }
+				}
+			}
+		</code>		
+    <!-- </compile> -->
+    </compile-check-error>
+    
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vcinheritance012" error="WRONG_INHERITANCE_RELATIONSHIP"
+    						description="Inherit outer from inner (simple)">
+    <!-- CaesarJ (inh.gener.6) -->
+        <code>
+			public cclass G {
+				public cclass N extends G {
+				}
+			}
+		</code>
+    </compile-check-error>
+    
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vcinheritance013" error="WRONG_INHERITANCE_RELATIONSHIP"
+    						description="Inherit outer from inner (longer chain of furtherbounds)">
+    <!-- CaesarJ (inh.gener.6) -->
+        <code>
+			public cclass G {
+				public cclass N {
+					public int n() { return 42; }
+				}
+			}
+			public cclass H extends G {}
+			public cclass X extends H {
+				public cclass N extends G {
+					public int p() { return n(); }
+				}
+			}
+		</code>
+    </compile-check-error>
+    
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vcinheritance014" error="WRONG_INHERITANCE_RELATIONSHIP"
+    						description="Inherit outer from inner (longer chain, first furtherbound inheritance)">
+    <!-- CaesarJ (inh.gener.6) -->
+        <code>
+			public cclass G {
+				public cclass N {
+					public int n() { return 42; }
+				}
+			}
+			public cclass H extends G {
+				public cclass P extends N {}
+			}
+			public cclass X extends H {
+				public cclass P {
+					public int p() { return n(); }
+				}
+			}
+		</code>
+    </compile-check-error>
+    
+    
+	    
+</testsuite>

@@ -1,0 +1,109 @@
+<testsuite name="Test Multiple Inheritance Links" package="mixin.check.inhlinks">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile  id="stcinhlinks001" description="simple inheritance">
+        <code>
+        	public cclass AAA {	}			
+			public cclass BBB extends AAA {	}
+        </code>
+    </compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks002" error="TYPE_UNKNOWN" 
+		                 description="super class of cclass not available">
+        <code>
+			public cclass BBB extends AAA { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile  id="stcinhlinks003" description="multiple inheritance">
+        <code>
+        	public cclass AAA {	}
+			public cclass BBB {	}			
+			public cclass CCC extends AAA &amp; BBB {	}
+        </code>
+    </compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks004" error="TYPE_UNKNOWN" 
+		                 description="one of the super cclasses is not available">
+        <code>
+			public cclass AAA {	}
+			public cclass CCC extends AAA &amp; BBB  { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="stcinhlinks005" description="interface implementation">
+        <code>
+			public interface III {	}
+			public interface JJJ {	}
+			public cclass CCC implements III, JJJ { }
+        </code>
+    </compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks006" error="TYPE_UNKNOWN" 
+		                 description="one of the interfaces not available">
+        <code>
+			public interface JJJ {	}
+			public cclass CCC implements III { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks007" error="CLASS_CIRCULARITY" 
+		                 description="cclass inherits from itself">
+        <code>
+			public cclass CCC extends CCC { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks008" error="CLASS_CIRCULARITY" 
+		                 description="cclass inherits indirectly from itself">
+        <code>
+			public cclass AAA extends CCC { }
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks009" error="WRONG_INHERITANCE_RELATIONSHIP" 
+		                 description="cclass inherits from class">
+        <code>
+			public class BBB { }
+			public cclass CCC extends BBB { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks010" error="WRONG_INHERITANCE_RELATIONSHIP" 
+		                 description="class inherits from cclass">
+        <code>
+			public cclass BBB { }
+			public class CCC extends BBB { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks011" error="SUPERINTERFACE_WRONG_TYPE" 
+		                 description="cclass implements cclass">
+        <code>
+			public cclass BBB { }
+			public cclass CCC implements BBB { }
+        </code>
+    </compile-check-error>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhlinks012" error="UNDEF_MESSAGE" 
+		                 description="interface extends from cclass">
+        <code>
+			public cclass BBB { }
+			public interface CCC extends BBB { }
+        </code>
+    </compile-check-error>
+    
+</testsuite>

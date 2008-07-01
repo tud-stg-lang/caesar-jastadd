@@ -1,0 +1,91 @@
+<testsuite name="Test Inheritance of Methods" package="mixin.transform.inhmethods">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="mitinhmethods001" description="test simple method inheritance">
+		<test>
+			String expected = "m";
+            BBB b = new BBB();
+            String result = b.m();
+			assertEquals(expected, result);
+		</test>
+        <code>
+        	public cclass AAA {	
+			   public String m() { return "m"; }
+			}			
+			public cclass BBB extends AAA {	}
+        </code>
+    </compile-run> 
+
+	<compile-run id="mitinhmethods002" description="test multiple inheritance">
+		<test>
+			String expected = "mn";
+            CCC c = new CCC();
+            String result = c.m() + c.n();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String m() { return "m"; } }	
+			public cclass BBB { public String n() { return "n"; } }
+			public cclass CCC extends AAA &amp; BBB { }
+		</code>
+	</compile-run>
+		
+	<compile-run id="mitinhmethods003" description="test simple indirect inheritance">
+		<test>
+			String expected = "m";
+            CCC c = new CCC();
+            String result = c.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String m() { return "m"; } }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+		</code>
+	</compile-run>
+		
+	<compile-run id="mitinhmethods004" description="test multiple indirect inheritance">
+		<test>
+			String expected = "mn";
+            DDD d = new DDD();
+            String result = d.m() + d.n();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String m() { return "m"; } }
+			public cclass BBB {	public String n() { return "n"; } }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { }
+		</code>
+	</compile-run>	
+	
+	<compile-run id="mitinhmethods005" description="test multiple inheritance with conflicting methods">
+		<test>
+			String expected = "ma";
+            CCC c = new CCC();
+            String result = c.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String m() { return "ma"; } }
+			public cclass BBB {	public String m() { return "mb"; } }
+			public cclass CCC extends AAA &amp; BBB { }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitinhmethods006" description="test indirect multiple inheritance with conflicting methods">
+		<test>
+			String expected = "ma";
+            DDD d = new DDD();
+            String result = d.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA {	public String m() { return "ma"; } }
+			public cclass BBB {	public String m() { return "mb"; } }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { } 
+		</code>
+	</compile-run>
+    
+</testsuite>

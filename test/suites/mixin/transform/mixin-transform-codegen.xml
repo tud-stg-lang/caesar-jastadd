@@ -1,0 +1,166 @@
+<testsuite name="Test transformation" package="mixin.transform.codegen">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	
+	<compile-run  id="mitcodegen001" description="test accessor methods">
+		<test>
+			String expectedResult = "A.s!";
+			A a = new A();
+			String tmp = a.s;
+			a.s = "!";
+			String result = tmp + a.s;
+			assertEquals(result, expectedResult);
+		</test>
+        <code>
+			public cclass A {
+				public String s = "A.s";
+			}
+        </code>
+    </compile-run> 
+	
+	<compile-run  id="mitcodegen002" description="test interfaces as method parameters">
+		<test>
+			A a = new A();
+			String expectedResult = "A.s,B.s";
+			X x = new X();
+			String result = x.y(a) + "," + x.y(new B());
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+			public cclass A {
+				public String s() { return "A.s"; }
+			}
+			public cclass B extends A {
+				public String s() { return "B.s"; }
+			}
+			public cclass X {
+				public String y(A a) { return a.s(); }
+			}
+        </code>
+    </compile-run> 
+	
+	<compile-run  id="mitcodegen003" description="test interfaces as method parameters within diamond">
+		<test>
+			String expectedResult = "D.sD.sD.sD.s";
+			X x = new X();
+			A ad = new D();
+			B bd = new D();
+			C cd = new D();
+			D dd = new D();
+			String result = x.y(ad) + x.y(bd) + x.y(cd) + x.y(dd);
+			assertEquals(result, expectedResult);
+		</test>
+        <code>
+			public cclass A {
+				public String s() { return "A.s"; }
+			}
+			public cclass B extends A {
+				public String s() { return "B.s"; }
+			}
+			public cclass C extends A {
+				public String s() { return "C.s"; }
+			}
+			public cclass D extends B &amp; C {
+				public String s() { return "D.s"; }
+			}
+			public cclass X {
+				public String y(A a) { return a.s(); }
+			}
+        </code>
+    </compile-run> 
+	
+	<compile-run  id="mitcodegen004" description="test interfaces as method parameters within diamond">
+		<test>
+			String expectedResult = "B.s";
+			B bd = new D();
+			bd.bs();
+			bd.f = bd.f + 1;
+			bd = new B();
+			bd.bs();
+			bd.f = bd.f + 1;
+		</test>
+        <code>
+			public cclass A {
+			}
+			public cclass B extends A {
+			   public int f = 0;
+			   public void bs() { }
+			}
+			public cclass C extends A {
+			}
+			public cclass D extends B &amp; C {
+			}
+
+        </code>
+    </compile-run> 
+	
+	<compile-run  id="mitcodegen005" description="test inner classes">
+		<test>
+			String expectedResult = "X.mY.m";
+			TopOuter to = new TopOuter();
+			TopOuter.OuterA oa = to.new OuterA();
+			TopOuter.OuterA.InnerY ay = oa.new InnerY();
+			String result = ay.m();
+		</test>
+        <code>
+			public cclass TopOuter{
+				public cclass OuterA {
+					public cclass InnerX {
+						public String m() { return "X.m"; }
+					}
+					public cclass InnerY extends InnerX {
+						public String m() { 
+							String a = super.m();
+							return a+"Y.m"; 
+						}
+					}
+				}
+			}
+        </code>
+    </compile-run> 
+    
+    <compile-run id="mitcodegen006" description="test instance variable initializers">
+		<test>
+			String expectedResult = "BBB";
+			String result = new A().getA();
+			assertEquals(expectedResult, result);
+		</test>
+        <code>
+			public cclass A {
+				private String a = "BBB";
+				public String getA() { return a; }
+			}
+        </code>
+    </compile-run>    
+    
+     <compile-run id="mitcodegen007" description="test class variable initialization in cclass">
+		<test>
+			String expectedResult = "BBB";
+			String result = new A().getA();
+			assertEquals(expectedResult, result);
+		</test>
+        <code>
+			public cclass A {
+				private static String a = "BBB";
+				public String getA() { return a; }				
+			}
+        </code>
+    </compile-run> 
+    
+    <compile-run id="mitcodegen008" description="test class variable initialization in a mixin copy">
+		<test>
+			String expectedResult = "BBB";
+			String result = new C().getA();
+			assertEquals(expectedResult, result);
+		</test>
+        <code>
+			public cclass A {
+				private static String a = "BBB";
+				public String getA() { return a; }
+			}
+			public cclass B { }
+			public cclass C extends B &amp; A {	}
+        </code>
+    </compile-run> 
+	
+</testsuite>

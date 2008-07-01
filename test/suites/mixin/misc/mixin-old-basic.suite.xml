@@ -1,0 +1,154 @@
+<testsuite name="Basic Java cclass tests" package="mixin.old.basic">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic001" description="Simple cclass">
+		<code>
+			public cclass c {
+				public int a = 5;
+				public int foo() {
+					return a*5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic002" description="Inner cclasses">
+		<code>
+			public cclass outer {
+				public cclass inner {
+					public int a;
+				}
+				
+				public void foo() {
+					inner i = new inner();
+					i.a = 5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic003" description="Inheritance of fields">
+		<code>
+			public cclass TestClass {
+				public int a;
+			}
+			public cclass Inherit extends TestClass {
+				public void foo() {
+					a = 5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic004" description="Two levels of inheritance">
+		<code>
+			public cclass TestClass {
+				public int a;
+			}
+			public cclass Inherit extends TestClass {
+			}
+			public cclass Inherit2 extends Inherit {
+				public void foo() {
+					a = 5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic005" description="Inheritance of methods">
+		<code>
+			public cclass TestClass {
+				public int a() { return 5; }
+			}
+			public cclass Inherit extends TestClass {
+				public void foo() {
+					int i = a();
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic006" description="Two levels of method inheritance">
+		<code>
+			public cclass TestClass {
+				public int a() { return 5; }
+			}
+			public cclass Inherit extends TestClass {
+			}
+			public cclass Inherit2 extends Inherit {
+				public void foo() {
+					int i = a();
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic007" description="May replace A with interface">
+		<code>
+		public cclass A {
+			public void doAction() {
+				A a = this;
+			}
+		}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic008" description="Must keep impl for field access">
+		<code>
+		public cclass A {
+			public int field;
+			public void doAction() {
+				A a = this;
+				a.field = 5;
+			}
+		}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic009" description="May replace A with interface for method access">
+		<code>
+		public cclass A {
+			public void method() {}
+			public void doAction() {
+				A a = this;
+				a.method();
+			}
+		}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic010" description="Must keep impl for static access">
+		<code>
+		public cclass A {
+			public static void method() {}
+			public void doAction() {
+				A a = this;
+				a.method();
+			}
+		}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="mixinbasic011" description="Must keep impl for final access">
+		<code>
+		public cclass A {
+			public final void method() {}
+			public void doAction() {
+				A a = this;
+				a.method();
+			}
+		}
+		</code>
+	</compile>
+
+</testsuite>

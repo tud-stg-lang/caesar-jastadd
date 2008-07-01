@@ -1,0 +1,164 @@
+<testsuite name="Testcases for super calls" package="mixin.transform.supercall">
+
+    <compile-run id="mitsuper001" description="Test simple super call">
+		<test>		
+			String expectedResult = "BB.n,AA.m";
+			String result = new BB().n();
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+				public cclass AA { 
+					public String m() { return "AA.m"; }
+				}
+				
+				public cclass BB extends AA { 
+					public String n() {
+						return "BB.n," + super.m();
+					}
+				}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsuper002" description="Test multiple simple super calls">
+		<test>		
+			String expectedResult = "AA.m,AA.m,AA.m,AA.m,";
+			String result = new BB().n();
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+				public cclass AA { 
+					public String m() { return "AA.m,"; }
+				}
+				
+				public cclass BB extends AA { 
+					public String n() {
+					    String r = super.m() + super.m() + super.m();
+						return r + super.m();
+					}
+				}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsuper003" description="Test super calls to methods with same name but different signatures">
+		<test>		
+			String expectedResult = "AA.m,3!,$4";
+			String result = new BB().n();
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+				public cclass AA {
+					public String m() { return "AA.m,"; }
+					public String m(String ps) { return ps+"!,"; }
+					public String m(String ps, int pi) { return ps+pi; }
+				}
+				
+				public cclass BB extends AA { 
+					public String n() {
+					    String r = super.m() + super.m("3") + super.m("$",4);
+						return r;
+					}
+				}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsuper004" description="Test simple super call within long inheritance chain">
+		<test>		
+			String expectedResult = "EE.n,BB.m";
+			String result = new EE().n();
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+				public cclass AA { 
+					public String m() { return "AA.m"; }
+				}
+				public cclass BB extends AA {
+					public String m() { return "BB.m"; }
+				}
+				public cclass CC extends BB { }
+				public cclass DD extends CC { }
+
+				public cclass EE extends DD { 
+					public String n() {
+						return "EE.n," + super.m();
+					}
+				}
+		</code>
+	</compile-run>
+		
+	<compile-run id="mitsuper005" description="Simple test with one method within diamond">
+		<test>		
+			String expectedResult = "D.m,B.m,C.m,A.m";
+			D d = new D();
+			String result = d.m();
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+			public cclass A { 
+				public String m() { return "A.m"; }
+			}
+			
+			public cclass B extends A {
+				public String m() { return "B.m," + super.m(); }
+			}
+			
+			public cclass C extends A {
+				public String m() {	return "C.m," + super.m(); }
+			}
+			
+			public cclass D extends B &amp; C {
+				public String m() { return "D.m," + super.m(); }
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsuper006" description="Test accessibility of every method in every superclass within diamond">
+		<test>		
+			String expectedResult = "B.n,A.m;C.p,A.m;D.q,B.n,A.m;D.r,C.p,A.m;D.s,A.m";
+			D d = new D();
+			String r1 = new B().n();
+			String r2 = new C().p();
+			String r3 = d.q() + ";" + d.r() +";" + d.s();
+			String result = r1 + ";" + r2 + ";" + r3;
+			assertEquals(result, expectedResult);
+		</test>
+		<code>
+			public cclass A { 
+				public String m() { return "A.m"; }
+			}
+			
+			public cclass B extends A {
+				public String n() { return "B.n,"+ super.m();	}
+			}
+			
+			public cclass C extends A {
+				public String p() {	return "C.p,"+ super.m(); }
+			}
+			
+			public cclass D extends B &amp; C {
+				public String q() { return "D.q,"+ super.n(); }
+				public String r() { return "D.r,"+ super.p(); }
+				public String s() { return "D.s,"+ super.m(); }
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitsuper010" description="Simple default constructor access">
+		<test>
+				BB b = new BB();
+		</test>
+		<code>
+				public cclass AA { 
+					public AA() {
+						System.out.println("A");
+					}
+				}
+				
+				public cclass BB extends AA { 
+					public BB() {
+						super();
+					}
+											}
+		</code>
+	</compile-run>
+	
+</testsuite>

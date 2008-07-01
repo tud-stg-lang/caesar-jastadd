@@ -1,0 +1,226 @@
+<testsuite name="Miscelaneous Java tests" package="java.misc">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc001" description="Test outer field access">
+		<test>			
+		    OuterA.InnerA a = new OuterA().new InnerA();
+			assertEquals(a.m(), 5);
+		</test>
+        <code>
+        	class OuterA {
+				int a = 5;
+				class InnerA {
+					int m() {
+						return a;
+					}
+				}
+			}
+        </code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc002" description="Test interface method call through abstract class">
+		<test>		
+			Role role = new RoleNet4J();
+			assertEquals(role.methA(), "A");
+		</test>
+        <code>
+        	interface NetObject {
+				public String methA();
+			}
+			
+			abstract class Role implements NetObject {	
+			}
+			
+			class RoleNet4J extends Role {
+				public String methA() {
+					return "A";
+				}
+			}
+        </code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc003" description="Test unqualified instantiation as statement">
+		<test>		
+			new TestClass();
+		</test>
+        <code>
+			class TestClass { }
+		</code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc004" description="Test abstract classes">
+		<test>		
+			new ClassB();
+		</test>
+        <code>
+			public abstract class ClassA {
+				public abstract void m();
+			}
+			
+			public class ClassB extends ClassA {
+				public void m() { }
+			}
+		</code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc005" description="Test inlined class inside abstract class">
+		<test>		
+			new ClassB().m();
+		</test>
+        <code>
+			public abstract class ClassA {
+				public ClassA() {		
+				}
+				
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println("run5");
+						}
+			        };
+			        
+			        new Thread(inlined).start();
+				}
+			}
+			
+			public class ClassB extends ClassA {	
+			}
+		</code>
+    </compile-run>		
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="javamisc006" description="Implementing method with array as return type">
+		<code>
+        	interface IfcA {
+        		public int[] elems();
+        	}
+        	class ClsB implements IfcA {
+        		public int[] elems() {
+        			return null;
+        		}
+        	}
+		</code>
+    </compile>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc007" description="Test accessor from inlined class">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+			public class ClassA {
+				private String getMsg() {
+					return "run7";
+				}
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println(getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc008" description="Test superaccessor from inlined class">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public class ClassB {
+        		protected String getMsg() {
+					return "run8";
+				}
+        	}
+			public class ClassA extends ClassB {
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println(ClassA.super.getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>		
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="javamisc009" description="Test bytecode generation">
+        <code>
+        	public class ClassA {
+				private void m(String a) {
+				    while (null == a) { }				   
+				}
+			}
+		</code>
+    </compile>	
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="javamisc010" error="CLASS_UNKNOWN" description="Check of base type of array fails">
+        <code>
+        	public class ClassA {
+				public void a() {
+				   EventListener[] list;
+				}
+			}
+		</code>		
+    </compile-check-error>	
+
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc011" description="Covariance">
+    	<test>
+			derived d = new derived();
+			base b = d;
+	
+			d.foo();
+			b.foo();
+
+			assertEquals("derivedderived", res.toString());
+    	</test>
+        <code>
+			public class a { }
+			public class b extends a { }
+
+			public class base {
+				public a foo() {
+					Test.res.append("base");
+					return new a();
+				}
+			}
+
+			public class derived extends base {
+				public b foo() {
+					Test.res.append("derived");
+					return new b();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="javamisc012" description="Test access of second level out reference">
+    	<test>
+    	   A.B.C c = new A().new B().new C();
+    	   c.c();
+    	</test>
+        <code>
+        	class A {
+        	    void m() { }
+        		class B {
+        			class C {
+        				void c() { A.this.m(); }
+        			}
+        		}
+			}
+        </code>
+    </compile-run>
+
+</testsuite>

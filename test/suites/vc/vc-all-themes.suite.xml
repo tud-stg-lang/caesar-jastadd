@@ -1,0 +1,4919 @@
+<testsuite name="Testcases for Virtual classes from caesar compiler project (java and OO)" package="vc.allfromcc">
+	
+	<!-- this suite could contain thematically identical tests as the sorted other suites in this directory -->
+	<!-- tests not yet taken from original project : 36, 36b, 38, 39, 99 -->
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vcallfromcc000" description="Test factory methods late bound new">
+		<test>			
+			System.out.println("VCTest 0: start");
+	
+			final TestCase0 testCase = new TestCase0();
+			
+			// with dependent types		
+			final testCase.A a = testCase.new A();
+			final testCase.B b = testCase.new B();
+			a.X x1 = a.new X();
+			b.X x2 = b.new X();
+			
+			// or without
+			//TestCase0.A a = testCase.new A();
+			//TestCase0.B b = testCase.new B();
+			//TestCase0.A.X x1 = a.new X();
+			//TestCase0.A.X x2 = b.new X();		
+			
+			assertEquals(x1.toString()+'-'+x2.toString(), "A.X-B.X");
+	
+			System.out.println("VCTest 0: end");
+		</test>
+        <code>
+			public cclass TestCase0 {
+				public cclass A {
+					public cclass X {
+						public String toString() {
+							return "A.X";
+						}
+					}
+				}
+			
+				public cclass B extends A {
+					public cclass X {
+						public String toString() {
+							return "B.X";
+						}
+					}
+				}
+			}
+        </code>
+    </compile-run>
+	
+	<compile-run id="vcallfromcc001" description="Test implements caluse for cclass">
+		<test>			
+			String expectedResult = "A.X->B.X";
+	
+			System.out.println("VCTest 1: start");
+	
+			TestCase1 testCase = new TestCase1();
+			TestCase1.A a = testCase.new B();
+			I i = a.new X();
+			assertEquals(expectedResult, i.msg());
+	
+			System.out.println(" VCTest 1: end");
+		</test>
+		<binary>
+			public interface I {
+				String msg();
+			}
+		</binary>
+		<code>
+			public cclass TestCase1 {
+				public cclass A {
+					public cclass X implements I {
+						public String msg() {
+						   return "A.X";
+						}
+					}
+				}
+				public cclass B extends A {
+					public cclass X {
+						public String msg() {
+							return super.msg()+"->B.X";
+						}
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc002" description="Test &amp;-Operator and linearization">
+		<test>			
+        	System.out.println("-> VCTest 2: start");
+	
+			final TestCase2 testCase = new TestCase2();
+			
+			// with dependent types
+			final testCase.G g = testCase.new CG();
+			g.E e = g.new UE();
+			
+			// without dependent types
+			// TestCase2.G g = testCase.new CG();
+			// TestCase2.G.E e = g.new UE();
+
+			e.init("n1", "n2");
+	
+			System.out.println("connecting: "+e.isConnecting("n1", "n2"));
+			assertEquals(e.isConnecting("n1", "n2"), false);
+	
+			System.out.println("-> VCTest 2: end");
+		</test>
+		<code>
+			import java.awt.Color;
+			
+			public cclass TestCase2 {
+			
+				public cclass G {
+					public cclass E {
+						protected String n1, n2;
+			
+						public void init(String n1, String n2) {
+							this.n1 = n1;
+							this.n2 = n2;
+						}
+			
+						public boolean isConnecting(String n1, String n2) {
+							return this.n1.equals(n1) &amp;&amp; this.n2.equals(n1);
+						}
+					}
+			
+					public cclass UE extends E {
+						public boolean isConnecting(String n1, String n2) {
+							return super.isConnecting(n1,n2) || super.isConnecting(n2, n1);
+//							return this.n1.equals(n1) &amp;&amp; this.n2.equals(n1);
+						}
+					}
+				}
+			
+				//=========================================================
+				public cclass CG extends G {
+					public cclass E {
+						protected Color col;
+			
+						public Color getColor() {return col;}
+						public void setColor(Color col) {this.col = col;}
+					}
+				}
+			}
+		</code>
+	</compile-run>
+
+    <compile-run id="vcallfromcc003" description="Test &amp;-Operator and linearization 2">
+		<test>	
+		
+    		System.out.println("VCTest 3: start");
+	
+			final TestCase3 testCase = new TestCase3();
+			final testCase.G g = testCase.new CWG();
+			g.N n1 = g.new N();
+			g.N n2 = g.new N();
+			g.E e = g.new UE();
+	
+			n1.setName("n1");
+			n2.setName("n2");
+			e.setEdges(n1, n2);
+	
+			g.doSomethingWithEdge(e);
+	
+			System.out.println("e: "+e);
+			assertEquals(e.toString(), "col:#a1babe, n1->n2, n2->n1");
+	
+			System.out.println("connecting: "+e.isConnecting(n1, n2));
+			assertEquals(e.isConnecting(n1, n2), true);
+	
+			System.out.println(" VCTest 3: end");
+		</test>
+        <code>
+			public cclass TestCase3 {
+			
+				public cclass G {
+					public void doSomethingWithEdge(E e) {
+						System.out.println("G.doSomethingWithEdge");
+					}
+			
+					public cclass E {
+						protected N n1, n2;
+			
+						public void setEdges(N n1, N n2) {
+							this.n1 = n1;
+							this.n2 = n2;
+						}
+			
+						public boolean isConnecting(N n1, N n2) {
+							return this.n1==n1 &amp;&amp; this.n2==n2;
+						}
+			
+						public String toString() {
+							return n1+"->"+n2;
+						}
+					}
+			
+					public cclass UE extends E {
+						public boolean isConnecting(N n1, N n2) {
+							return super.isConnecting(n1,n2) || super.isConnecting(n2, n1);
+							// return this.n1==n1 &amp;&amp; this.n2==n2;
+						}
+			
+						public String toString() {
+							return super.toString()+", "+n2+"->"+n1;
+							// return n1+"->"+n2+", "+n2+"->"+n1;
+						}
+					}
+			
+					public cclass N {
+						protected String name;
+			
+						public void setName(String name) {this.name = name;}
+						public String getName() {return name;}
+			
+						public String toString() {return getName();}
+					}
+				}
+			
+				//=========================================================
+				public cclass CG extends G {
+					// test: signature should be same as in G
+					public void doSomethingWithEdge(E e) {
+						super.doSomethingWithEdge(e);
+						e.setColor("#a1babe");
+						System.out.println("CG.doSomethingWithEdge");
+					}
+			
+					public cclass E {
+						protected String col;
+			
+						public String getColor() {return col;}
+						public void setColor(String col) {this.col = col;}
+			
+						public void someSpecialAlg() {
+							N n = n1;
+						}
+			
+						public String toString() {
+							return "col:"+col+", "+super.toString();
+							// return "col:"+col+", "+n1+"->"+n2;
+						}
+					}
+				}
+			
+				//=========================================================
+				public cclass WG extends G {
+					public cclass E {
+						protected float w;
+			
+						public float getW() {return w;}
+						public void setW(float w) {this.w = w;}
+					}
+				}
+			
+				//=========================================================
+				public cclass CWG extends CG &amp; WG {
+					public cclass E {
+						public void nowWeHaveItAll() {
+							float w = this.w;
+							String col = this.col;
+							
+							// note that the type of n1,n2 has been bound to the most specific node,
+							// namely CWG.N
+							N n1 = this.n1;
+							N n2 = this.n2;
+						}
+					}
+				}
+			}
+        </code>
+    </compile-run>
+	
+	<compile-run id="vcallfromcc004" description="Expression Problem">
+		<test>
+			System.out.println("VCTest 4: start");
+			
+			final EvalPrettyPrintNegAST ast = new EvalPrettyPrintNegAST();
+			ast.Literal l1 = ast.new Literal(5);
+			ast.Literal l2 = ast.new Literal(4);
+			ast.AddExpression add = ast.new AddExpression(l1, l2);
+			ast.NegExpression neg = ast.new NegExpression(add);
+	
+			System.out.println(neg.print()+" = "+neg.eval());
+
+			System.out.println("VCTest 4: end");
+		</test>
+		<code>
+			public cclass AST  {
+			
+				public cclass Expression {
+					public Expression() {
+					}
+				}
+				
+				public cclass AddExpression extends Expression {
+					protected Expression r;
+					protected Expression l;
+			
+					public AddExpression(Expression l, Expression r) {
+						this.r = r;
+						this.l = l;
+					}
+				}
+			
+				public cclass Literal extends Expression {
+					protected int val;
+			
+					public Literal(int val) {
+						this.val = val;
+					}
+				}
+			}
+
+			//=========================================================
+			public cclass EvalAST extends AST {
+				public cclass Expression {
+					public int eval() {return 0;}
+				}
+			
+				public cclass AddExpression {
+					public int eval() {
+						return l.eval() + r.eval();
+					}
+				}
+			
+				public cclass Literal {
+					public int eval() {
+						return val;
+					}
+				}
+			}
+			
+			//=========================================================
+			public cclass PrettyPrintAST extends AST {
+				public cclass Expression {
+					public String print() {return "";}
+				}
+			
+				public cclass AddExpression {
+					public String print() {
+						return "(" + l.print() + "+" + r.print() + ")";
+					}
+				}
+			
+				public cclass Literal {
+					public String print() {
+						return ""+val;
+					}
+				}
+			}
+			
+			//=========================================================
+			public cclass NegAST extends AST {
+				public cclass NegExpression extends Expression {
+					protected Expression expr;
+					public NegExpression(Expression expr) {
+						this.expr = expr;
+					}
+				}
+			}
+			
+			//=========================================================
+			public cclass EvalPrettyPrintNegAST extends EvalAST &amp; PrettyPrintAST &amp; NegAST {
+				public cclass NegExpression {
+					public int eval() {
+						return -expr.eval();
+					}
+					public String print() {
+						return "-(" + expr.print() + ")";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc005" description="Test outer class access">
+		<test>
+			System.out.println("VCTest 5: Outer Class Access: start");
+			
+			String expectedResult1 = "A.A";
+			String expectedResult2 = "B.A, B.A, B.B";
+			
+			final OuterA oa = new OuterA();
+			final OuterB ob = new OuterB();
+			
+			// does not work
+			// oa.InnerA a1 = oa.new InnerA();
+			// ob.InnerA a2 = ob.new InnerA();
+			
+			// replaced by:
+			OuterA.InnerA a1 = oa.new InnerA();
+			OuterB.InnerA a2 = ob.new InnerA();
+	
+			System.out.println(a1.accessOuterA());
+			assertEquals(a1.accessOuterA(), expectedResult1);
+	
+			System.out.println(a2.accessOuterB());
+			assertEquals(a2.accessOuterB(), expectedResult2);
+	
+			System.out.println("VCTest 5: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public String queryA()
+				{
+					return "A.A";
+				}
+			
+				public cclass InnerA
+				{
+					public String accessOuterA()
+					{
+						return OuterA.this.queryA();
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public String queryA()
+				{
+					return "B.A";
+				}
+			
+				public String queryB()
+				{
+					return "B.B";
+				}
+			
+				public cclass InnerA
+				{
+					public String accessOuterB()
+					{
+						return accessOuterA() + ", " + queryA() + ", " + queryB();
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc005b" description="Test outer class access 2">
+		<test>
+			String expectedResult = "abacabaxbxbauu";
+			
+			System.out.println("VCTest 5b: Outer Class Access: start");
+
+			final A a = new A();
+			
+			// does not work
+			// final a.B b = a.new B();
+			// b.C c = b.new C();
+	
+			// replaced by:
+			A.B b = a.new B();
+			A.B.C c = b.new C();
+
+			a.a();
+			b.b();
+			c.c();				
+			
+			System.out.println("result: "+VCTestCase.result.toString());
+	
+			assertEquals(expectedResult, VCTestCase.result.toString());
+	
+			System.out.println("VCTest 5b: end");
+		</test>
+		<code>
+			public cclass VCTestCase {
+				public static StringBuffer result = new StringBuffer();
+			}
+			
+			public cclass X {
+				public void x() {				
+					VCTestCase.result.append("x");
+				}
+				
+				public cclass B {
+					public void xb() {
+						VCTestCase.result.append("xb");
+					}
+				}
+			}
+			
+			public cclass A extends X {
+			
+				public void a() {
+					VCTestCase.result.append("a");
+				}
+			
+				public cclass B {
+				
+					public void b() {
+						VCTestCase.result.append("b");			
+						A.this.a();
+					}
+			
+					public cclass C {
+			
+						public cclass D {
+							public void d() {}
+						}
+			
+						public void c() {
+							VCTestCase.result.append("c");
+							A.this.a();
+							A.B.this.b();				
+							
+							xb();
+			
+							x();
+							b();
+							
+							U u;
+							u = new U();
+							u = A.this.new U();								
+						}			
+					}	
+				}
+			
+				public cclass U {
+					public U() {
+						VCTestCase.result.append("u");	
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc006" description="Test type inheritance of outer classes.">
+		<test>
+			String expectedResult = "A.A, B.B, A.C, B.D";
+			
+			System.out.println("VCTest 6: Outer Class Type Inheritance: start");
+
+			OuterB ob = new OuterB();
+	
+			String resA = ((InterfaceA)ob).queryA();
+			String resB = ((InterfaceB)ob).queryB();
+			String resC = ((OuterA)ob).queryC();
+			String resD = ob.queryD();
+			String result = resA + ", " + resB + ", " + resC + ", " + resD;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 6: end");
+		</test>
+		<code>
+			public interface InterfaceA
+			{
+				public String queryA();
+			}
+			
+			public interface InterfaceB
+			{
+				public String queryB();
+			}
+			
+			public cclass OuterA implements InterfaceA
+			{
+				public String queryA()
+				{
+					return "A.A";
+				}
+			
+				public String queryC()
+				{
+					return "A.C";
+				}
+			
+				// not used
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA implements InterfaceB
+			{
+				public String queryB()
+				{
+					return "B.B";
+				}
+			
+				public String queryD()
+				{
+					return "B.D";
+				}
+			
+				// not used
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc007" description="Test polymorphism of outer classes.">
+		<test>
+			String expectedResult = "B.A, A.B, B.C, A.D";
+			
+			System.out.println("VCTest 7: Outer Class Polymorphism: start");
+
+			OuterA ob = new OuterB();
+	
+			String resA = ((InterfaceA)ob).queryA();
+			String resB = ((InterfaceB)ob).queryB();
+			String resC = ob.queryC();
+			String resD = ob.queryD();
+			String result = resA + ", " + resB + ", " + resC + ", " + resD;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 7: end");
+		</test>
+		<code>
+			public interface InterfaceA
+			{
+				public String queryA();
+			}
+			
+			public interface InterfaceB
+			{
+				public String queryB();
+			}
+			
+			public cclass OuterA implements InterfaceA
+			{
+				public String queryA()
+				{
+					return "A.A";
+				}
+			
+				public String queryB()
+				{
+					return "A.B";
+				}
+			
+				public String queryC()
+				{
+					return "A.C";
+				}
+			
+				public String queryD()
+				{
+					return "A.D";
+				}
+			
+				// not used
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA implements InterfaceB
+			{
+				public String queryA()
+				{
+					return "B.A";
+				}
+			
+				public String queryC()
+				{
+					return "B.C";
+				}
+			
+				// not used
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc008" description="Test type inheritance of inner classes.">
+		<test>
+			// does not work, constructor problem
+			String expectedResult = "A.A.A, B.A.B, A.A.C, B.A.D, A.B.E, A.B.F, A.B.F";
+
+			System.out.println("VCTest 8: Inner Class Type Inheritance: start");
+		
+			final OuterB ob = new OuterB();
+			final OuterA oa = ob;
+			
+			// does not work
+			// final ob.InnerA ba = ob.new InnerA();
+			
+			// replaced by
+			OuterB.InnerA ba = ob.new InnerA();
+	
+			String resA = ((InterfaceA)ba).queryA();
+			String resB = ((InterfaceB)ba).queryB();
+			
+			// does not work
+			// String resC = ((oa.InnerA)ba).queryC();
+			
+			// replaced by:
+			String resC = ((OuterA.InnerA)ba).queryC();
+			
+			String resD = ba.queryD();
+			String resE = ((InterfaceE)ba).queryE();
+			
+			// does not work
+			// String resF = ((oa.InnerB)ba).queryF();
+			// String resF1= ((ob.InnerB)ba).queryF();
+			
+			// replaced by:
+			String resF = ((OuterA.InnerB)ba).queryF();
+			String resF1= ((OuterB.InnerB)ba).queryF();
+			String result = resA + ", " + resB + ", " + resC + ", " + resD + ", "
+								 + resE + ", "  + resF + ", " + resF1;
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 8: end");
+		</test>
+		<code>
+			public interface InterfaceA
+			{
+				public String queryA();
+			}
+			
+			public interface InterfaceB
+			{
+				public String queryB();
+			}
+			
+			public interface InterfaceE
+			{
+				public String queryE();
+			}
+			
+			public cclass OuterA
+			{
+				public cclass InnerB implements InterfaceE
+				{
+					public String queryE()
+					{
+						return "A.B.E";
+					}
+			
+					public String queryF()
+					{
+						return "A.B.F";
+					}
+				}
+			
+				public cclass InnerA extends InnerB implements InterfaceA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+			
+					public String queryC()
+					{
+						return "A.A.C";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA implements InterfaceB
+				{
+					public String queryB()
+					{
+						return "B.A.B";
+					}
+			
+					public String queryD()
+					{
+						return "B.A.D";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc009" description="Test polymorphism of inner classes.">
+		<test>
+			// does not work, constructor problem
+			String expectedResult = "B.A.A, A.B.B, A.A.C, B.A.D, B.A.E, B.A.F";
+			
+			System.out.println("VCTest 9: Inner Class Polymorphism: start");
+
+			final OuterB ob = new OuterB();
+			final OuterA oa = ob;
+			
+			// does not work
+			// oa.InnerA ba = (oa.InnerA)ob.new InnerA();
+			
+			// replaced by
+			OuterA.InnerA ba = (OuterA.InnerA)ob.new InnerA();
+	
+			String resA = ((InterfaceA)ba).queryA();
+			String resB = ((InterfaceB)ba).queryB();
+			String resC = ba.queryC();
+			String resD = ba.queryD();
+			String resE = ((InterfaceE)ba).queryE();
+			
+			// does not work
+			// String resF = ((oa.InnerB)ba).queryF();
+			
+			// replaced by
+			String resF = ((OuterA.InnerB)ba).queryF();
+			
+			String result = resA + ", " + resB + ", " + resC + ", " + resD + ", "
+								 + resE + ", " + resF;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 9: end");
+		</test>
+		<code>
+			public interface InterfaceA
+			{
+				public String queryA();
+			}
+			
+			public interface InterfaceB
+			{
+				public String queryB();
+			}
+			
+			public interface InterfaceE
+			{
+				public String queryE();
+			}
+			
+			public cclass OuterA
+			{
+				public cclass InnerB implements InterfaceE
+				{
+					public String queryB()
+					{
+						return "A.B.B";
+					}
+			
+					public String queryE()
+					{
+						return "A.B.E";
+					}
+			
+					public String queryF()
+					{
+						return "A.B.F";
+					}
+				}
+			
+				public cclass InnerA extends InnerB implements InterfaceA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+			
+					public String queryC()
+					{
+						return "A.A.C";
+					}
+			
+					public String queryD()
+					{
+						return "A.A.D";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA implements InterfaceB
+				{
+					public String queryA()
+					{
+						return "B.A.A";
+					}
+			
+					public String queryD()
+					{
+						return "B.A.D";
+					}
+			
+					public String queryE()
+					{
+						return "B.A.E";
+					}
+			
+					public String queryF()
+					{
+						return "B.A.F";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+		
+	<compile-run id="vcallfromcc010" description="Test factory methods of outer classes.">
+		<test>
+			String expectedResult = "A.A.A, A.B.A, B.A.A, A.B.A, B.C.A, B.A.A, A.B.A";
+			
+			System.out.println("VCTest 10: Outer Factory Methods: start");
+
+			OuterA oa = new OuterA(); 
+			OuterB ob = new OuterB();
+	
+			String resAA = oa.new InnerA().queryA();
+			String resAB = oa.new InnerB().queryA();
+			String resBA = ob.new InnerA().queryA();
+			String resBB = ob.new InnerB().queryA();
+			String resBC = ob.new InnerC().queryA();
+	
+			oa = ob;
+			String resBA1 = oa.new InnerA().queryA();
+			String resBB1 = oa.new InnerB().queryA();
+	
+			String result = resAA + ", " + resAB + ", " + resBA + ", " + resBB + ", " + resBC + ", " + resBA1 + ", " + resBB1;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 10: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			
+				public cclass InnerB
+				{
+					public String queryA()
+					{
+						return "A.B.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "B.A.A";
+					}
+				}
+			
+				public cclass InnerC
+				{
+					public String queryA()
+					{
+						return "B.C.A";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile id="vcallfromcc011" description="Inner classes of inner classes.">
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public cclass DeepestA
+					{
+						public String queryA()
+						{
+							return "A.A.A.A";
+						}
+					}
+			
+					public cclass DeepestB
+					{
+						public String queryA()
+						{
+							return "A.A.B.A";
+						}
+					}
+			
+					public cclass DeepestC
+					{
+						public String queryA()
+						{
+							return "A.A.C.A";
+						}
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public cclass DeepestA
+					{
+						public String queryA()
+						{
+							return "A.B.A.A";
+						}
+					}
+			
+					public cclass DeepestD
+					{
+						public String queryA()
+						{
+							return "A.B.D.A";
+						}
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerB
+				{
+					public cclass DeepestB
+					{
+						public String queryA()
+						{
+							return "B.B.B.A";
+						}
+					}
+			
+					public cclass DeepestD
+					{
+						public String queryA()
+						{
+							return "B.B.D.A";
+						}
+					}
+				}
+			}
+		</code>
+	</compile>
+
+	<compile-run id="vcallfromcc012" description="Test factory methods of inner classes.">
+		<test>
+			String expectedResult = "A.A.A.A, A.A.B.A, A.A.C.A, A.B.A.A, B.B.B.A, A.A.C.A, B.B.D.A"
+											  + ", A.B.A.A, B.B.B.A, A.A.C.A";
+											  
+			System.out.println("VCTest 12: Inner Factory Methods: start");
+	
+			final OuterA oa = new OuterA();
+			final OuterB ob = new OuterB();
+			
+			// does not work
+			// oa.InnerA aa = oa.new InnerA();
+			// ob.InnerB bb = ob.new InnerB();
+
+			// replaced by:
+			OuterA.InnerA aa = oa.new InnerA();
+			OuterB.InnerB bb = ob.new InnerB();
+	
+			String resAAA = aa.new DeepestA().queryA();
+			String resAAB = aa.new DeepestB().queryA();
+			String resAAC = aa.new DeepestC().queryA();
+			String resBBA = bb.new DeepestA().queryA();
+			String resBBB = bb.new DeepestB().queryA();
+			String resBBC = bb.new DeepestC().queryA();
+			String resBBD = bb.new DeepestD().queryA();
+	
+			final OuterA oba = ob;
+			
+			// does not work
+			// oba.InnerA aaa = (oba.InnerA)bb;
+			
+			// replaced by:
+			OuterA.InnerA aaa = (OuterA.InnerA)bb;
+
+			String resAAA1 = aaa.new DeepestA().queryA();
+			String resAAB1 = aaa.new DeepestB().queryA();
+			String resAAC1 = aaa.new DeepestC().queryA();
+	
+			String result = resAAA + ", " + resAAB + ", " + resAAC + ", " + resBBA + ", " + resBBB + ", " + resBBC + ", " + resBBD
+				+ ", " + resAAA1 + ", " + resAAB1 + ", " + resAAC1;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 12: end");											  
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public cclass DeepestA
+					{
+						public String queryA()
+						{
+							return "A.A.A.A";
+						}
+					}
+			
+					public cclass DeepestB
+					{
+						public String queryA()
+						{
+							return "A.A.B.A";
+						}
+					}
+			
+					public cclass DeepestC
+					{
+						public String queryA()
+						{
+							return "A.A.C.A";
+						}
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public cclass DeepestA
+					{
+						public String queryA()
+						{
+							return "A.B.A.A";
+						}
+					}
+			
+					public cclass DeepestD
+					{
+						public String queryA()
+						{
+							return "A.B.D.A";
+						}
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerB
+				{
+					public cclass DeepestB
+					{
+						public String queryA()
+						{
+							return "B.B.B.A";
+						}
+					}
+			
+					public cclass DeepestD
+					{
+						public String queryA()
+						{
+							return "B.B.D.A";
+						}
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc013" description="Test inherited methods.">
+		<test>
+			// constructor error
+			String expectedResult = "A.A.A, A.B.B, A.B.C, B.A.D, A.B.E, B.B.F, B.B.G";
+			
+			System.out.println("VCTest 13: Inherited Methods: start");
+
+			final OuterB ob = new OuterB();
+			
+			// does not work
+			// ob.InnerB bb = ob.new InnerB();
+			
+			// replaced by:
+			OuterB.InnerB bb = ob.new InnerB();
+			
+			String resA = bb.queryA();
+			String resB = bb.queryB();
+			String resC = bb.queryC();
+			String resD = bb.queryD();
+			String resE = bb.queryE();
+			String resF = bb.queryF();
+			String resG = bb.queryG();
+			String result = resA + ", " + resB + ", " + resC + ", " + resD + ", " + resE + ", " + resF + ", " + resG;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 13: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+			
+					public String queryB()
+					{
+						return "A.A.B";
+					}
+			
+					public String queryC()
+					{
+						return "A.A.C";
+					}
+			
+					public String queryD()
+					{
+						return "A.A.D";
+					}
+			
+					public String queryG()
+					{
+						return "A.A.G";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryB()
+					{
+						return "A.B.B";
+					}
+			
+					public String queryC()
+					{
+						return "A.B.C";
+					}
+			
+					public String queryE()
+					{
+						return "A.B.E";
+					}
+			
+					public String queryF()
+					{
+						return "A.B.F";
+					}
+			
+					public String queryG()
+					{
+						return "A.B.G";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryB()
+					{
+						return "B.A.B";
+					}
+			
+			
+					public String queryD()
+					{
+						return "B.A.D";
+					}
+			
+					public String queryE()
+					{
+						return "B.A.E";
+					}
+			
+					public String queryF()
+					{
+						return "B.A.F";
+					}
+			
+					public String queryG()
+					{
+						return "B.A.G";
+					}
+				}
+			
+				public cclass InnerB
+				{
+					public String queryF()
+					{
+						return "B.B.F";
+					}
+			
+					public String queryG()
+					{
+						return "B.B.G";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc014" description="Test super calls.">
+		<test>
+			String expectedResultBB = "A.A.A; A.A.B, B.A.B, A.B.B; A.A.C, A.B.C; A.A.D, B.A.D; A.B.E; A.B.F, B.B.F; A.A.G, B.A.G, A.B.G, B.B.G";
+			String expectedResultBA = "A.A.A; A.A.B, B.A.B; A.A.C; A.A.D, B.A.D; B.A.E; B.A.F; A.A.G, B.A.G";
+			
+			System.out.println("VCTest 14: Test Super Calls: start");
+
+			final OuterB ob = new OuterB();
+			//ob.InnerB bb = ob.new InnerB();
+			OuterB.InnerB bb = ob.new InnerB();
+	
+			String resA = bb.queryA();
+			String resB = bb.queryB();
+			String resC = bb.queryC();
+			String resD = bb.queryD();
+			String resE = bb.queryE();
+			String resF = bb.queryF();
+			String resG = bb.queryG();
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResultBB);
+	
+			//ob.InnerA ba = ob.new InnerA();
+			OuterB.InnerA ba = ob.new InnerA();
+	
+			resA = ba.queryA();
+			resB = ba.queryB();
+			resC = ba.queryC();
+			resD = ba.queryD();
+			resE = ba.queryE();
+			resF = ba.queryF();
+			resG = ba.queryG();
+			result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResultBA);
+	
+			System.out.println("VCTest 14: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+			
+					public String queryB()
+					{
+						return "A.A.B";
+					}
+			
+					public String queryC()
+					{
+						return "A.A.C";
+					}
+			
+					public String queryD()
+					{
+						return "A.A.D";
+					}
+			
+					public String queryG()
+					{
+						return "A.A.G";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryB()
+					{
+						return super.queryB() + ", A.B.B";
+					}
+			
+					public String queryC()
+					{
+						return super.queryC() + ", A.B.C";
+					}
+			
+					public String queryE()
+					{
+						return "A.B.E";
+					}
+			
+					public String queryF()
+					{
+						return "A.B.F";
+					}
+			
+					public String queryG()
+					{
+						return super.queryG() + ", A.B.G";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryB()
+					{
+						return super.queryB() + ", B.A.B";
+					}
+			
+			
+					public String queryD()
+					{
+						return super.queryD() + ", B.A.D";
+					}
+			
+					public String queryE()
+					{
+						return "B.A.E";
+					}
+			
+					public String queryF()
+					{
+						return "B.A.F";
+					}
+			
+					public String queryG()
+					{
+						return super.queryG() + ", B.A.G";
+					}
+				}
+			
+				public cclass InnerB
+				{
+					public String queryF()
+					{
+						return super.queryF() + ", B.B.F";
+					}
+			
+					public String queryG()
+					{
+						return super.queryG() + ", B.B.G";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc014b" description="Test super calls using extends for furtherbindings.">
+		<test>
+			String expectedResult = "B.C2, C.C2, B.L1, A.L1";
+			
+			System.out.println("VCTest 14b: Test Super Calls and extends for furtherbindings: start");
+
+			OuterC oc = new OuterC();
+	
+			String result = oc.new Leaf1().queryA();
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 14: end");
+		</test>
+		<code>
+			public cclass _synth {
+				public cclass Cat1 {}
+				public cclass Cat2 {}
+				public cclass Leaf1 {}
+			}
+			
+			// [A, 0]
+			public cclass OuterA extends _synth
+			{
+				// [A.C1, 0.C1]
+				public cclass Cat1
+				{
+					public String queryA() {
+						return "A.C1";
+					}
+				}
+			
+			//	 [A.L1, O.L1, A.C1, 0.C1]
+				public cclass Leaf1 extends Cat1
+				{
+					public String queryA() {
+						return super.queryA() + ", A.L1";
+					}
+				}
+			}
+			
+			// [B, A, 0]
+			public cclass OuterB extends _synth
+			{
+				// [B.C2, O.C2]
+				public cclass Cat2
+				{
+					public String queryA() {
+						return "B.C2";
+					}
+				}
+			
+				// [B.L1, B.C2, O.C2]
+				public cclass Leaf1 extends Cat2
+				{
+					public String queryA() {
+						return super.queryA() + ", B.L1";
+					}
+				}
+			}
+			
+			// [C, A, B, 0]
+			public cclass OuterC extends OuterA &amp; OuterB
+			{
+				// [C.C2, O.C2, C.C1, A.C1, B.C1, O.C1]
+				public cclass Cat2 extends Cat1 {
+					public String queryA() {
+						return super.queryA() + ", C.C2";
+					}
+				}
+			
+				// Leaf1 : [A.L1, B.L1, C.C2, O.C2, C.C1, A.C1, B.C1, O.C1]
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc015" description="Test long inheritance sequence.">
+		<test>
+			String expectedResultCD = "A.A.A, B.A.A, A.B.A, B.B.A, C.B.A, A.C.A, C.C.A, B.D.A";
+			String expectedResultCF = "A.A.A, B.A.A, C.E.A, C.F.A";
+			
+			System.out.println("VCTest 15: Long Inheritance Sequence: start");
+
+			final OuterC oc = new OuterC(); 
+			oc.InnerD cd = oc.new InnerD();       // with dependent types
+			// OuterC.InnerD cd = oc.new InnerD();// without dependent types
+	
+			String result = cd.queryA();
+	
+			System.out.println(result);
+			assertEquals(result, expectedResultCD);
+	
+		 	oc.InnerF cf = oc.new InnerF();        // with dependent types
+			// OuterC.InnerF cf = oc.new InnerF(); // without dependent types
+	
+			result = cf.queryA();
+	
+			System.out.println(result);
+			assertEquals(result, expectedResultCF);
+	
+			System.out.println("VCTest 15: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.B.A";
+					}
+				}
+			
+				public cclass InnerC extends InnerB
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.A.A";
+					}
+				}
+			
+				public cclass InnerB
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.B.A";
+					}
+				}
+				
+				public cclass InnerD extends InnerC
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.D.A";
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterB
+			{
+				public cclass InnerB
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.B.A";
+					}
+				}
+			
+				public cclass InnerC
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.C.A";
+					}
+				}
+			
+				public cclass InnerE extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.E.A";
+					}
+				}
+			
+				public cclass InnerF extends InnerE
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.F.A";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc016" description="Test state inheritance.">
+		<test>
+			String expectedResultBB = "A.A.a, A.A.a, A.A.a, A.A.a; " +
+	                                              "A.A.b, B.A.b, A.B.b, A.B.b; " +
+	                                              "A.A.c, A.A.c, A.B.c, A.B.c; " +
+	                                              "A.A.d, B.A.d, A.A.d, B.A.d; " +
+	                                              "A.B.e, A.B.e; " +
+	                                              "A.B.f, B.B.f; " +
+	                                              "A.A.g, B.A.g, A.B.g, B.B.g";
+
+			String expectedResultBA = "A.A.a, A.A.a; " +
+	                                              "A.A.b, B.A.b; " +
+	                                              "A.A.c, A.A.c; " +
+	                                              "A.A.d, B.A.d; " +
+	                                              "B.A.e; " +
+	                                              "B.A.f; " +
+	                                              "A.A.g, B.A.g";
+												  
+			System.out.println("VCTest 16: Test State Inheritance: start");
+	
+			final OuterB ob = new OuterB();
+			ob.InnerB bb = ob.new InnerB();        // with dependent types
+			// OuterB.InnerB bb = ob.new InnerB(); // without dependent types
+	
+			String resA = bb.queryA();
+			String resB = bb.queryB();
+			String resC = bb.queryC();
+			String resD = bb.queryD();
+			String resE = bb.queryE();
+			String resF = bb.queryF();
+			String resG = bb.queryG();
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(expectedResultBB, result);
+	
+			ob.InnerA ba = ob.new InnerA();        // with dependent types
+			// OuterB.InnerA ba = ob.new InnerA(); // without dependent types
+	
+			resA = ba.queryA();
+			resB = ba.queryB();
+			resC = ba.queryC();
+			resD = ba.queryD();
+			resE = ba.queryE();
+			resF = ba.queryF();
+			resG = ba.queryG();
+			result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(expectedResultBA, result);
+	
+			System.out.println("VCTest 16: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					protected String _a = "A.A.a";
+			
+					protected String _b = "A.A.b";
+			
+					protected String _c = "A.A.c";
+			
+					protected String _d = "A.A.d";
+			
+					protected String _g = "A.A.g";
+			
+					public String queryA()
+					{
+						return _a;
+					}
+			
+					public String queryB()
+					{
+						return _b;
+					}
+			
+					public String queryC()
+					{
+						return _c;
+					}
+			
+					public String queryD()
+					{
+						return _d;
+					}
+			
+					public String queryG()
+					{
+						return _g;
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					protected String _b = "A.B.b";
+			
+					protected String _c = "A.B.c";
+			
+					protected String _e = "A.B.e";
+			
+					protected String _f = "A.B.f";
+			
+					protected String _g = "A.B.g";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+			
+					public String queryB()
+					{
+						return super.queryB() + ", " + _b;
+					}
+			
+					public String queryC()
+					{
+						return super.queryC() + ", " + _c;
+					}
+			
+					public String queryD()
+					{
+						return super.queryD() + ", " + _d;
+					}
+			
+					public String queryE()
+					{
+						return _e;
+					}
+			
+					public String queryF()
+					{
+						return _f;
+					}
+			
+					public String queryG()
+					{
+						return super.queryG() + ", " + _g;
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					protected String _b = "B.A.b";
+			
+					protected String _d = "B.A.d";
+			
+					protected String _e = "B.A.e";
+			
+					protected String _f = "B.A.f";
+			
+					protected String _g = "B.A.g";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+			
+					public String queryB()
+					{
+						return super.queryB() + ", " + _b;
+					}
+			
+					public String queryC()
+					{
+						return super.queryC() + ", " + _c;
+					}
+			
+					public String queryD()
+					{
+						return super.queryD() + ", " + _d;
+					}
+			
+					public String queryE()
+					{
+						return _e;
+					}
+			
+					public String queryF()
+					{
+						return _f;
+					}
+			
+					public String queryG()
+					{
+						return super.queryG() + ", " + _g;
+					}
+				}
+			
+				public cclass InnerB
+				{
+					protected String _f = "B.B.f";
+			
+					protected String _g = "B.B.g";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+			
+					public String queryB()
+					{
+						return super.queryB() + ", " + _b;
+					}
+			
+					public String queryC()
+					{
+						return super.queryC() + ", " + _c;
+					}
+			
+					public String queryD()
+					{
+						return super.queryD() + ", " + _d;
+					}
+			
+					public String queryE()
+					{
+						return super.queryE() + ", " + _e;
+					}
+			
+					public String queryF()
+					{
+						return super.queryF() + ", " + _f;
+					}
+			
+					public String queryG()
+					{
+						return super.queryG() + ", " + _g;
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc017" description="Test extending deep classes relationships.">
+		<test>
+			String expectedResult = "A.A.A, B.A.A, A.B.A" +
+												", A.A.B, child: A.A.A, B.A.A, A.B.A, A.A.C, B.A.C, A.B.C" +
+												", B.A.B, child3: A.A.A, B.A.A, A.B.A, A.A.C, B.A.C, A.B.C, B.A.E" +
+												", A.B.A, child2: A.A.A, B.A.A, A.B.A, A.A.C, B.A.C, A.B.C, A.B.D";
+			System.out.println("VCTest 17: Extending Deep Classes: start");
+
+			final OuterB ob = new OuterB();
+			ob.InnerB b = ob.new InnerB();        // with dependent types
+			// OuterB.InnerB b = ob.new InnerB(); // without dependent types
+	
+			String result = b.defaultObject().queryA();
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 17: end");
+		</test>
+		<code>
+			public cclass OuterA {
+				public cclass InnerA {
+					public cclass DeepestA {
+						public String queryA() {
+							return "A.A.A";
+						}
+					}
+			
+					public cclass DeepestB extends DeepestA {
+						protected DeepestA _child = null;
+			
+						public void setChild(DeepestA child) {
+							_child = child;
+						}
+			
+						public void setDefaultChild() {
+							setChild(InnerA.this.new DeepestC());
+						}
+			
+						public String queryA() {
+							return super.queryA() + ", A.A.B, child: " + _child.queryA();
+						}
+					}
+			
+					public cclass DeepestC extends DeepestA {
+						public String queryA() {
+							return super.queryA() + ", A.A.C";
+						}
+					}
+			
+					public DeepestB defaultObject() {
+						DeepestB b = new DeepestB();
+						b.setDefaultChild();
+						return b;
+					}
+				}
+			
+				public cclass InnerB extends InnerA {
+					public cclass DeepestA {
+						public String queryA() {
+							return super.queryA() + ", A.B.A";
+						}
+					}
+			
+					public cclass DeepestB {
+						protected DeepestA _child2 = null;
+			
+						public void setChild2(DeepestA child) {
+							_child2 = child;
+						}
+			
+						public void setDefaultChild2() {
+							setChild2(InnerB.this.new DeepestD());
+						}
+			
+						public String queryA() {
+							return super.queryA() + ", A.B.A, child2: " + _child2.queryA();
+						}
+					}
+			
+					public cclass DeepestC {
+						public String queryA() {
+							return super.queryA() + ", A.B.C";
+						}
+					}
+			
+					public cclass DeepestD extends DeepestC {
+						public String queryA() {
+							return super.queryA() + ", A.B.D";
+						}
+					}
+			
+					public DeepestB defaultObject() {
+						DeepestB b = super.defaultObject();
+						b.setDefaultChild2();
+						return b;
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA {
+				public cclass InnerA {
+					public cclass DeepestA {
+						public String queryA() {
+							return super.queryA() + ", B.A.A";
+						}
+					}
+			
+					public cclass DeepestB {
+						protected DeepestA _child3 = null;
+			
+						public void setChild3(DeepestA child) {
+							_child3 = child;
+						}
+			
+						public void setDefaultChild3() {
+							setChild3(InnerA.this.new DeepestE());
+						}
+			
+						public String queryA() {
+							return super.queryA() + ", B.A.B, child3: " + _child3.queryA();
+						}
+					}
+			
+					public cclass DeepestC {
+						public String queryA() {
+							return super.queryA() + ", B.A.C";
+						}
+					}
+			
+					public cclass DeepestE extends DeepestC {
+						public String queryA() {
+							return super.queryA() + ", B.A.E";
+						}
+					}
+			
+					public DeepestB defaultObject() {
+						DeepestB b = super.defaultObject();
+						b.setDefaultChild3();
+						return b;
+					}
+				}
+			}			
+		</code>
+	</compile-run>
+	
+	
+	<compile id="vcallfromcc017a" description="Simplified: Test extending deep classes relationships.">
+		<code>
+			public cclass OuterA {
+				public cclass InnerA {
+					public cclass DeepestA { }
+					public cclass DeepestB extends DeepestA { }
+					public cclass DeepestC extends DeepestA { }
+					
+					public DeepestB defaultObject() {
+						DeepestB b = new DeepestB();
+						return b;
+					}
+				}
+			
+				public cclass InnerB extends InnerA {
+					public cclass DeepestB { }
+					public cclass DeepestC { }
+					public cclass DeepestD extends DeepestC { }
+			
+					public DeepestB defaultObject() {
+						DeepestB b = super.defaultObject();
+						return b;
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA {
+				public cclass InnerA {
+					public cclass DeepestA { }
+					public cclass DeepestB { }
+					public cclass DeepestC { }
+					public cclass DeepestE extends DeepestC { }
+			
+					public DeepestB defaultObject() {
+						DeepestB b = super.defaultObject();
+						return b;
+					}
+				}
+				
+				/* implicit inherited VC: Inner B */
+				
+				/* Problem: Inner B sees not only inherited OuterA.InnerB.defaultObject(),
+				   but also defaultObject() from its sibling OuterB.InnerA ! */
+			}			
+		</code>
+	</compile>
+	
+	<compile-run id="vcallfromcc018" description="Test multiple inheritance of methods.">
+		<test>
+			String expectedResult = "A.a; A.b, B.b; A.c, C.c; A.d, C.d, B.d; B.e; B.f, D.f; A.g, C.g, B.g, D.g";
+			
+			System.out.println("VCTest 18: Multiple Inheritance of Methods: start");
+
+			OuterD d = new OuterD();
+	
+			String resA = d.queryA();
+			String resB = d.queryB();
+			String resC = d.queryC();
+			String resD = d.queryD();
+			String resE = d.queryE();
+			String resF = d.queryF();
+			String resG = d.queryG();
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 18: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				protected String _a = "A.a";
+			
+				protected String _b = "A.b";
+			
+				protected String _c = "A.c";
+			
+				protected String _d = "A.d";
+			
+				protected String _g = "A.g";
+			
+				public String queryA()
+				{
+					return _a;
+				}
+			
+				public String queryB()
+				{
+					return _b;
+				}
+			
+				public String queryC()
+				{
+					return _c;
+				}
+			
+				public String queryD()
+				{
+					return _d;
+				}
+			
+				public String queryG()
+				{
+					return _g;
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				protected String _b = "B.b";
+			
+				protected String _d = "B.d";
+			
+				protected String _e = "B.e";
+			
+				protected String _f = "B.f";
+			
+				protected String _g = "B.g";
+			
+				public String queryB()
+				{
+					return super.queryB() + ", " + _b;
+				}
+			
+				public String queryD()
+				{
+					return super.queryD() + ", " + _d;
+				}
+			
+				public String queryE()
+				{
+					return _e;
+				}
+			
+				public String queryF()
+				{
+					return _f;
+				}
+			
+				public String queryG()
+				{
+					return super.queryG() + ", " + _g;
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				protected String _c = "C.c";
+			
+				protected String _d = "C.d";
+			
+				protected String _e = "C.e";
+			
+				protected String _f = "C.f";
+			
+				protected String _g = "C.g";
+			
+				public String queryC()
+				{
+					return super.queryC() + ", " + _c;
+				}
+			
+				public String queryD()
+				{
+					return super.queryD() + ", " + _d;
+				}
+			
+				public String queryE()
+				{
+					return _e;
+				}
+			
+				public String queryF()
+				{
+					return _f;
+				}
+			
+				public String queryG()
+				{
+					return super.queryG() + ", " + _g;
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC
+			{
+				protected String _f = "D.f";
+			
+				protected String _g = "D.g";
+			
+				public String queryF()
+				{
+					return super.queryF() + ", " + _f;
+				}
+			
+				public String queryG()
+				{
+					return super.queryG() + ", " + _g;
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile id="vcallfromcc018b" description="Test simple cclass multiple inheritance">
+		<code>
+			public cclass Test {
+				public static void main(String args[]){
+					Z z = new Z();
+				}
+			}
+			
+			public cclass X {
+				public cclass A {}
+			}
+			
+			public cclass Y {
+				public cclass A {}
+			}
+			
+			public cclass Z extends X &amp; Y {} 
+		</code>
+	</compile>
+	
+	<compile-run id="vcallfromcc019" description="Test simple cclass multiple inheritance">
+		<test>
+			String expectedResult = "A.a, A.a, A.a, A.a; " +
+												"A.b, A.b, B.b, B.b; " +
+												"A.c, C.c, A.c, C.c; " +
+	                                            "A.d, C.d, B.d, B.d; " +
+	                                            "B.e, B.e; " +
+	                                            "B.f, D.f; " +
+	                                            "A.g, C.g, B.g, D.g";
+			System.out.println("VCTest 19: Multiple Inheritance of State: start");
+
+			OuterD d = new OuterD();
+	
+			String resA = d.queryA();
+			String resB = d.queryB();
+			String resC = d.queryC();
+			String resD = d.queryD();
+			String resE = d.queryE();
+			String resF = d.queryF();
+			String resG = d.queryG();
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 19: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				protected String _a = "A.a";
+			
+				protected String _b = "A.b";
+			
+				protected String _c = "A.c";
+			
+				protected String _d = "A.d";
+			
+				protected String _g = "A.g";
+			
+				public String queryA()
+				{
+					return _a;
+				}
+			
+				public String queryB()
+				{
+					return _b;
+				}
+			
+				public String queryC()
+				{
+					return _c;
+				}
+			
+				public String queryD()
+				{
+					return _d;
+				}
+			
+				public String queryG()
+				{
+					return _g;
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				protected String _b = "B.b";
+			
+				protected String _d = "B.d";
+			
+				protected String _e = "B.e";
+			
+				protected String _f = "B.f";
+			
+				protected String _g = "B.g";
+			
+				public String queryA()
+				{
+					return super.queryA() + ", " + _a;
+				}
+			
+				public String queryB()
+				{
+					return super.queryB() + ", " + _b;
+				}
+			
+				public String queryC()
+				{
+					return super.queryC() + ", " + _c;
+				}
+			
+				public String queryD()
+				{
+					return super.queryD() + ", " + _d;
+				}
+			
+				public String queryE()
+				{
+					return _e;
+				}
+			
+				public String queryF()
+				{
+					return _f;
+				}
+			
+				public String queryG()
+				{
+					return super.queryG() + ", " + _g;
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				protected String _c = "C.c";
+			
+				protected String _d = "C.d";
+			
+				protected String _e = "C.e";
+			
+				protected String _f = "C.f";
+			
+				protected String _g = "C.g";
+			
+				public String queryA()
+				{
+					return super.queryA() + ", " + _a;
+				}
+			
+				public String queryB()
+				{
+					return super.queryB() + ", " + _b;
+				}
+			
+				public String queryC()
+				{
+					return super.queryC() + ", " + _c;
+				}
+			
+				public String queryD()
+				{
+					return super.queryD() + ", " + _d;
+				}
+			
+				public String queryE()
+				{
+					return _e;
+				}
+			
+				public String queryF()
+				{
+					return _f;
+				}
+			
+				public String queryG()
+				{
+					return super.queryG() + ", " + _g;
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC
+			{
+				protected String _f = "D.f";
+			
+				protected String _g = "D.g";
+			
+				public String queryA()
+				{
+					return super.queryA() + ", " + _a;
+				}
+			
+				public String queryB()
+				{
+					return super.queryB() + ", " + _b;
+				}
+			
+				public String queryC()
+				{
+					return super.queryC() + ", " + _c;
+				}
+			
+				public String queryD()
+				{
+					return super.queryD() + ", " + _d;
+				}
+			
+				public String queryE()
+				{
+					return super.queryE() + ", " + _e;
+				}
+			
+				public String queryF()
+				{
+					return super.queryF() + ", " + _f;
+				}
+			
+				public String queryG()
+				{
+					return super.queryG() + ", " + _g;
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc020" description="Test joins linearization of state.">	
+		<test>
+			String expectedResult = "A.a; " +						
+												"A.a, B.a; " +					
+												"A.a, C.a; " +					
+												"A.a, B.a, D.a; " +				
+												"A.a, C.a, B.a; " +				
+												"A.a, C.a, F.a; " + 			
+												"A.a, B.a, D.a, C.a; " +		
+												"A.a, C.a, F.a, B.a, H.a; " +	
+												"A.a, C.a, F.a, B.a, H.a, D.a";	
+			System.out.println("VCTest 20: Joins Linearization: start");
+	
+			String resA = new OuterA().new InnerA().queryA();
+			String resB = new OuterB().new InnerA().queryA();
+			String resC = new OuterC().new InnerA().queryA();
+			String resD = new OuterD().new InnerA().queryA();
+			String resE = new OuterE().new InnerA().queryA();
+			String resF = new OuterF().new InnerA().queryA();
+			String resG = new OuterG().new InnerA().queryA();
+			String resH = new OuterH().new InnerA().queryA();
+			String resI = new OuterI().new InnerA().queryA();
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG
+								 + "; " + resH + "; " + resI;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 20: end");												
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					protected String _a = "A.a";
+			
+					public String queryA()
+					{
+						return _a;
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					protected String _a = "B.a";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				public cclass InnerA
+				{
+					protected String _a = "C.a";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+				}
+			}
+			
+			public cclass OuterD extends OuterB
+			{
+				public cclass InnerA
+				{
+					protected String _a = "D.a";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+				}
+			}
+			
+			public cclass OuterE extends OuterB &amp; OuterC
+			{
+			
+			}
+			
+			public cclass OuterF extends OuterA &amp; OuterC
+			{
+				public cclass InnerA
+				{
+					protected String _a = "F.a";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+				}
+			}
+			
+			public cclass OuterG extends OuterE &amp; OuterD
+			{
+			
+			}
+			
+			public cclass OuterH extends OuterE &amp; OuterF
+			{
+				public cclass InnerA
+				{
+					protected String _a = "H.a";
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _a;
+					}
+				}
+			}
+			
+			public cclass OuterI extends OuterG &amp; OuterH
+			{
+			
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc021" description="Test joining extensions of state.">	
+		<test>
+			String expectedResult = "A.A, C.A, B.A, " +
+	                                "A.B, child: A.A, C.A, B.A, A.C, C.C, B.C, " +
+	                                "C.B, child3: A.A, C.A, B.A, A.C, C.C, B.C, C.E, " +
+	                                "B.B, child2: A.A, C.A, B.A, A.C, C.C, B.C, B.D";
+									
+			System.out.println("VCTest 21: Test joining extensions: start");
+
+			String result = new OuterD().defaultObject().queryA();
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 21: end");
+		</test>
+		<code>
+			public cclass OuterA {
+				public cclass InnerA {
+					public String queryA() {
+						return "A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA {
+				    protected OuterA.InnerA _child = null;
+			
+					public void setChild(OuterA.InnerA child) {
+						_child = child;
+					}
+			
+					public void setDefaultChild() {
+						setChild(OuterA.this.new InnerC());
+					}
+			
+					public String queryA() {
+						return super.queryA() + ", A.B, child: " + _child.queryA();
+					}
+				}
+			
+				public cclass InnerC extends InnerA {
+					public String queryA() {
+						return super.queryA() + ", A.C";
+					}
+				}
+			
+				public InnerB defaultObject() {
+				    //InnerB b = $newInnerB();
+					InnerB b = new InnerB();
+					b.setDefaultChild();
+					return b;
+				}
+			}
+			
+			public cclass OuterB extends OuterA {
+				public cclass InnerA {
+					public String queryA() {
+						return super.queryA() + ", B.A";
+					}
+				}
+			
+				public cclass InnerB {
+				    protected OuterB.InnerA _child2 = null;
+			
+					public void setChild2(OuterB.InnerA child) {
+						_child2 = child;
+					}
+			
+					public void setDefaultChild2() {
+						setChild2(OuterB.this.new InnerD());
+					}
+			
+					public String queryA() {
+						return super.queryA() + ", B.B, child2: " + _child2.queryA();
+					}
+				}
+			
+				public cclass InnerC {
+					public String queryA() {
+						return super.queryA() + ", B.C";
+					}
+				}
+			
+				public cclass InnerD extends InnerC {
+					public String queryA() {
+						return super.queryA() + ", B.D";
+					}
+				}
+			
+				public InnerB defaultObject() {
+					InnerB b = super.defaultObject();
+					b.setDefaultChild2();
+					return b;
+				}
+			}
+			
+			public cclass OuterC extends OuterA {
+				public cclass InnerA {
+					public String queryA() {
+						return super.queryA() + ", C.A";
+					}
+				}
+			
+				public cclass InnerB {
+				    protected OuterC.InnerA _child3 = null;
+			
+					public void setChild3(OuterC.InnerA child) {
+						_child3 = child;
+					}
+			
+					public void setDefaultChild3() {
+						setChild3(OuterC.this.new InnerE());
+					}
+			
+					public String queryA() {
+						return super.queryA() + ", C.B, child3: " + _child3.queryA();
+					}
+				}
+			
+				public cclass InnerC {
+					public String queryA() {
+						return super.queryA() + ", C.C";
+					}
+				}
+			
+				public cclass InnerE extends InnerC {
+					public String queryA()
+					{
+						return super.queryA() + ", C.E";
+					}
+				}
+			
+				public InnerB defaultObject() {
+					InnerB b = super.defaultObject();
+					b.setDefaultChild3();
+					return b;
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC { }
+		</code>
+	</compile-run>
+	
+	
+	<compile id="vcallfromcc021a" description="Simplified: Test joining extensions of state.">	
+		<code>
+			public cclass OuterA {
+				public cclass InnerA {
+					public String queryA() { 	return "A.A"; }
+				}
+			
+				public cclass InnerB extends InnerA {
+					public String queryA() {	return super.queryA() + ", A.B, child: -"; }
+				}
+			
+				public cclass InnerC extends InnerA {
+					public String queryA() {	return super.queryA() + ", A.C"; }
+				}
+			
+				public InnerB defaultObject() {
+				    InnerB b = new InnerB();
+					return b;
+				}
+			}
+			
+			public cclass OuterB extends OuterA {
+				public cclass InnerA {
+					public String queryA() {	return super.queryA() + ", B.A"; }
+				}
+			
+				public cclass InnerB {
+				    public String queryA() {	return super.queryA() + ", B.B, child2: -"; }
+				}
+			
+				public cclass InnerC {
+					public String queryA() {	return super.queryA() + ", B.C"; }
+				}
+			
+				public cclass InnerD extends InnerC {
+					public String queryA() {	return super.queryA() + ", B.D"; }
+				}
+			
+				public InnerB defaultObject() {
+					InnerB b = super.defaultObject();
+					return b;
+				}
+			}
+			
+			public cclass OuterC extends OuterA {
+				public cclass InnerA {
+					public String queryA() {	return super.queryA() + ", C.A"; }
+				}
+			
+				public cclass InnerB {
+				    public String queryA() {	return super.queryA() + ", C.B, child3: -"; }
+				}
+			
+				public cclass InnerC {
+					public String queryA() {	return super.queryA() + ", C.C"; }
+				}
+			
+				public cclass InnerE extends InnerC {
+					public String queryA() {	return super.queryA() + ", C.E"; }
+				}
+			
+				public InnerB defaultObject() {
+					InnerB b = super.defaultObject();
+					return b;
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC { }
+		</code>
+	</compile>
+	
+	
+	<compile id="vcallfromcc021b" description="Even more simplified: Test joining extensions of state.">	
+		<code>
+			public cclass OuterA {
+				public cclass InnerA { }
+				public cclass InnerB extends InnerA { }
+				public cclass InnerC extends InnerA { }
+			
+				public InnerB defaultObject() {
+				    InnerB b = new InnerB();
+					return b;
+				}
+			}
+			
+			public cclass OuterB extends OuterA {
+				public cclass InnerA { }
+				public cclass InnerB { }
+				public cclass InnerC { }
+				public cclass InnerD extends InnerC { }
+			
+				public InnerB defaultObject() {
+					InnerB b = super.defaultObject();
+					return b;
+				}
+			}
+			
+			public cclass OuterC extends OuterA {
+				public cclass InnerA { }
+				public cclass InnerB { }
+				public cclass InnerC { }
+				public cclass InnerE extends InnerC { }
+			
+				public InnerB defaultObject() {
+					InnerB b = super.defaultObject();
+					return b;
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC { }
+		</code>
+	</compile>
+	
+	
+	<compile id="vcallfromcc021c" description="Ultimately simplified: Simple diamond inheritance">	
+		<code>
+			public cclass OuterA {
+				public cclass InnerA { }
+				public InnerA defaultObject() {
+					return new InnerA();
+				}
+			}
+			
+			public cclass OuterB extends OuterA {
+				public cclass InnerA { }
+				public InnerA defaultObject() {
+					return super.defaultObject();
+				}
+			}
+			
+			public cclass OuterC extends OuterA {
+				public cclass InnerA { }
+				public InnerA defaultObject() {
+					return super.defaultObject();
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC { }
+		</code>
+	</compile>
+	
+	
+	<compile-run id="vcallfromcc022" description="Test polymorphism of joined classes.">	
+		<test>
+			String expectedResult = "D.M, D.N, A.O, D.Q, D.A, D.B, D.C";
+
+			System.out.println("VCTest 22: Test joined polymorphism: start");
+
+			OuterD od = new OuterD();
+
+			String resM = ((InterfaceM)od).queryM();
+			String resN = ((InterfaceN)od).queryN();
+			String resO = ((InterfaceO)od).queryO();
+			String resQ = ((InterfaceQ)od).queryQ();
+			String resA = ((OuterA)od).queryA();
+			String resB = ((OuterB)od).queryB();
+			String resC = ((OuterC)od).queryC();
+	
+			String result = resM + ", " + resN + ", " + resO + ", " + resQ + ", " + resA + ", " + resB + ", " + resC;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 22: end");
+		</test>
+		<code>
+			interface InterfaceM
+			{
+				public String queryM();
+			}
+			
+			interface InterfaceN
+			{
+				public String queryN();
+			}
+			
+			interface InterfaceO
+			{
+				public String queryO();
+			}
+			
+			interface InterfaceQ
+			{
+				public String queryQ();
+			}
+			
+			public cclass OuterA implements InterfaceM
+			{
+				public String queryA()
+			
+				{
+					return "A.A";
+				}
+			
+			
+				public String queryM()
+				{
+					return "A.M";
+				}
+			
+				public String queryO()
+				{
+					return "A.O";
+				}
+			
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA implements InterfaceN
+			{
+				public String queryB()
+			
+				{
+					return "B.B";
+				}
+			
+			
+				public String queryN()
+				{
+					return "B.N";
+				}
+			
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.A.A";
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterA implements InterfaceO
+			{
+				public String queryC()
+				{
+					return "C.C";
+				}
+			
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.A.A";
+					}
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC implements InterfaceQ
+			{
+				public String queryA()
+				{
+					return "D.A";
+				}
+			
+				public String queryB()
+				{
+					return "D.B";
+				}
+			
+				public String queryC()
+				{
+					return "D.C";
+				}
+			
+				public String queryM()
+				{
+					return "D.M";
+				}
+			
+				public String queryN()
+				{
+					return "D.N";
+				}
+			
+				public String queryQ()
+				{
+					return "D.Q";
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc023" description="Test join inner classes.">	
+		<test>
+			String expectedResult =
+			"A.A, C.A, B.A; " +								  										// A
+			"A.A, C.A, B.A, A.B, C.B; "	+					  										// B lt A
+			"A.A, C.A, B.A, A.C, C.C, B.C; "	+ 					  								// C lt A
+			"A.A, C.A, B.A, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D; " +			  					// D lt B and C
+			"A.A, C.A, B.A, A.E; " +						  										// E lt A
+			"A.A, C.A, B.A, A.E, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D, A.F, B.F; " +				// F lt D and A
+			"A.A, C.A, B.A, A.E, A.B, C.B, A.C, C.C, B.C, A.D, C.D, B.D, A.F, B.F, B.G; " + 		// G lt C and F
+			"A.A, C.A, B.A, A.C, C.C, B.C, A.B, C.B, C.H; " +	  									// H lt B and C
+			"A.A, C.A, B.A, A.E, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D, A.F, B.F, D.I";			// I lt F and D
+			
+			System.out.println("VCTest 23: Test joined polymorphism: start");
+
+			OuterD od = new OuterD();
+	
+			String resA = od.new InnerA().queryA();
+			String resB = od.new InnerB().queryA();
+			String resC = od.new InnerC().queryA();
+			String resD = od.new InnerD().queryA();
+			String resE = od.new InnerE().queryA();
+			String resF = od.new InnerF().queryA();
+			String resG = od.new InnerG().queryA();
+			String resH = od.new InnerH().queryA();
+			String resI = od.new InnerI().queryA();
+	
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG +
+							"; " + resH + "; " + resI;
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 23: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.B";
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C";
+					}
+				}
+			
+				public cclass InnerD extends InnerB &amp; InnerC
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.D";
+					}
+				}
+			
+				public cclass InnerE extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.E";
+					}
+				}
+			
+				public cclass InnerF extends InnerD &amp; InnerE
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.F";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.A";
+					}
+				}
+			
+				public cclass InnerC
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.C";
+					}
+				}
+			
+				public cclass InnerD
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.D";
+					}
+				}
+			
+				public cclass InnerF {
+					public String queryA()
+					{
+						return super.queryA() + ", B.F";
+					}
+				}
+			
+				public cclass InnerG extends InnerC &amp; InnerF
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.G";
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.A";
+					}
+				}
+			
+				public cclass InnerB
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.B";
+					}
+				}
+			
+				public cclass InnerC {
+					public String queryA()
+					{
+						return super.queryA() + ", C.C";
+					}
+				}
+			
+				public cclass InnerD
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.D";
+					}
+				}
+			
+				public cclass InnerH extends InnerB &amp; InnerC
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", C.H";
+					}
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC
+			{
+				public cclass InnerI extends InnerF &amp; InnerD
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", D.I";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc024" description="Test arrays on Caesar classes.">	
+		<test>
+			String expectedResult = "B.a0, A.a0, B.a1, A.a1, B.a2, A.a2, B.a3, A.a3";
+			
+			System.out.println("VCTest 24: Test Arrays on Caesar Classes: start");
+
+			OuterB ob = new OuterB();
+	
+			String result = ob.createDefaultA().queryA();
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 24: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					protected InnerA _arr[] = null;
+					protected String _name = null;
+			
+					public InnerA init(String name)
+					{
+						_name = name;
+						return this;
+					}
+			
+					public InnerA[] getArr()
+					{
+						return _arr;
+					}
+			
+					public void setArr(InnerA[] arr)
+					{
+						_arr = arr;
+					}
+			
+					public String queryA()
+					{
+						String out = "A." + _name;
+			
+						if (_arr != null)
+						{
+							for (int i1 = 0; i1 &lt; _arr.length; i1++)
+							{
+								out += ", " + _arr[i1].queryA();
+							}
+						}
+			
+						return out;
+					}
+				}
+			
+				public InnerA createDefaultA()
+				{
+					InnerA[] arr = new InnerA[2];
+					arr[0] = this.new InnerA().init("a1");
+					arr[1] = this.new InnerA().init("a2");
+			
+					InnerA a = this.new InnerA().init("a0");
+					a.setArr(arr);
+					return a;
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "B." + _name + ", " + super.queryA();
+					}
+				}
+			
+				public InnerA createDefaultA()
+				{
+					InnerA a = super.createDefaultA();
+					InnerA[] arr = a.getArr();
+					InnerA[] arrNew = new InnerA[arr.length + 1];
+			
+					System.arraycopy(arr, 0, arrNew, 0, arr.length);
+			
+					arrNew[arr.length] = this.new InnerA().init("a3");
+					a.setArr(arrNew);
+			
+					return a;
+				}
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="vcallfromcc025" description="Test default constructors.">	
+		<test>
+			String expectedResult = "A; " + 					// A
+									"A.A; " +					// A.A
+									"A, B; " +					// B
+									"A.A, B.A, A.B, B.B; " +	// B.B
+									"A.A, A.C, A.B, A.D"; 		// A.D
+									
+			System.out.println("VCTest 25: Test Default Constructors: start");
+	
+			final OuterA oa = new OuterA();
+			oa.InnerA ia = oa.new InnerA();
+	
+			final OuterB ob = new OuterB();
+			ob.InnerB ib = ob.new InnerB();
+			oa.InnerD id = oa.new InnerD();
+	
+			String result = oa.queryA() + "; " + ia.queryA() + "; " + ob.queryA() + "; " + ib.queryA() + "; " + id.queryA();
+	
+			System.out.println(result);
+			assertEquals(result, expectedResult);
+	
+			System.out.println("VCTest 25: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				protected String _a;
+			
+				public OuterA()
+				{
+					_a = "A";
+				}
+			
+				public String queryA()
+				{
+					return _a;
+				}
+			
+				public cclass InnerA
+				{
+					protected String _aa;
+			
+					public InnerA()
+					{
+						_aa = "A.A";
+					}
+			
+					public String queryA()
+					{
+						return _aa;
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					protected String _ab;
+			
+			
+					public InnerB()
+					{
+						_ab = "A.B";
+					}
+			
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _ab;
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					protected String _ac;
+			
+					public InnerC()
+					{
+						_ac = "A.C";
+					}
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _ac;
+					}
+				}
+			
+				public cclass InnerD extends InnerB &amp; InnerC
+				{
+					protected String _ad;
+			
+					public InnerD()
+					{
+						_ad = "A.D";
+					}
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _ad;
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				protected String _b;
+			
+				public OuterB()
+				{
+					_b = "B";
+				}
+			
+				public String queryA()
+				{
+					return super.queryA() + ", " + _b;
+				}
+			
+				public cclass InnerA
+				{
+					protected String _ba;
+			
+					public InnerA()
+					{
+						_ba = "B.A";
+					}
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _ba;
+					}
+				}
+			
+				public cclass InnerB
+				{
+					protected String _bb;
+			
+					public InnerB()
+					{
+						_bb = "B.B";
+					}
+			
+					public String queryA()
+					{
+						return super.queryA() + ", " + _bb;
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc026" description="Test extends for furtherbindings.">	
+		<test>
+			String expectedResult = "A.A, A.B, B.B, A.C, B.C";
+			
+			System.out.println("VCTest 26: Test extends for furtherbindings: start");
+
+			OuterB ob = new OuterB();
+			final OuterA oa = ob;
+			
+			oa.InnerB ic = (oa.InnerB)(OuterA.InnerA)ob.new InnerC();
+	
+			String result = ic.queryA();
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 26: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+			
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.B";
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerB
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.B";
+					}
+				}
+			
+				public cclass InnerC extends InnerB
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.C";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc027" description="Test multiple outer joins.">	
+		<test>
+			String expectedResult =
+						"A.A, C.A, F.A, D.A, E.A, G.A; " +
+						"A.A, C.A, F.A, E.A, D.A, G.A, B.A, H.A; " +
+						"A.B, C.B, E.B, G.B; " +
+						"A.B, C.B, E.B, G.B";
+						
+			System.out.println("VCTest 27: Test Multiple Outer Joins: start");
+
+			OuterG og = new OuterG();
+			OuterH oh = new OuterH();
+	
+			String resGA = og.queryA();
+			String resHA = oh.queryA();
+			String resGB = og.queryB();
+			String resHB = oh.queryB();
+	
+			String result = resGA + "; " + resHA + "; " + resGB + "; " + resHB;
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 27: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public String queryA()
+				{
+					return "A.A";
+				}
+			
+				public String queryB()
+				{
+					return "A.B";
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", B.A";
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", C.A";
+				}
+			
+				public String queryB()
+				{
+					return super.queryB() + ", C.B";
+				}
+			}
+			
+			public cclass OuterD extends OuterA
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", D.A";
+				}
+			}
+			
+			public cclass OuterE extends OuterC
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", E.A";
+				}
+			
+				public String queryB()
+				{
+					return super.queryB() + ", E.B";
+				}
+			}
+			
+			public cclass OuterF extends OuterC
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", F.A";
+				}
+			}
+			
+			public cclass OuterG extends OuterE &amp; OuterD &amp; OuterF
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", G.A";
+				}
+			
+				public String queryB()
+				{
+					return super.queryB() + ", G.B";
+				}
+			}
+			
+			public cclass OuterH extends OuterA &amp; OuterB &amp; OuterC &amp; OuterD &amp; OuterE &amp; OuterF &amp; OuterG
+			{
+				public String queryA()
+				{
+					return super.queryA() + ", H.A";
+				}
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="vcallfromcc028" description="Test merging class with multiple parents.">	
+		<test>
+			String expectedResult =	"A.A.A, A.C.A; B.B.B, B.C.B; A.C.C; A.A.D; B.B.E; B.C.F; A.C.G";
+			
+			System.out.println("VCTest 28: Test Merging Class With Multiple Parents: start");
+
+			final OuterC oc = new OuterC();
+			oc.InnerC cc = oc.new InnerC();
+	
+			String resA = cc.queryA();
+			String resB = cc.queryB();
+			String resC = cc.queryC();
+			String resD = cc.queryD();
+			String resE = cc.queryE();
+			String resF = cc.queryF();
+			String resG = cc.queryG();
+	
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 28: end");
+		</test>
+		<code>
+			public cclass AllTypes
+			{
+				public cclass InnerA
+				{ }
+			
+				public cclass InnerB
+				{ }
+			
+				public cclass InnerC
+				{ }
+			}
+			
+			public cclass OuterA extends AllTypes
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+			
+					public String queryD()
+					{
+						return "A.A.D";
+					}
+			
+					public String queryF()
+					{
+						return "A.A.F";
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C.A";
+					}
+			
+					public String queryC()
+					{
+						return "A.C.C";
+					}
+			
+					public String queryG()
+					{
+						return "A.C.G";
+					}
+				}
+			}
+			
+			public cclass OuterB extends AllTypes
+			{
+				public cclass InnerB
+				{
+					public String queryB()
+					{
+						return "B.B.B";
+					}
+			
+					public String queryE()
+					{
+						return "B.B.E";
+					}
+			
+					public String queryG()
+					{
+						return "B.B.G";
+					}
+				}
+			
+				public cclass InnerC extends InnerB
+				{
+					public String queryB()
+					{
+						return super.queryB() + ", B.C.B";
+					}
+			
+					public String queryC()
+					{
+						return "B.C.C";
+					}
+			
+					public String queryF()
+					{
+						return "B.C.F";
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterA &amp; OuterB
+			{
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="vcallfromcc029" description="Test introducing new inheritance.">	
+		<test>
+			String expectedResult =
+				"A.A.A, B.D.A, A.B.A, B.B.A, A.C.A, B.C.A; " +	// C.A
+				"A.B.B, B.B.B, B.C.B; " +						// C.B
+				"A.C.C; " +										// C.C
+				"B.D.D, B.B.D, B.C.D; " +						// C.D
+				"B.E.E, B.C.E";									// C.E
+				
+			System.out.println("VCTest 29: Test Introducing New Inheritance: start");
+
+			final OuterB ob = new OuterB();
+			ob.InnerC bc = ob.new InnerC();
+	
+			String resA = bc.queryA();
+			String resB = bc.queryB();
+			String resC = bc.queryC();
+			String resD = bc.queryD();
+			String resE = bc.queryE();
+	
+			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE;
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 29: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.B.A";
+					}
+			
+					public String queryB()
+					{
+						return "A.B.B";
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C.A";
+					}
+			
+					public String queryC()
+					{
+						return "A.C.C";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerD extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.D.A";
+					}
+			
+					public String queryD()
+					{
+						return "B.D.D";
+					}
+				}
+			
+				public cclass InnerE
+				{
+					public String queryE()
+					{
+						return "B.E.E";
+					}
+				}
+			
+				public cclass InnerC extends InnerB &amp; InnerE
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.C.A";
+					}
+			
+					public String queryB()
+					{
+						return super.queryB() + ", B.C.B";
+					}
+			
+					public String queryE()
+					{
+						return super.queryE() + ", B.C.E";
+					}
+			
+					public String queryD()
+					{
+						return super.queryD() + ", B.C.D";
+					}
+				}
+			
+				public cclass InnerB extends InnerD
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.B.A";
+					}
+			
+					public String queryB()
+					{
+						return super.queryB() + ", B.B.B";
+					}
+			
+					public String queryD()
+					{
+						return super.queryD() + ", B.B.D";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc030" description="Test merging class hierarchies.">	
+		<test>
+			String expectedResult =
+				// InnerB lt A: InnerA( lt B: InnerM ), B: InnerN ( lt B: InnerA )
+				"A.A.A, B.N.A, A.B.A; " +
+				"C.B.B; " +
+				"B.M.M, B.A.M; " +
+				"B.N.N, B.B.N; " +
+		
+				// InnerC lt A: InnerA( lt B: InnerM ), B: InnerN ( lt B: InnerA ), C: InnerB
+				"A.A.A, B.N.A, A.B.A, A.C.A; " +
+				"C.B.B, C.C.B; " +
+				"B.M.M, B.A.M; " +
+				"B.N.N, B.B.N, B.C.N; " +
+		
+				// InnerD lt A: InnerA( lt B: InnerM ), C: InnerB, InnerO
+		
+				"A.A.A, B.N.A, A.B.A, A.D.A; " +
+				"C.B.B, C.D.B; " +
+				"B.M.M, B.A.M; " +
+				"C.O.O, C.D.O; " +
+		
+				// InnerF lt A: InnerE( lt C: InnerO ), B: InnerM
+		
+				"A.E.E, A.F.E; " +
+				"B.M.M, B.F.M; " +
+				"C.O.O, C.E.O; " +
+		
+				// InnerG lt A: InnerE( lt C: InnerO ), B: InnerM, C: InnerP( lt C: InnerO )
+		
+				"A.E.E, A.G.E; " +
+				"B.M.M, B.G.M; " +
+				"C.O.O, C.E.O, C.P.O, C.G.O; " +
+				"C.P.P, C.G.P; " +
+		
+				// InnerH lt A: InnerE( lt C: InnerO ), C: InnerP( lt C: InnerO ), InnerA( lt B: InnerM )
+		
+				"A.E.E, A.H.E; " +
+				"C.O.O, C.E.O, C.P.O, C.H.O; " +
+				"C.P.P, C.H.P; " +
+				"A.A.A, C.H.A";
+				
+				System.out.println("VCTest 30: Test Merging Class Hierarchies: start");
+
+				final OuterD d = new OuterD();
+
+				d.InnerB db = d.new InnerB();
+				d.InnerC dc = d.new InnerC();
+				d.InnerD dd = d.new InnerD();
+				d.InnerF df = d.new InnerF();
+				d.InnerG dg = d.new InnerG();
+				d.InnerH dh = d.new InnerH();
+		
+				String resBA = db.queryA();
+				String resBB = db.queryB();
+				String resBM = db.queryM();
+				String resBN = db.queryN();
+		
+				String resCA = dc.queryA();
+				String resCB = dc.queryB();
+				String resCM = dc.queryM();
+				String resCN = dc.queryN();
+		
+				String resDA = dd.queryA();
+				String resDB = dd.queryB();
+				String resDM = dd.queryM();
+				String resDO = dd.queryO();
+		
+				String resFE = df.queryE();
+				String resFM = df.queryM();
+				String resFO = df.queryO();
+		
+				String resGE = dg.queryE();
+				String resGM = dg.queryM();
+				String resGO = dg.queryO();
+				String resGP = dg.queryP();
+		
+				String resHE = dh.queryE();
+				String resHO = dh.queryO();
+				String resHP = dh.queryP();
+				String resHA = dh.queryA();
+		
+				String result = resBA + "; " + resBB + "; " + resBM + "; " + resBN
+						+ "; " + resCA + "; " + resCB + "; " + resCM + "; " + resCN
+						+ "; " + resDA + "; " + resDB + "; " + resDM + "; " + resDO
+						+ "; " + resFE + "; " + resFM + "; " + resFO
+						+ "; " + resGE + "; " + resGM + "; " + resGO + "; " + resGP
+						+ "; " + resHE + "; " + resHO + "; " + resHP + "; " + resHA;
+		
+				System.out.println(result);
+				assertEquals(expectedResult, result);
+		
+				System.out.println("VCTest 30: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.B.A";
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C.A";
+					}
+				}
+			
+				public cclass InnerD extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.D.A";
+					}
+				}
+			
+				public cclass InnerE
+				{
+					public String queryE()
+					{
+						return "A.E.E";
+					}
+				}
+			
+				public cclass InnerF extends InnerE
+				{
+					public String queryE()
+					{
+						return super.queryE() + ", A.F.E";
+					}
+				}
+			
+				public cclass InnerG extends InnerE
+				{
+					public String queryE()
+					{
+						return super.queryE() + ", A.G.E";
+					}
+				}
+			
+				public cclass InnerH extends InnerE
+				{
+					public String queryE()
+					{
+						return super.queryE() + ", A.H.E";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerM
+				{
+					public String queryM()
+					{
+						return "B.M.M";
+					}
+				}
+			
+				public cclass InnerA extends InnerM
+				{
+					public String queryM()
+					{
+						return super.queryM() + ", B.A.M";
+					}
+				}
+			
+				public cclass InnerF extends InnerM
+				{
+					public String queryM()
+					{
+						return super.queryM() + ", B.F.M";
+					}
+				}
+			
+				public cclass InnerG extends InnerM
+				{
+					public String queryM()
+					{
+						return super.queryM() + ", B.G.M";
+					}
+				}
+			
+				public cclass InnerN extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", B.N.A";
+					}
+			
+					public String queryN()
+					{
+						return "B.N.N";
+					}
+				}
+			
+				public cclass InnerB extends InnerN
+				{
+					public String queryN()
+					{
+						return super.queryN() + ", B.B.N";
+					}
+				}
+			
+				public cclass InnerC extends InnerN
+				{
+					public String queryN()
+					{
+						return super.queryN() + ", B.C.N";
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				public cclass InnerO
+				{
+					public String queryO()
+					{
+						return "C.O.O";
+					}
+				}
+			
+				public cclass InnerB
+				{
+					public String queryB()
+					{
+						return "C.B.B";
+					}
+				}
+			
+				public cclass InnerC extends InnerB
+				{
+					public String queryB()
+					{
+						return super.queryB() + ", C.C.B";
+					}
+				}
+			
+				public cclass InnerD extends InnerB &amp; InnerO
+				{
+					public String queryO()
+					{
+						return super.queryO() + ", C.D.O";
+					}
+			
+					public String queryB()
+					{
+						return super.queryB() + ", C.D.B";
+					}
+				}
+			
+				public cclass InnerE extends InnerO
+				{
+					public String queryO()
+					{
+						return super.queryO() + ", C.E.O";
+					}
+				}
+			
+				public cclass InnerP extends InnerO
+				{
+					public String queryO()
+					{
+						return super.queryO() + ", C.P.O";
+					}
+			
+					public String queryP()
+					{
+						return "C.P.P";
+					}
+				}
+			
+				public cclass InnerG extends InnerP
+				{
+					public String queryO()
+					{
+						return super.queryO() + ", C.G.O";
+					}
+			
+					public String queryP()
+					{
+						return super.queryP() + ", C.G.P";
+					}
+				}
+			
+				public cclass InnerH extends InnerP &amp; InnerA
+				{
+					public String queryO()
+					{
+						return super.queryO() + ", C.H.O";
+					}
+			
+					public String queryP()
+					{
+						return super.queryP() + ", C.H.P";
+					}
+			
+					public String queryA()
+					{
+						return super.queryA() + ", C.H.A";
+					}
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC
+			{
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc031" description="Test outer class creation.">	
+		<test>
+			String expectedResult =	"2";
+			
+			System.out.println("VCTest 31: Test Outer Class Creation: start");
+
+			String result = new OuterB().test();
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 31: end");
+		</test>
+		<code>
+			public cclass OuterB
+			{
+				public String test()
+				{
+					OuterA oa = new OuterA(2);
+					return "" + oa.getVal();
+				}
+			}
+			
+			public cclass OuterA
+			{
+				protected int _val;
+			
+				public OuterA(int val)
+				{
+					_val = val;
+				}
+			
+				public int getVal()
+				{
+					return _val;
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc032" description="Test introducing new inheritance.">	
+		<test>
+			String expectedResult = "A.A.A, A.B.A, A.C.A";
+			
+			System.out.println("VCTest 32: Test Introducing New Inheritance: start");
+
+			final OuterB ob = new OuterB();
+			ob.InnerC bc = ob.new InnerC();
+
+			String result = bc.queryA();
+
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+
+			System.out.println("VCTest 32: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			
+				public cclass InnerB extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.B.A";
+					}
+				}
+			
+				public cclass InnerC extends InnerA
+				{
+					public String queryA()
+					{
+						return super.queryA() + ", A.C.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+			   public cclass InnerC extends InnerB
+				{ }
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="vcallfromcc033" description="Test virtual class scoping.">	
+		<test>
+			// Here we test the following:
+			// resolution of types which has not been explicitly redefined in the same collaboration
+			// lookup of ambiguous types inherited from different interfaces
+			
+			String expectedResult = "A.A.A, B.B.B, C.A.C";
+			
+			System.out.println("VCTest 33: Inheritance from Implicit Type: start");
+        
+			final OuterE oe = new OuterE();
+			oe.InnerB cb = oe.new InnerB();
+		
+			String result = cb.queryA() + ", " + cb.queryB() + ", " + cb.queryC();
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 33: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerB extends InnerA
+				{
+					public String queryB()
+					{
+						return "B.B.B";
+					}
+				}
+			}
+			
+			public cclass OuterC extends OuterB  
+			{  
+				public cclass InnerA
+				{
+					public String queryC()
+					{
+						return "C.A.C";
+					}
+				}
+			}
+			
+			public cclass OuterD extends OuterB {}
+			
+			public cclass OuterE extends OuterC &amp; OuterD {
+			
+				public cclass InnerX extends InnerA {}
+				public cclass InnerY extends InnerB {}
+			
+				private InnerA a;
+				private InnerB b;
+				private String s;
+			
+				public cclass X {
+					private InnerA a;
+					private InnerB b;
+					private String s;
+				}
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="vcallfromcc033b" description="Test virtual class scoping with deeper nesting.">	
+		<test>
+			String expectedResult = "A.U.X, B.U.Y";
+			
+			System.out.println("VCTest 33b: Inheritance from Implicit Type with deeper nesting: start");
+        
+			String result = new B().new U().new Y().queryB();
+			assertEquals(expectedResult, result);		
+	
+			System.out.println("VCTest 33b: end");
+		</test>
+		<code>
+			public cclass A {
+				public cclass U {	
+					public cclass X {
+						public String queryA() {
+							return "A.U.X";
+						}
+					}
+				}
+			}
+			
+			public cclass B extends A {
+				public cclass U {       
+					public cclass Y extends X {
+						public String queryB() {
+							return queryA()+", B.U.Y";
+						}
+					}
+				}
+			}
+		</code>	
+	</compile-run>
+	
+	<compile-run id="vcallfromcc034" description="Test virtual class scoping with deeper nesting.">	
+		<test>
+			String expectedResult = "B.B.B, C.C.C";
+			
+			System.out.println("VCTest 34: Mixin factory methods: start");
+
+			final OuterD od1 = new OuterD();
+			final OuterD od2 = new OuterD();
+			final OuterB ob = od1;
+			final OuterC oc = od2;
+			
+			ob.InnerB db = (ob.InnerB)od1.newB();
+			oc.InnerC dc = (oc.InnerC)od2.newC();
+	
+			String result = db.queryB() + ", " + dc.queryC();
+	
+			System.out.println(result);
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 34: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerB
+				{
+					public String queryB()
+					{
+						return "B.B.B";
+					}
+				}
+			
+				public OuterB.InnerB newB()
+				{
+					return new InnerB();
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				public cclass InnerC
+				{
+					public String queryC()
+					{
+						return "C.C.C";
+					}
+				}
+			
+				public OuterC.InnerC newC()
+				{
+					return new InnerC();
+				}
+			}
+			
+			public cclass OuterD extends OuterB &amp; OuterC
+			{
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc035" description="Test Object methods through Caesar interfaces.">	
+		<test>
+			System.out.println("VCTest 35: Object methods: start");
+
+ 		    IfcB b = new ClassB();
+			final OuterA a = new OuterA();
+			a.InnerA aa = a.new InnerA();
+	
+			/* test normal interface */
+			String result1 = "[" + b.toString() + "][" + b.equals(aa) + "][" + b.hashCode() + "]";
+			System.out.println(result1);
+	
+			/* test interface of outer class */
+			String result2 = "[" + a.toString() + "][" + a.equals(aa) + "][" + a.hashCode() + "]";
+			System.out.println(result2);
+	
+			/* test interface of inner class */
+			String result3 = "[" + aa.toString() + "][" + aa.equals(aa) + "][" + aa.hashCode() + "]";
+			System.out.println(result3);
+	
+			System.out.println("VCTest 35: end");
+		</test>
+		<code>
+			interface IfcB
+			{
+				public String getA();
+			}
+			
+			class ClassB implements IfcB
+			{
+				public String getA()
+				{
+					return "A";
+				}
+			}
+			
+			public cclass OuterA
+			{
+				public cclass InnerA
+				{
+					public String queryA()
+					{
+						return "A.A.A";
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc037" description="Test automatic casts.">	
+		<test>
+			// Ivica: This unit test fails because of prepareDynamicDeployment rewrites the CClass generated
+			
+			System.out.println("VCTest 37: automatic casts: start");
+
+			new Entry().test();
+	
+			// just compile, no checks
+	
+			System.out.println("VCTest 37: end");
+		</test>
+		<code>
+		    import java.awt.Color;
+		    
+		    public class Entry {
+		       	public void test() {
+		       	   	{
+			        final B b = new B();
+					final b.CG cg = b.new CG();
+					cg.N n1 = cg.new N("n1", Color.BLACK);
+					cg.N n2 = cg.new N("n2", Color.RED);
+					cg.E e = cg.new E(n1, n2);
+					e.doSomethingWithNodes();
+					
+					System.out.println(n1);
+					System.out.println(n2);
+					System.out.println(e);
+					
+					e.getStartNode().getColor();
+					e.getEndNode().getColor();
+					System.out.println("E connecting same colors? "+e.isConnectingSameColors());
+					}
+					
+					{
+					final Y bb = new Y();
+					bb.B b = bb.new B();
+					b.exec();
+					}
+		       	}
+		    }
+		
+			public cclass A {
+				public cclass G {
+					public cclass E {
+						protected N n1, n2;
+						
+						public E(N n1, N n2) {
+							this.n1 = n1;
+							this.n2 = n2;
+						}
+						
+						public N getStartNode() {return n1;}
+						public N getEndNode() {return n2;}
+						
+						public boolean isConnecting(N n1, N n2) {
+							return this.n1 == n1 &amp;&amp; this.n2 == n2;
+						}
+						
+						 public String toString() {
+							return "[E:"+n1+"->"+n2+"]";
+						 }
+					}
+					
+					public cclass N {
+						protected String name;
+						
+						public N(String name) {
+							this.name = name;
+						}
+				 
+						public String toString() {
+							return "[N:"+name+"]";
+						}
+					}
+				}
+				
+				public cclass CG extends G {	
+					public cclass E {
+						public boolean isConnectingSameColors() {		
+							return n1.getColor().equals(n2.getColor());
+						}
+					}
+					
+					public cclass N {
+						protected Color col;
+						
+						public Color getColor() {return col;}
+						
+						public N(String name, Color color) {
+							//super(name);
+							this.name = name;
+							this.col = color;
+						}
+						
+						public String toString() {		
+							return "[N:"+name+","+col+"]";
+						}
+					}
+				}
+			}
+			
+			public cclass B extends A {
+				public cclass CG {
+					public cclass E {
+						public void doSomethingWithNodes() {
+							n1.x();
+							n2.x();
+						}
+					}
+					
+					public cclass N {
+						public void x() {
+							System.out.println("B.CG.N.x");
+						}
+					}
+				}
+			}
+			
+			public cclass X {
+				public cclass A {
+					public cclass R {
+					}
+				}
+				
+				public cclass B {
+					protected A.R a;
+				}
+			}
+			
+			public cclass Y extends X {
+				public cclass A {
+					public cclass R {
+						public void x() {}
+					}
+				}
+				
+				public cclass B {
+					public void exec() {
+						A ya = Y.this.new A();
+						a = ya.new R();
+						a.x();
+					}
+				}
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="vcallfromcc040" description="Array Test.">	
+		<test>
+			System.out.println("VCTest 40: Type scoping with arrays");
+			
+			String expectedResult = "(0, 1)";
+	
+			final BoardIfc boardComp = new BoardImpl();
+	
+			boardComp.Board board = boardComp.makeBoard(2, 2);
+			boardComp.BoardItem newItem = boardComp.new BoardItem();
+	
+			board.putAt(1, 1, newItem);
+			newItem.moveTo(0, 1);
+	
+			boardComp.BoardItem item = board.itemAt(0, 1);
+	
+			String result = "(" + item.getX() + ", " + item.getY() + ")";
+			System.out.println(result);
+	
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 40: end");
+		</test>
+		<code>
+			/**
+			 * Board interface
+			 */
+			public cclass BoardIfc
+			{
+				public Board makeBoard(int nRows, int nCols) { return null; }
+			
+				public cclass Board
+				{
+					public BoardItem[] getBoardItems() {return null;}
+					public BoardItem[] getBoardItems(BoardItem[] items) 
+					{
+						System.out.println("BoardIfc.Board.getBoardItems()");
+						return null;
+					}
+					
+					public void putAt(int x, int y, BoardItem bi) {}
+					public BoardItem itemAt(int x, int y) { return null; }
+				}
+			
+				public cclass BoardItem
+				{
+					public void moveTo(int x, int y) { }
+					public int getX() { return 0; }
+					public int getY() { return 0; }
+				}
+			}
+			
+			/**
+			 * Board Implementation
+			 */
+			public cclass BoardImpl extends BoardIfc
+			{
+				public Board makeBoard(int nCols, int nRows)
+				{
+					Board board = new Board();
+					board.init(nRows, nCols);
+					return board;
+				}
+			
+				public cclass Board
+				{
+					protected BoardItem[][] _matrix = null;
+			
+					public BoardItem[] getBoardItems(BoardItem[] items) 
+					{
+						System.out.println("BoardImpl.Board.getBoardItems()");
+						//super.getBordItems(items);
+						return null;
+					}
+					
+					public void init(int nCols, int nRows)
+					{
+						_matrix = new BoardItem[nCols][nRows];
+						
+						// TEST: casting of array references to the most specific
+						BoardItem[] res = getBoardItems(); // as JVariableDefinition
+						res = getBoardItems(); // as CjAssignmentExpression
+						res = getBoardItems(new BoardItem[10]);
+						try {
+							_matrix[0][0].positionAt(this, 0, 0);
+						}
+						catch (Exception e) {
+							// do nothing
+						}
+					}
+			
+					public void putAt(int x, int y, BoardItem bi)
+					{
+						_matrix[x][y] = bi;
+						bi.positionAt(this, x, y);
+					}
+			
+					public void remove(BoardItem bi)
+					{
+						_matrix[bi.getX()][bi.getY()] = null;
+						bi.positionAt(null, -1, -1);
+					}
+			
+					public BoardItem itemAt(int x, int y)
+					{
+						return _matrix[x][y];
+					}
+				}
+			
+				public cclass BoardItem
+				{
+					protected Board _board = null;
+					protected int _x = 0;
+					protected int _y = 0;
+			
+					public void positionAt(Board board, int x, int y)
+					{
+						_board = board;
+						_x = x;
+						_y = y;
+					}
+			
+					public void moveTo(int x, int y)
+					{
+						Board brd = _board;
+						brd.remove(this);
+						brd.putAt(x, y, this);
+					}
+			
+					public int getX()
+					{
+						return _x;
+					}
+			
+					public int getY()
+					{
+						return _y;
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc041" description="Accessing field within nested mixin copies.">	
+		<test>
+			// Rytis : this test does not terminate
+			String expectedResult = "2";
+			
+			System.out.println("VCTest 41: Accessing field within nested mixin copies");
+
+			final OuterD od = new OuterD();
+			od.InnerD a = od.new InnerD();
+	
+			String result = "" + a.getF();
+			System.out.println(result);
+	
+			assertEquals(expectedResult, result);
+	
+			System.out.println("VCTest 41: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public cclass InnerA {
+				}
+			
+				public cclass InnerC extends InnerA {
+					protected int _f = 2;
+				}
+			
+				public cclass InnerD extends InnerC {
+				}
+			}
+			
+			public cclass OuterB extends OuterA
+			{
+				public cclass InnerA {
+				}
+			}
+			
+			public cclass OuterC extends OuterA
+			{
+				public cclass InnerD {
+			
+					public int getF() {
+						return _f;
+					}
+				}
+			}
+			
+			public cclass OuterD extends OuterC &amp; OuterB {
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc050" description="Accessing public cclass fields.">	
+		<test>
+			System.out.println("VCTest 50: Accessing field within nested mixin copies");
+
+			OuterA a = new OuterA();
+			
+			System.out.println(a.i);
+			System.out.println(a.x.i);
+					
+			System.out.println("VCTest 50: end");
+		</test>
+		<code>
+			public class X {
+				public int i = 11;
+			}
+			
+			public cclass OuterA
+			{
+				public X x = new X();
+				public int i = 10;
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="vcallfromcc051" description="Accessing fields defined in enclosing.">	
+		<test>
+			System.out.println("VCTest 51: Accessing fields defined in enclosing");
+
+			final OuterA a = new OuterA();
+			a.InnerA ia = a.new InnerA();		
+			
+			System.out.println(ia.getI());		
+					
+			System.out.println("VCTest 51: end");
+		</test>
+		<code>
+			public cclass OuterA
+			{
+				public int i = 10;    
+				public cclass InnerA 
+				{
+					public int getI() 
+					{
+						return i;
+					}
+				}
+			}
+		</code>
+	</compile-run>
+	
+</testsuite>

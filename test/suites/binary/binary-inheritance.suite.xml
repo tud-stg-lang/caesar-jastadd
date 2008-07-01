@@ -1,0 +1,182 @@
+<testsuite name="Test reading binary Caesar classes" package="binary.inheritance">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="binaryinheritance001"
+		description="Inheritance of methods">
+		<test>
+		    BinaryClass b = new BinaryClass();
+			SourceClass s = new SourceClass();
+			assertEquals(s.x("s.x"),1);
+			assertEquals(b.x("b.x"),2);
+			assertEquals(s.y("s.y"),3);
+			assertEquals(b.y("b.y"),3);
+		</test>
+        <code>
+        	public class SourceClass extends BinaryClass {
+			    public int x(String p1) {
+					System.out.println("Subclass SourceClass.x(p1) : p1 = "+p1);
+					return 1;
+				}
+			}
+        </code>
+		<binary>
+        	public class BinaryClass {
+			    public int x(String p1) {
+					System.out.println("Superclass BinaryClass.x(p1) : p1 = "+p1);
+					return 2;
+				}
+				public int y(String p2) {
+					System.out.println("Superclass BinaryClass.y(p2) : p2 = "+p2);
+					return 3;
+				}
+			}
+		</binary>
+    </compile-run>
+
+	<compile id="binaryinheritance002" description="Two levels of inheritance">
+		<code>
+			public cclass Inherit2 extends Inherit {
+				public void foo() {
+					a = 5;
+				}
+			}
+		</code>
+		<binary>
+			public cclass TestClass {
+				int a;
+			}
+			public cclass Inherit extends TestClass {
+			}
+		</binary>
+	</compile>
+
+	<compile id="binaryinheritance003" description="Simple multiple inheritance">
+		<binary>
+			public cclass test1 {
+				public void f() { System.out.println("f1"); }
+			}
+			public cclass test2 {
+				public void f() { System.out.println("f2"); }
+				public void g() { System.out.println("g2"); }
+			}
+		</binary>
+		<code>
+			public cclass test extends test1 &amp; test2 {
+				public void t() {
+					f();
+					g();
+				}
+
+				static public void main(String[] args) {
+					test t = new test();
+					t.t();
+					test.main(null);
+				}
+			}
+		</code>
+	</compile>
+
+	<compile id="binaryinheritance004" description="Diamond inheritance">
+		<binary>
+			public abstract cclass A {
+				protected void doA() {
+					System.out.println("diamond.a");
+				}
+				public abstract void doAction();
+			}
+
+			public cclass B extends A {
+				public void doAction() {
+					doA();
+					doB();
+				}
+				private void doB() {
+					System.out.println("diamond.b");
+				}
+			}
+
+			public cclass C extends A {
+				public void doAction() {
+					doA();
+					doC();
+				}
+				private void doC() {
+					System.out.println("diamond.C");
+				}
+			}
+		</binary>
+		<code>
+			public cclass D extends B &amp; C {
+				private void doD() {
+					System.out.println("diamond.d");
+				}
+				public void doAction() {
+					super.doAction();
+					doD();
+				}
+				public static void main(String args[]) {
+					new D().doAction();
+				}
+			}
+		</code>
+	</compile>
+
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="binaryinheritance005" description="Diamond inheritance with extra subclass">
+		<binary>
+			public abstract cclass A {
+				protected void doA() {
+					System.out.println("diamond.a");
+				}
+				public abstract void doAction();
+			}
+
+			public cclass B extends A {
+				public void doAction() {
+					doA();
+					doB();
+				}
+				private void doB() {
+					System.out.println("diamond.b");
+				}
+			}
+
+			public cclass C extends A {
+				public void doAction() {
+					doA();
+					doC();
+				}
+				private void doC() {
+					System.out.println("diamond.C");
+				}
+			}
+			public cclass D extends B &amp; C {
+				private void doD() {
+					System.out.println("diamond.d");
+				}
+				public void doAction() {
+					super.doAction();
+					doD();
+				}
+				public static void main(String args[]) {
+					new D().doAction();
+				}
+			}
+		</binary>
+		<code>
+			public cclass E extends D {
+				private void doD() {
+					System.out.println("diamond.e");
+				}
+				public void doAction() {
+					super.doAction();
+					doD();
+				}
+				public static void main(String args[]) {
+					new D().doAction();
+				}
+			}
+		</code>
+	</compile>
+
+</testsuite>

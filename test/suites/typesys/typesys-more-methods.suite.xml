@@ -1,0 +1,175 @@
+<testsuite name="Test plain java type checker" package="typesys.methods">
+
+	<common-code-base>		
+		public cclass G {
+			public cclass N {
+				public N getSelf() { return this; }
+			}
+		}
+	</common-code-base>
+
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="mmethods001" description="Test method calls.">
+        <code>
+			public cclass A {	
+				public cclass B {
+					public final G allG = new G();
+					public void foo() {
+						allG.new N();
+					}
+				}								
+			}			
+		</code>
+    </compile>	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="mmethods002" description="Test method calls.">
+        <code>
+			public cclass A {	
+				public static final G allG = new G();			
+				public cclass B {
+
+					public void foo() {
+						allG.new N();
+					}
+				}								
+			}			
+		</code>
+    </compile>	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="mmethods003" description="Test method calls.">
+        <code>
+			public cclass A {
+			    public final static G allG = new G();				
+				public cclass B {
+					public allG.N n = allG.new N();
+
+					public allG.N getN() { return allG.new N(); }
+
+					public void foo() {
+						B b = new B();
+						allG.N n = b.getN();
+					}
+				}								
+			}			
+		</code>
+    </compile>		
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mmethods004" description="Call on cast target.">
+    	<test>
+    		B.test();
+    	</test>
+        <code>
+			public class A {
+				final public G g = new G();
+				public void foo(g.N n) { 
+				}
+			}
+			public cclass B {
+				public static void test() {
+					final Object a = new A(); 					
+					((A)a).foo(((A)a).g.new N());
+				}			
+			}
+		</code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="mmethods005" error="METHOD_NOT_FOUND" description="Call on cast target.">
+    	<code>
+			public class A {
+				final public G g = new G();
+				public void foo(g.N n) { 
+				}
+			}
+			public cclass B {
+				public static void test() {
+					final Object a = new A();
+					final Object a1 = new A();
+					((A)a).foo(((A)a1).g.new N());
+				}			
+			}
+		</code>
+    </compile-check-error>	
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mmethods006" description="Explicit static method call.">
+    	<test>
+    		B.test();
+    	</test>
+        <code>
+			public class A {
+				final static public G g = new G();
+				public static void foo(g.N n) { 
+				}
+			}
+			public cclass B {
+				public static void test() {
+					A.foo(A.g.new N());
+				}			
+			}
+		</code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mmethods007" description="Implicit static method call.">
+    	<test>
+    		A.test();
+    	</test>
+        <code>
+			public class A {
+				final static public G g = new G();
+				public static void foo(g.N n) { 
+				}
+				public static void test() {
+					foo(g.new N());
+				}			
+			}
+		</code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mmethods008" description="Implicit static method call as target.">
+    	<test>
+    		A.test();
+    	</test>
+        <code>
+			public class A {
+				final static public G g = new G();
+				public static g.N foo(g.N n) { 
+					return n;
+				}
+				public static void test() {
+					g.N n = foo(g.new N()).getSelf();
+				}			
+			}
+		</code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mmethods009" description="Plain type as return type.">
+    	<test>
+    		new A().test();
+    	</test>
+        <code>
+        	public class B {
+        		public void setN(A.g.N n) {
+        		}
+        	}
+			public cclass A {
+				final static public G g = new G();
+				public B getB() {
+					return new B();
+				}
+				public void test() {
+					getB().setN(g.new N());
+				}			
+			}
+		</code>
+    </compile-run>
+    
+
+</testsuite>

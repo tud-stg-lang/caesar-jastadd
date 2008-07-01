@@ -1,0 +1,97 @@
+<testsuite name="Test Modifiers except visibility" package="mixin.transform.modifiers">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="mitmodifiers001" description="test simple inheritance with abstract method">
+		<test>
+			String expected = "m";
+            AAA ab = new BBB();
+            String result = ab.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public abstract cclass AAA { public abstract String m(); }	
+			public cclass BBB extends AAA { public String m() { return "m"; } }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitmodifiers002" description="test simple indirect inheritance with abstract method">
+		<test>
+			String expected = "m";
+            BBB bc = new CCC();
+            String result = bc.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public abstract cclass AAA { public abstract String m(); }	
+			public abstract cclass BBB extends AAA { }
+			public cclass CCC extends BBB { public String m() { return "m"; } }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitmodifiers003" description="test multiple inheritance with abstract method">
+		<test>
+			String expected = "cm";
+            BBB bc = new CCC();
+            String result = bc.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public abstract cclass AAA { public abstract String m(); }	
+			public cclass BBB { public String m() { return "bm"; } }
+			public cclass CCC extends AAA &amp; BBB { public String m() { return "cm"; } }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitmodifiers004" description="test indirect multiple inheritance with abstract method">
+		<test>
+			String expected = "dm";
+            BBB bd = new DDD();
+            String result = bd.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public abstract cclass AAA { public abstract String m(); }	
+			public cclass BBB { public String m() { return "bm"; } }
+			public abstract cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { public String m() { return "dm"; } } 
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitmodifiers010" description="test static field access">
+		<test>
+			String expected = "A";
+            String result = AAA.s;
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public abstract cclass AAA { public static String s = "A"; }	
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitmodifiers011" description="test static method access">
+		<test>
+			String expected = "A";
+            String result = AAA.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public abstract cclass AAA { public static String m(){ return "A"; } }	
+		</code>
+	</compile-run>
+	
+	<compile-run id="mitmodifiers012" description="test loading class with a private method">
+		<test>
+			String expected = "A";
+			AAA a = new AAA();
+            String result = a.m();
+			assertEquals(expected, result);
+		</test>
+		<code>
+			public cclass AAA { 
+			   public String m() { return n(); }
+			   protected String n() { return "A"; }  
+			}	
+		</code>
+	</compile-run>
+	
+</testsuite>

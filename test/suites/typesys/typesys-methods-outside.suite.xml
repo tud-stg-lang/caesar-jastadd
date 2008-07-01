@@ -1,0 +1,194 @@
+<testsuite name="TypeSystem" package="typesys.methods.outside">
+
+	<common-code-base>
+		public cclass B {
+		    public final G g1 = new G();
+		    public final G g2 = new G();
+		    
+		    public final g1.X x1 = g1.new X();
+		    public final g2.X x2 = g2.new X();
+		    
+		    public x1.N n1 = x1.new N();
+		    public x2.N n2 = x2.new N();
+		}
+		
+		public cclass G {
+			public cclass X {
+				public cclass N {}
+            }
+        }
+	</common-code-base>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="methods001" description="Dependent type in method signatures.">
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+					m1(b.x1);
+				}	
+				
+				void m1(b.g1.X x) { }
+			}			
+        </code>
+    </compile>
+    
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="methods002" description="Dependent type in method signature with dependency to a parameter.">
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+					m(b.g1, b.x1);
+				}	
+				
+				void m(final G g, g.X x) {}	
+			}			
+        </code>
+    </compile>
+    
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="methods003" description="Check nested return statement with an absolute dependent type.">
+    	<test>
+    		A a = new A();
+    		final B b = new B();
+    		
+    		assertTrue(a.m3() instanceof b.g1.X);
+    	</test>
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+				    b.g1.X v1 = m3();
+				}	
+				
+				b.g1.X 	m3() { {{return b.g1.new X();}} }
+			}			
+        </code>
+    </compile-run>
+    
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="methods004" description="Check a nested return statement with argument as family.">
+    	<test>
+    		A a = new A();
+    		final G g = new G();
+    		assertTrue(a.m4(g) instanceof g.X);
+    	</test>
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+					b.g2.X v2 = m4(b.g2);
+				}	
+				
+				g.X 	m4(final G g) 			{ {return g.new X();} }
+			}			
+        </code>
+    </compile-run>
+    
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="methods005" description="Check non-nested return statement with an argument as family.">
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+				    b.g2.X v3 = m5(b.g2, b.x2);
+				}	
+				
+				g.X 	m5(final G g, g.X x) 	{ return g.new X(); }
+			}			
+        </code>
+    </compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="methods006" description="Check returning null.">
+    	<test>
+    		A a = new A();
+    		final G g = new G();
+    		assertNull(a.m6(g, g.new X()));
+    	</test>
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+				    b.g1.X v4 = m6(b.g2, b.x2);
+				}	
+				
+				b.g1.X 	m6(final G g, g.X x) 	{ return null; }
+			}			
+        </code>
+    </compile-run>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="methods007" description="Check multiple dependencies in a method signature.">
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {
+					m7(b.g2, b.x2, b.n2);
+				}	
+				
+				void m7(final G g, final g.X x, x.N n) {}
+			}			
+        </code>
+    </compile>
+
+<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="methods008" description="Check return statement and multiple dependencies in a method signature.">
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {				   
+				    b.g1.X v5 = m8(b.g1, b.x1, b.n1);
+				}	
+				
+				g.X	m8(final G g, final g.X x, x.N n) {return x;}
+			}			
+        </code>
+    </compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="DECLARATION_DEPENDENCY_ORDER" id="methods009" description="Check the declaration order of arguments.">
+        <code>
+			public class A {
+				final B b = new B();
+						
+				void foo() {				   
+				    m(b.x1, b.g1);
+				}	
+				
+				void m(g.X x, final G g) { }
+			}			
+        </code>
+    </compile-check-error>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="methods010" description="Check method overloaded with different dependent types that would match a common wildcard (and thus have the same top furtherbound)."
+    							error="DUPLICATE_DECL_DIFF_DEPTYPES">
+    	<!-- 
+    	<test>
+    		final A a = new A();
+    		
+    		assertEquals(21, a.bar(a.b.g1.new N()) );
+    		assertEquals(42, a.bar(a.b.g2.new N()) );
+    	</test>
+    	-->
+        <code>
+			public class A {
+				public final B b = new B();
+				
+				public int bar(b.g1.N n) { return 21; }
+				public int bar(b.g2.N n) { return 42; }
+			}
+		</code>
+    </compile-check-error>
+    
+</testsuite>

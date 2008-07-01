@@ -1,0 +1,146 @@
+<testsuite name="Test relationships between Caesar classes" package="vc.relations">
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_OUTER_INNER_RELATIONSHIP"  id="vcrel001" description="class in cclass">
+        <code>
+        	public cclass OuterA {
+				public class InnerA { }
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_OUTER_INNER_RELATIONSHIP"  id="vcrel002" description="cclass in class">
+        <code>
+        	public class OuterA {
+				public cclass InnerA {
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel003" description="cclass inherit class">
+        <code>
+        	public class ClassA {
+			}
+			public cclass OuterA {
+				public cclass InnerA extends ClassA {
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel004" description="class inherit cclass">
+        <code>
+        	public cclass CclassA {
+			}
+			
+			public class ClassA extends CclassA {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="SUPERINTERFACE_WRONG_TYPE"  id="vcrel005" description="class implements cclass">
+        <code>
+        	public cclass CclassA {
+			}
+			public class ClassA implements CclassA {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel006" description="inner extends outer">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA extends OuterA {
+				}
+			}
+        </code>
+    </compile-check-error>
+
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel007" description="outer extends inner">
+        <code>
+        	public cclass OuterA extends OuterA.InnerA {
+			
+				public cclass InnerA {
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel008" description="inner extends external class">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+			public cclass OuterB {
+				public cclass InnerB extends OuterA.InnerA {
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel009" description="outer cclass extends external inner cclass">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+			public cclass OuterB extends OuterA.InnerA {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_OUTER_INNER_RELATIONSHIP"  id="vcrel010" description="interface in cclass">
+        <code>
+        	public cclass ClassA {
+				interface IfcA {
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel011" description="class extends interface">
+        <code>
+        	public interface IfcA {
+			}
+			public cclass ClassA extends IfcA {
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="SUPERINTERFACE_WRONG_TYPE"  id="vcrel012" description="cclass in implements">
+        <code>
+        	public cclass OuterA {
+			}
+			public cclass OuterB implements OuterA {
+			}
+        </code>
+    </compile-check-error>
+            
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcrel013" description="extending overrriden classes">
+        <code>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+			public cclass OuterB extends OuterA {
+				public cclass InnerB extends OuterA.InnerA {
+				}
+			}
+        </code>
+    </compile-check-error>
+	    
+</testsuite>

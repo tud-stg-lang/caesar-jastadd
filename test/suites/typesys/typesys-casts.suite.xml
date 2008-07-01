@@ -1,0 +1,209 @@
+<testsuite name="Test casts to dependent types" package="typesys.casts">
+
+	<common-code-base>		
+		public cclass G {
+			public cclass N {
+				public void x(M m) {}
+			}
+			public cclass M {
+			}
+		}
+	</common-code-base>
+
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts001" description="Check casts">
+		<test>			
+		    final G g = new G();			
+			final G gCopy = g;
+		    g.N n = (g.N)(G.N)gCopy.new N();
+		</test>
+        <code></code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts002" description="Check casts">
+		<test>		
+			try {	
+			    final G g1 = new G();			
+				final G g2 = new G();
+			    g1.N n = (g1.N)(G.N)g2.new N();
+			}
+			catch(ClassCastException cce) {
+				return;
+			}
+			fail("The cast was successful but should not be possible.");
+		</test>
+        <code></code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts003" description="Check casts">
+		<test>		
+			final GG gg = new GG();
+			gg.foo();
+		</test>
+        <code>
+			public cclass GG {
+				public N foo() {
+					Object res = new N();
+					return (N)res;
+				}
+				public cclass N {}
+			}
+		</code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts004" description="Check casts">
+		<test>		
+			final GG gg = new GG();			
+			final gg.G g = gg.new G();
+			g.foo();
+		</test>
+        <code>
+			public cclass GG {
+				public cclass G {
+					public N foo() {
+						Object res = new N();
+						return (N)res;
+					}
+				}
+				public cclass N {}
+			}
+		</code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts005" description="Check casts">
+		<test>		
+			final GG gg = new GG();
+			GG gg2 = gg.foo();
+		</test>
+        <code>
+			public cclass GG {
+				public GG foo() {
+					Object res = new GG();
+					return (GG)res;
+				}
+				public cclass N {}
+			}
+		</code>
+    </compile-run>		  
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="casts006" description="Check casts">		
+        <code>
+			public cclass GG extends G {
+				public cclass M {					
+					public void foo() {	
+						Object o = new N();
+						((N)o).x( this ); 			// ( (ctx(4).N) o).x( ctx(3) );
+					}
+				}
+			}
+		</code>
+    </compile>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= 
+    <compile-run id="casts007" description="Cast in method parameter.">
+    	<test>
+    		try {
+    			B.test();
+    		}
+			catch(ClassCastException cce) {
+				return;
+			}
+			fail();	
+    	</test>
+        <code>
+			public class A {
+				final public G g = new G();
+				public void foo(g.N n) { 
+				}
+			}
+			public cclass B {
+				public static void test() {
+					final A a = new A(); 					
+					final A a1 = new A();
+					a.foo((a.g.N)a1.g.new N());
+				}			
+			}
+		</code>
+    </compile-run>-->
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="casts008" error="INCOMPATIBLE_TYPE" description="Check cast to implicit sibling class">		
+        <code>
+        	public cclass P {
+        		public cclass A {
+	        		public final G g = new G();
+	        	}
+	        	public cclass B extends A {        		
+	        		public g.N getN() { return null; }
+	        	}
+        		public cclass Q {					
+					public void foo() {	
+						final A a = new B();
+						a.g.N n = ((B)a).getN();
+					}
+				}
+			}
+		</code>
+    </compile-check-error>			
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts008" description="Check direct cast to different-name, same-value, same-top-furtherbound dependent type">
+		<test>
+			try {	
+			    final G g = new G();			
+				final G gCopy = g;
+		    	g.N n = (g.N) gCopy.new N();
+			}
+			catch(ClassCastException cce) {
+				return;
+			}
+			fail("The cast was successful but should not be possible.");
+		</test>
+        <code></code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts009" description="Check direct cast to different-value, same-top-furtherbound dependent type">
+		<test>
+			try {	
+			    final G g = new G();			
+				final G h = new G();
+		    	g.N n = (g.N)h.new N();
+			}
+			catch(ClassCastException cce) {
+				return;
+			}
+			fail("The cast was successful but should not be possible.");
+		</test>
+        <code></code>
+    </compile-run>
+
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="casts010" description="Check cast to wildcard type">
+		<test>
+		    final G g = new G();			
+	    	G.N n = (G.N)g.new N();
+		</test>
+        <code></code>
+    </compile-run>
+    
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="casts011" description="Check cast to wildcard, assign to dependent type"
+    									error="INCOMPATIBLE_TYPE">
+        <code>
+        	public cclass X { 
+		    	public final G g = new G();
+	    		public g.N n = (G.N)g.new N();
+	    	}
+        </code>
+    </compile-check-error>
+    
+    
+</testsuite>

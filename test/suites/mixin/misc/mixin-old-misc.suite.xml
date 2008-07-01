@@ -1,0 +1,172 @@
+<testsuite name="Miscelaneous cclass tests" package="mixin.old.misc">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc002" description="Test interface method call through abstract cclass">
+		<test>		
+			Role role = new RoleNet4J();
+			assertEquals(role.methA(), "A");
+		</test>
+        <code>
+        	interface NetObject {
+				public String methA();
+			}
+			
+			abstract public cclass Role implements NetObject {	
+			}
+			
+			public cclass RoleNet4J extends Role {
+				public String methA() {
+					return "A";
+				}
+			}
+        </code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc003" description="Test unqualified instantiation as statement">
+		<test>		
+			new TestClass();
+		</test>
+        <code>
+			public cclass TestClass { }
+		</code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc004" description="Test abstract cclasses">
+		<test>		
+			new ClassB();
+		</test>
+        <code>
+			public abstract cclass ClassA {
+				public abstract void m();
+			}
+			
+			public cclass ClassB extends ClassA {
+				public void m() { }
+			}
+		</code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc005" description="Test inlined cclass inside abstract cclass">
+		<test>		
+			new ClassB().m();
+		</test>
+        <code>
+			public abstract cclass ClassA {
+				public ClassA() {		
+				}
+				
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println("run5");
+						}
+			        };
+			        
+			        new Thread(inlined).start();
+				}
+			}
+			
+			public cclass ClassB extends ClassA {	
+			}
+		</code>
+    </compile-run>		
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="mixinmisc006" description="Implementing method with array as return type">
+		<code>
+        	interface IfcA {
+        		public int[] elems();
+        	}
+        	public cclass ClsB implements IfcA {
+        		public int[] elems() {
+        			return null;
+        		}
+        	}
+		</code>
+    </compile>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc007" description="Test accessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+			public cclass ClassA {
+				private String getMsg() {
+					return "run7";
+				}
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println(getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc008" description="Test superaccessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public cclass ClassB {
+        		protected String getMsg() {
+					return "run8";
+				}
+        	}
+			public cclass ClassA extends ClassB {
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println(ClassA.super.getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>		
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="mixinmisc009" description="Test bytecode generation">
+        <code>
+        	public cclass ClassA {
+				private void m(String a) {
+				    while (null == a) { }				   
+				}
+			}
+		</code>
+    </compile>	
+
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="mixinmisc010" error="CLASS_UNKNOWN" description="Check of base type of array fails">
+        <code>
+        	public cclass ClassA {
+				public void a() {
+				   EventListener[] list;
+				}
+			}
+		</code>		
+    </compile-check-error>	
+
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="mixinmisc011" error="METHOD_NOT_FOUND" description="Do some arithmetic with unknownType()">
+        <code>
+        	public cclass ClassA {
+        		cclass ClassB {
+					public int a() {
+					   return m() + n() + (i + j) + k * 5 / v;
+					}
+				}
+			}
+		</code>		
+    </compile-check-error>	
+
+</testsuite>

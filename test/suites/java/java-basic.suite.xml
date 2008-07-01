@@ -1,0 +1,91 @@
+<testsuite name="Basic Java tests" package="java.basic">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="javabasic001" description="Simple class">
+		<code>
+			class c {
+				int a = 5;
+				int foo() {
+					return a*5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="javabasic002" description="Inner classes">
+		<code>
+			class outer {
+				class inner {
+					int a;
+				}
+				
+				void foo() {
+					inner i = new inner();
+					i.a = 5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="javabasic003" description="Inheritance of fields">
+		<code>
+			class TestClass {
+				int a;
+			}
+			class Inherit extends TestClass {
+				void foo() {
+					a = 5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="javabasic004" description="Inheritance of fields (two levels)">
+		<code>
+			class TestClass {
+				int a;
+			}
+			class Inherit extends TestClass {
+			}
+			class Inherit2 extends Inherit {
+				void foo() {
+					a = 5;
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="javabasic005" description="Inheritance of methods">
+		<code>
+			class TestClass {
+				int a() { return 5; }
+			}
+			class Inherit extends TestClass {
+				void foo() {
+					int i = a();
+				}
+			}
+		</code>
+	</compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="javabasic006" description="Inheritance of fields (two levels)">
+		<code>
+			class TestClass {
+				int a() { return 5; }
+			}
+			class Inherit extends TestClass {
+			}
+			class Inherit2 extends Inherit {
+				void foo() {
+					int i = a();
+				}
+			}
+		</code>
+	</compile>
+
+</testsuite>

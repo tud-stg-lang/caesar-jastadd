@@ -1,0 +1,139 @@
+<testsuite name="Test Subtyping" package="mixin.check.subtyping">
+	
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile  id="stcsubtyping001" description="test simple inheritance">
+			<code>
+				public cclass AAA {	}			
+				public cclass BBB extends AAA {	}
+				public class Test {
+					public void test() {
+					   BBB b = null;
+					   AAA a = b;
+					}
+				}
+			</code>
+		</compile>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile-check-error id="stcsubtyping002" error="INCOMPATIBLE_TYPE" 
+							 description="no inheritance link between cclasses">
+			<code>
+				public cclass AAA {	}	
+				public cclass BBB { }
+				public class Test {
+					public void test() {
+					   AAA a = null;
+					   BBB b = a;
+					}
+				}
+			</code>
+		</compile-check-error>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile id="stcsubtyping003" description="test multiple inheritance">
+			<code>
+				public cclass AAA {	}	
+				public cclass BBB { }
+				public cclass CCC extends AAA &amp; BBB { }
+				public class Test {
+					public void test() {
+					   CCC c = null;
+					   AAA a = c;
+					   BBB b = c;
+					}
+				}
+			</code>
+		</compile>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile id="stcsubtyping004" description="test simple indirect inheritance">
+			<code>
+				public cclass AAA {	}	
+				public cclass BBB extends AAA { }
+				public cclass CCC extends BBB { }
+				public class Test {
+					public void test() {
+					   CCC c = null;
+					   AAA a = c;
+					}
+				}
+			</code>
+		</compile>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile id="stcsubtyping005" description="test multiple indirect inheritance">
+			<code>
+				public cclass AAA {	}
+				public cclass BBB {	}
+				public cclass CCC extends AAA &amp; BBB { }
+				public cclass DDD extends CCC { }
+				public class Test {
+					public void test() {
+					   DDD d = null;
+					   AAA a = d;
+					   BBB b = d;
+					}
+				}
+			</code>
+		</compile>	
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile id="stcsubtyping006" description="test implements in cclass">
+			<code>
+				public interface AAA { }
+				public cclass BBB implements AAA { }
+				public class Test {
+					public void test() {
+					   BBB b = null;
+					   AAA a = b;
+					}
+				}
+			</code>
+		</compile>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile-check-error id="stcsubtyping007" error="INCOMPATIBLE_TYPE" 
+							 description="cclass does not implement the interface">
+			<code>
+				public interface AAA {	}	
+				public cclass BBB { }
+				public class Test {
+					public void test() {
+					   AAA a = null;
+					   BBB b = a;
+					}
+				}
+			</code>
+		</compile-check-error>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile id="stcsubtyping008" description="test indirect implements in cclass">
+			<code>
+				public interface AAA { }
+				public interface CCC extends AAA { }
+				public cclass BBB implements CCC { }
+				public class Test {
+					public void test() {
+					   BBB b = null;
+					   AAA a = b;
+					}
+				}
+			</code>
+		</compile>
+		
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+		<compile id="stcsubtyping009" description="test indirect implements in cclass">
+			<code>
+				public interface AAA { }
+				public cclass CCC implements AAA { }
+				public cclass BBB extends CCC { }
+				public class Test {
+					public void test() {
+					   BBB b = null;
+					   AAA a = b;
+					}
+				}
+			</code>
+		</compile>
+		
+	</testsuite>

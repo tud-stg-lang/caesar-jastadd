@@ -1,0 +1,128 @@
+<testsuite name="Test Inheritance of Fields" package="mixin.check.inhfields">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile  id="stcinhfields001" description="test simple field inheritance">
+        <code>
+        	public cclass AAA {	
+			   public String s1;
+			}			
+			public cclass BBB extends AAA {	}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s1 = "";
+				}
+			}
+        </code>
+    </compile>
+	
+    <compile-check-error id="stcinhfields002" error="VAR_UNKNOWN" 
+		                 description="test not available field">
+        <code>
+			public cclass BBB { }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s = null;
+				}
+			}
+        </code>
+    </compile-check-error>
+
+	<compile id="stcinhfields003" description="test multiple field inheritance">
+		<code>
+			public cclass AAA {	public String sa; }	
+			public cclass BBB { public String sb; }
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.sa = "";
+				   c.sb = "";
+				}
+			}
+		</code>
+	</compile>
+	
+    <compile id="stcinhfields004" description="test multiple inheritance if fields have equal names">
+		<code>
+			public cclass AAA {	public String s; }	
+			public cclass BBB { public String s; }
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.s = "";
+				}
+			}
+		</code>
+	</compile>
+		
+	<compile id="stcinhfields005" description="test simple indirect field inheritance">
+		<code>
+			public cclass AAA {	public String sa; }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.sa = "";
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile id="stcinhfields006" description="test multiple indirect field inheritance">
+		<code>
+			public cclass AAA {	public String sa; }
+			public cclass BBB {	public String sb; }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { }
+			public class Test {
+				public void test() {
+				   DDD d = null;
+				   d.sa = "";
+				   d.sb = "";
+				}
+			}
+		</code>
+	</compile>	
+		
+		<compile id="stcinhfields007" description="test directly declared field">
+			<code>
+				public cclass BBB { public String sb; }
+				public class Test {
+					public void test() {
+					   BBB b = null;
+					   b.sb = "";
+					}
+				}
+			</code>
+		</compile>
+		
+		<compile  id="stcinhfields008" description="test inherited field from inside">
+			<code>
+				public cclass AAA {	
+				   public String sa;
+				}			
+				public cclass BBB extends AAA {	
+					public void test() {
+					   sa = "";
+					}
+				}
+
+			</code>
+		</compile>
+	
+	<compile  id="stcinhfields009" description="test own field from inside">
+		<code>
+			public cclass BBB {
+				public String sb;
+				public void test() {
+				   sb = "";
+				}
+			}
+		</code>
+	</compile>
+    
+</testsuite>

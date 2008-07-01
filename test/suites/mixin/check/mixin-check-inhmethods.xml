@@ -1,0 +1,291 @@
+<testsuite name="Test Inheritance of Methods" package="mixin.check.inhmethods">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile  id="stcinhmethods001a" description="test simple method inheritance from Object">
+        <code>
+			public cclass BBB {	}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.hashCode();
+				}
+			}
+        </code>
+    </compile> 
+	
+    <compile  id="stcinhmethods001b" description="test simple method inheritance">
+        <code>
+        	public cclass AAA {	
+			   public void m() { }
+			}			
+			public cclass BBB extends AAA {	}
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="stcinhmethods002" error="METHOD_NOT_FOUND" 
+		                 description="test not available method">
+        <code>
+			public cclass BBB { }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+        </code>
+    </compile-check-error>
+	
+	
+		
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods003" description="test multiple inheritance">
+		<code>
+			public cclass AAA {	public void m() {} }	
+			public cclass BBB { public void n() {} }
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				   c.n();
+				}
+			}
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods004" description="test simple indirect inheritance">
+		<code>
+			public cclass AAA {	public void m() {} }	
+			public cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods005" description="test multiple indirect inheritance">
+		<code>
+			public cclass AAA {	public void m() {} }
+			public cclass BBB {	public void n() {} }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { }
+			public class Test {
+				public void test() {
+				   DDD d = null;
+				   d.m();
+				   d.n();
+				}
+			}
+		</code>
+	</compile>	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods006" description="test implements in cclass">
+		<code>
+			public interface AAA { public void m(); }
+			abstract public cclass BBB implements AAA { }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods007" description="test indirect implements in cclass">
+		<code>
+			public interface AAA { public void m(); }
+			public interface CCC extends AAA { }
+			abstract public cclass BBB implements CCC { }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods008" description="test indirect implements in cclass">
+		<code>
+			public interface AAA { public void m(); }
+			abstract public cclass CCC implements AAA { }
+			abstract public cclass BBB extends CCC { }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcinhmethods009" description="test directly declared method">
+		<code>
+			public cclass BBB { public void m() {} }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile  id="stcinhmethods010" description="test inherited method from inside">
+		<code>
+			public cclass AAA {	
+			   public void m() { }
+			}			
+			public cclass BBB extends AAA {	
+				public void test() {
+				   m();
+				}
+			}
+
+		</code>
+	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile  id="stcinhmethods011" description="test own method from inside">
+		<code>
+			public cclass BBB {
+			    public void m() { }	
+				public void test() {
+				   m();
+				}
+			}
+		</code>
+	</compile>
+		
+	<compile-check-error id="stcinhmethods012" error="DUPLICATE_DECL"
+		                 description="Test calls to methods with same name but different return types">
+		<code>
+				public cclass AA {
+					public int m() { return 1; }
+					public String m() { return "!"; }
+				}
+				public cclass BB extends AA { 
+					public String n() {
+						int i = super.m();
+					    String r = i + "," + super.m();
+						return r;
+					}
+				}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="stcinhmethods013" error="METHOD_RETURNS_DIFFERENT"
+		                 description="no common root method in superclasses">
+		<code>
+			public cclass AAA { public int m() { return 2; } }	
+			public cclass BBB { public String m() { return ""; } }
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-run id="stcinhmethods014" description="methods with same signature and same return type in different ancestors">
+		<test>
+			DDD d = new DDD();
+			assertEquals("AAA", d.m()); // mixin linearization
+		</test>
+		<code>
+			public cclass AAA { public String m() { return "AAA"; } }	
+			public cclass BBB { public String m() { return "BBB"; } }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { } 
+		</code>
+	</compile-run>
+     
+   	<compile id="stcinhmethods015" description="test indirect inheritance with overwrite method">
+		<code>
+			public cclass A           { public void m() {} }	
+			public cclass B extends A { public void m() {} }
+			public cclass C extends B { }
+			public class Test {
+				public void test() {
+				   C c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-run id="stcinhmethods016" description="test multiple and indirect inheritance with overwrite method ">
+		<test>
+			D d = new D();
+			assertEquals("B", d.m());
+		</test>
+		<code>
+			public cclass A           { public String m() { return "A"; } }	
+			public cclass B extends A { public String m() { return "B"; } }
+			public cclass C           { public String m() { return "C"; } }
+			public cclass D extends B &amp; C { }
+		</code>
+	</compile-run>
+	
+	<compile id="stcinhmethods017" description="methods with same signature and same return types from inside">
+		<code>
+			public cclass A { public void m() {} }	
+			public cclass B { public void m() {} }
+			public cclass C extends A &amp; B { 
+				public void test() {
+				   m();
+				}
+			}
+		</code>	
+	</compile>
+	
+	<compile-check-error id="stcinhmethods018" error="METHOD_RETURNS_DIFFERENT" 
+						description="methods with same signature but different return types from inside">
+		<code>
+			public cclass A { public int    m() { return 1; } }	
+			public cclass B { public String m() { return "Hello"; } }
+			public cclass C extends A &amp; B { 
+				public void test() {
+				   m();
+				}
+			}
+		</code>	
+	</compile-check-error>
+	
+	<compile-check-error id="stcinhmethods019" error="METHOD_RETURNS_DIFFERENT" 
+						description="conflicts through transitive inheritance">
+		<code>
+			public cclass A { public int    m() { return 1; } }
+			public cclass B extends A { }	
+			public cclass C { public String m() { return "Hello"; } }
+			public cclass D extends C { }
+			public cclass E extends B &amp; D { 
+				public void test() {
+				   m();
+				}
+			}
+		</code>	
+	</compile-check-error>
+
+</testsuite>
