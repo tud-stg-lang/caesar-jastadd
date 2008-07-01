@@ -1,0 +1,69 @@
+aspect Arrays {
+  syn lazy List TypeDecl.getDynamicTypeList() = new List();
+
+  syn lazy int TypeDecl.dimension() = 0;
+  //eq ArrayDecl.dimension() = getDimension();
+  eq ArrayDecl.dimension() = componentType().dimension() + 1;
+  
+  // TypeDecl.elementType() - the ground type that the array is based on
+  syn lazy TypeDecl TypeDecl.elementType() = this;
+  eq ArrayDecl.elementType() = componentType().elementType();
+
+  // TypeDecl.componentType() -  the elements in an array has this type
+  eq Program.getCompilationUnit().componentType() = unknownType();
+  eq TypeDecl.getDynamicType().componentType() = this;
+  inh lazy TypeDecl TypeDecl.componentType();
+
+  // TypeDecl.arrayType() - the type that has components of type this
+  //public TypeDecl TypeDecl.arrayType() {
+  syn lazy TypeDecl TypeDecl.arrayType() {
+    // TODO: do this in a nicer way. The arrayType() must return the same declaration every time even if caching is not allowed
+    //if(computedArray) return valueArray;
+    String name = name() + "[]";
+
+    TypeDecl typeDecl =
+      new ArrayDecl(
+        new Modifiers(new List().add(new Modifier("public"))),
+        name,
+        new Opt(typeObject().createQualifiedAccess()), // [SuperClassAccess]
+        new List().add(typeCloneable().createQualifiedAccess()).add(typeSerializable().createQualifiedAccess()), // Implements*
+        new List().add( // BodyDecl*
+          new FieldDeclaration(
+            new Modifiers(new List().add(new Modifier("public")).add(new Modifier("final"))),
+            new PrimitiveTypeAccess("int"),
+            "length",
+            new Opt() // [Init:Expr]
+          )).add(
+          new MethodDecl(
+            new Modifiers(new List().add(new Modifier("public"))),
+            typeObject().createQualifiedAccess(),
+            "clone",
+            new List(),
+            new List(),
+            new List(),
+            new Opt(new Block())
+          )
+        )
+      );
+    addDynamicType(typeDecl);
+    typeDecl.isFinal = true;
+    valueArray = typeDecl;
+    computedArray = true;
+    return typeDecl;
+  }
+  private boolean TypeDecl.computedArray = false;
+  private TypeDecl TypeDecl.valueArray;
+  
+  inh TypeDecl TypeDecl.typeCloneable();
+  inh TypeDecl TypeDecl.typeSerializable();
+  
+  eq ArrayDecl.name() = fullName();
+  eq ArrayDecl.fullName() = getID();
+
+  syn lazy String ArrayTypeAccess.getPackage() = getAccess().type().packageName();
+  syn lazy String ArrayTypeAccess.getID() = getAccess().type().name();
+
+  public Access ArrayDecl.createQualifiedAccess() {
+    return new ArrayTypeAccess(elementType().createQualifiedAccess(), dimension());
+  }
+}

@@ -1,0 +1,84 @@
+aspect DTNormalization {
+	
+	/**********************************************************
+	 * 
+	 * Normalize a given type
+	 *  
+	 * Normalization is necessary for type equivalence checking:
+	 * two types are equivalent if their normal forms are equal
+	 * 
+	 */
+	
+	public DependentType DependentType.normalizeType(TypeDecl thist);
+	
+	public DependentType DepTypeThis.normalizeType(TypeDecl thist) {
+		return this;
+	}
+	
+	public DependentType DepTypeAbsVar.normalizeType(TypeDecl thist) {
+		return this;
+	}
+	
+	public DependentType DepTypeRelVar.normalizeType(TypeDecl thist) {
+		DependentType bound = typeBound(thist);
+		if (bound.isSingleton()) {
+			return bound.normalizeType(thist);
+		}
+		else {
+			return new DepTypeRelVar(prefix.normalizeType(thist), var);
+		}
+	}
+	
+	public DependentType DepTypeOut.normalizeType(TypeDecl thist) {
+		DependentType bound = typeBound(thist);
+		if (bound.isSingleton()) {
+			return bound.normalizeType(thist);
+		}
+		else {
+			return new DepTypeOut(prefix.normalizeType(thist));
+		}
+	}
+	
+	public DependentType DepTypeClass.normalizeType(TypeDecl thist) {
+		return new DepTypeClass(outType.normalizeType(thist), virtualClass);
+	}
+	
+	public DependentType DepTypePlain.normalizeType(TypeDecl thist) {
+		return this;
+	}	
+	
+	/**********************************************************
+	 * 
+	 * Compute a bound of a type
+	 * 
+	 */
+	
+	public DependentType DependentType.typeBound(TypeDecl thist);
+	
+	public DependentType DepTypeThis.typeBound(TypeDecl thist) {
+		return thist.depType();
+	}
+	
+	public DependentType DepTypeAbsVar.typeBound(TypeDecl thist) {
+		return var.type().depType();
+	}
+	
+	public DependentType DepTypeRelVar.typeBound(TypeDecl thist) {
+		return varType(prefix, var);
+	}	
+	
+	public DependentType DepTypeOut.typeBound(TypeDecl thist) {
+		DependentType newPrefix = prefix.normalizeType(thist);
+		// the bound of normalized type must be a class or plain type
+		DependentType prefixBound = newPrefix.typeBound(thist);
+		return outType(prefixBound);
+	}
+	
+	public DependentType DepTypeClass.typeBound(TypeDecl thist) {
+		return this;
+	}
+	
+	public DependentType DepTypePlain.typeBound(TypeDecl thist) {
+		return this;
+	}	
+}

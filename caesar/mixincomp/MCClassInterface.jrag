@@ -1,0 +1,133 @@
+// Implements interfaces for cclasses
+//
+// Since multiple inheritance must be translated into single 
+// inheritance in Java bytecode, some of the classes must be
+// copied. In order to enable a uniform access to all copies
+// of a class, an interface is generated, which is then implemented
+// by all copies of the class. The interface contains all members
+// of the class: the methods and field accessor.
+//
+// - Creation of interfaces for cclasses is implemented
+// - The interface is used for the type refereces of the cclass in the bytecode
+// - Calls of cclass methods are replaced by calls over interface
+// 
+// Note: field access is implemented in a separate module MCFieldAccess
+
+
+aspect MCClassInterface {
+	
+	inh TypeDecl ASTNode.typeCjObjectIfc();
+	eq Program.getCompilationUnit().typeCjObjectIfc() = typeCjObjectIfc();
+	syn lazy TypeDecl Program.typeCjObjectIfc() = lookupType("org.caesarj.runtime", "CjObjectIfc");
+
+	
+	eq DirectTypeAccess.type() = getTarget();
+
+	syn lazy Opt CjClassDecl.getCjInterfaceOpt() {
+		Modifiers modifiers = new Modifiers(new List().add(new Modifier("abstract"))
+				                                      .add(new Modifier("public")));
+		// name is constructed from id adding _ccIfc
+		String id = getID() + "_ccIfc";
+		List body = new List();
+		// add local methods
+		for (Iterator iter = localMethodsIterator(); iter.hasNext();) {
+			MethodDecl m = (MethodDecl) iter.next();
+			m.addToCjInterfaceBody(body);
+		}
+		// superinterface is every interface which is explicitly implemented by cclass
+		InterfaceDecl ccIfc = new InterfaceDecl(
+				modifiers,
+				id,
+				(List)getImplementsList().copy(),
+				body);
+
+		if (getDirectParents().isEmpty()) {
+			ccIfc.addSuperInterfaceId(new DirectTypeAccess(typeCjObjectIfc()));
+		}
+		else {
+			// and CjInterface of every direct parent of this cclass
+			for (Iterator iter = getDirectParents().iterator(); iter.hasNext();) {
+				TypeDecl t = (TypeDecl) iter.next();
+				if (t.isCjClassDecl()) {
+					CjClassDecl c = t.getCjClassDecl();
+					if(!c.isCircular())
+						ccIfc.addSuperInterfaceId(new DirectTypeAccess(c.getCjInterface()));
+				}
+			}
+		}
+		return new Opt(ccIfc);
+	}
+	
+	// methods only included in interface if they are overridable
+	syn boolean BodyDecl.existsInCjInterface() = false;
+	eq MethodDecl.existsInCjInterface() = !isStatic() /* && !isPrivate() && !isFinal() */;
+	
+	public void MethodDecl.addToCjInterfaceBody(List body) {
+		if(existsInCjInterface()) {
+			body.add(new MethodDecl(
+					new Modifiers(new List().add(new Modifier("public")).add(new Modifier("abstract"))),
+					// force resolving of type, because it may be impossible to resolve
+					// it in the context of the interface
+					new DirectTypeAccess(getTypeAccess().type()),
+					name(),
+					resolveParameterTypes(getParameterList()),
+					(List)getEmptyBracketList().fullCopy(),
+					(List)getExceptionList().fullCopy(),
+					new Opt()
+			));
+		}
+	}
+	
+	private static List MethodDecl.resolveParameterTypes(List accessList) {
+		List list = new List();
+		for (int i1 = 0; i1 < accessList.numChildren(); i1++) {
+			ParameterDeclaration param = (ParameterDeclaration)accessList.getChild(i1);
+			ParameterDeclaration newParam = (ParameterDeclaration)param.fullCopy();
+			newParam.setTypeAccess(new DirectTypeAccess(param.getTypeAccess().type()));
+			list.add(newParam);
+		}
+		return list;
+	}
+	
+	public void CjClassDecl.addCjInterface() {
+	   // generate interface
+	   InterfaceDecl ccifc = getCjInterface();
+	   setImplementsList(new List().add(new DirectTypeAccess(ccifc)));
+	}
+	
+	// Use interface for fields, parameters, variables, return types etc.
+	eq CjClassDecl.typeDescriptor() = getCjInterface().typeDescriptor();
+	
+	// if method has parameter of cclass and cclass implements mixin interface - use interface 
+	refine CodeGeneration public void MethodDecl.emitInvokeMethod(CodeGeneration gen, TypeDecl hostType) {
+	   if (existsInCjInterface() && hostType.isCjClassDecl() && hostType.getCjClassDecl().hasCjInterface())
+		   hostType = hostType.getCjClassDecl().getCjInterface();
+	   CodeGeneration.MethodDecl.emitInvokeMethod(gen, hostType);
+	}
+	
+	// avoid overriding interface methods with private or protected modifiers
+	refine Flags eq MethodDecl.flags() {
+		int flags = Flags.MethodDecl.flags();
+		if (hostType().isCjClassDecl()) {
+			return flags & (~Modifiers.ACC_FINAL) & (~Modifiers.ACC_PRIVATE) & (~Modifiers.ACC_PROTECTED) | (Modifiers.ACC_PUBLIC);
+		}
+		else {
+			return flags;
+		}
+	}
+	
+	syn lazy TypeDecl TypeDecl.typeForCasting() = this;
+    eq CjClassDecl.typeForCasting() = getCjInterface();
+    
+    refine AutoBoxing public void ReferenceType.java5EmitCastTo(CodeGeneration gen, TypeDecl type) {
+        if (type != this && isPrimitive() && type.isPrimitive()) {
+            emitUnboxingOperation(gen);
+            unboxed().emitCastTo(gen, type);
+        }
+        else { 
+           if (!instanceOf(type) && !type.isNull()) {
+              gen.emitCheckCast(type.typeForCasting());
+           }
+        }
+    }
+}

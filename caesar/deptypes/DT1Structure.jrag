@@ -1,0 +1,76 @@
+// the name of the aspect must be alphabetically smaller
+// than the names of aspects that introduce new methods
+// to the dependent types
+//
+aspect DT1Structure {
+	
+	public interface DependentType { 
+		// a singleton type contains only one object
+		public boolean isSingleton();
+	}
+	
+	public class DepTypeThis implements DependentType {
+		public boolean isSingleton() { return true; }
+	}
+	
+	public class DepTypeAbsVar implements DependentType {
+		final public Variable var;
+		
+		public DepTypeAbsVar(Variable var) {
+			this.var = var; 
+		}
+		
+		public boolean isSingleton() { return true; }
+	}
+	
+	public class DepTypeRelVar implements DependentType {
+		final public DependentType prefix;
+		final public Variable var;
+		
+		public DepTypeRelVar(DependentType prefix, Variable var) {
+			this.prefix = prefix;
+			this.var = var; 
+		}
+		
+		public boolean isSingleton() { return true; }
+	}
+	
+	public class DepTypeOut implements DependentType {
+		final public DependentType prefix;
+		
+		public DepTypeOut(DependentType prefix) {
+			this.prefix = prefix;			
+		}
+		
+		public boolean isSingleton() { return true; }
+	}
+	
+	public class DepTypeClass implements DependentType {
+		final public CjVirtualClassDecl virtualClass;
+		final public DependentType outType;
+		
+		public DepTypeClass(DependentType outType, CjVirtualClassDecl virtualClass) {	
+			this.virtualClass = virtualClass;
+			this.outType = outType;
+		}
+		
+		public boolean isSingleton() { return false; }
+	}
+	
+	public class DepTypePlain implements DependentType {
+		final public TypeDecl type;
+		
+		public DepTypePlain(TypeDecl type) {	
+			this.type = type;			
+		}
+		
+		public boolean isSingleton() { return false; }		
+	}
+	
+	public class DependentTypeException extends RuntimeException {
+		public final String msg; 
+		public DependentTypeException(String msg) {
+			this.msg = msg;
+		}
+	}
+}

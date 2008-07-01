@@ -1,0 +1,176 @@
+aspect DTSubtyping {
+	
+	/*************************
+	 * 
+	 * Equivalence relation for dependent types
+	 * 
+	 */
+	
+	public static boolean DependentTypeDecl.areEquivalent(TypeDecl thist, DependentType type1, DependentType type2) {
+		// types are equivalent if their normal forms are equal
+		return type1.normalizeType(thist).equals(type2.normalizeType(thist));
+	}
+		
+	
+	/*************************
+	 * 
+	 * Relation of dependent types to other types
+	 * 
+	 */
+	
+	eq DependentTypeDecl.instanceOf(TypeDecl type) = type.isSupertypeOfDependentType(this);
+	
+	syn boolean TypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) = 
+		type.absoluteType().instanceOf(this);
+	
+	eq DependentTypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) {
+		DependentType type1 = type.depType();
+		DependentType type2 = this.depType();
+		return isSubtype(type.thist, type1, type2);
+	}
+	
+	eq DependentTypeDecl.isSupertypeOfNullType(NullType type) = true;
+	
+	eq DependentTypeDecl.isSupertypeOfCjClassDecl(CjClassDecl type) =
+		depType().isAbsolute() && type.instanceOf(absoluteType());		
+		
+	/*************************
+	 * 
+	 * Subtyping between dependent types
+	 * 
+	 */
+	
+	public static boolean DependentTypeDecl.isSubtype(TypeDecl thist, DependentType type1, DependentType type2) {
+		try {
+			if (type2 instanceof DepTypePlain) {
+				// check subclassing
+				return (type1.absoluteType(thist).instanceOf(type2.absoluteType(thist)));
+			}
+			else if (type2 instanceof DepTypeClass) {
+				if (type1 instanceof DepTypeClass) {
+					// compare two class types
+					// check subclassing
+					if (!type1.absoluteType(thist).instanceOf(type2.absoluteType(thist))) {
+						return false;
+					}
+					// check family types
+					DependentType out1 = ((DepTypeClass)type1).outType;
+					DependentType out2 = ((DepTypeClass)type2).outType;
+					// family types must be subtypes of each other
+					return isSubtype(thist, out1, out2);				       			
+				}
+				else if (type1.isSingleton()){
+					// compare path type with a class type
+					DependentType norm = type1.normalizeType(thist);
+					DependentType bound = type1.typeBound(thist);
+					if (bound instanceof DepTypeClass) {
+						CjVirtualClassDecl cls = ((DepTypeClass)bound).virtualClass;
+						DependentType updBound = new DepTypeClass(new DepTypeOut(norm), cls);
+						return isSubtype(thist, updBound, type2);	
+					}
+					else {
+						// bound is a plain type
+						return false;
+					}
+				}
+				else { 
+					// plain type is not subtype of a virtual class
+					return false;
+				}
+			}
+			else {
+				// otherwise normalized types must be equivalent
+				return areEquivalent(thist, type1, type2);			
+			}
+		}
+		catch (DependentTypeException e) {
+			return false;
+		}
+	}
+	
+	/*************************
+	 * 
+	 * Equality between dependent types
+	 * 
+	 */	
+		
+	public boolean DepTypeThis.equals(Object type) {
+		if ((type == null) || !(type instanceof DepTypeThis)) 
+			return false;
+		// DepTypeThis dt = (DepTypeThis)type;
+		// return context == dt.context;
+		return true; 
+    }
+	
+	public boolean DepTypeAbsVar.equals(Object type) {
+		if ((type == null) || !(type instanceof DepTypeAbsVar)) 
+			return false;
+		DepTypeAbsVar dt = (DepTypeAbsVar)type;
+		return (this.var == dt.var);		 
+    }
+	
+    public boolean DepTypeRelVar.equals(Object type) {
+    	if ((type == null) || !(type instanceof DepTypeRelVar)) 
+			return false;
+    	DepTypeRelVar dt = (DepTypeRelVar)type;
+		return (this.var == dt.var) && this.prefix.equals(dt.prefix);
+    }
+    
+    public boolean DepTypeOut.equals(Object type) {
+    	if ((type == null) || !(type instanceof DepTypeOut)) 
+			return false;
+    	DepTypeOut dt = (DepTypeOut)type;
+		return this.prefix.equals(dt.prefix);
+    }
+
+    public boolean DepTypeClass.equals(Object type) { 
+    	if ((type == null) || !(type instanceof DepTypeClass)) 
+			return false;
+    	DepTypeClass dt = (DepTypeClass)type;
+    	return this.outType.equals(dt.outType) 
+    	   && (this.virtualClass.getTopFurtherbound() == dt.virtualClass.getTopFurtherbound());
+    }
+    
+    public boolean DepTypePlain.equals(Object type) { 
+    	if ((type == null) || !(type instanceof DepTypePlain)) 
+			return false;
+    	DepTypePlain dt = (DepTypePlain)type;
+    	if (this.type == dt.type) {
+    		return true;
+    	}
+    	else {
+    	   // rely on subtyping
+    	   return this.type.instanceOf(dt.type) && dt.type.instanceOf(this.type);
+    	}
+    }
+    
+    /*************************
+	 * 
+	 * Hash code
+	 * 
+	 */	
+    
+	public int DepTypeThis.hashCode() {
+		return 31;		
+    }
+	
+	public int DepTypeAbsVar.hashCode() {
+		return var.hashCode();
+    }
+	
+    public int DepTypeRelVar.hashCode() {
+    	return prefix.hashCode() + var.hashCode();
+    }
+    
+    public int DepTypeOut.hashCode() {
+    	return prefix.hashCode() + 19;
+    }
+
+    public int DepTypeClass.hashCode() { 
+    	return outType.hashCode() + virtualClass.hashCode();
+    }
+    
+    public int DepTypePlain.hashCode() { 
+    	return type.hashCode();
+    }    
+}

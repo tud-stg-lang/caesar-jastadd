@@ -1,0 +1,33 @@
+// Implementation of abstract virtual classes
+aspect VCAbstractClasses {
+	
+	// isAbstract() determines when a class may contain abstract members:
+	// A virtual class may contain abstract members when it is declared as abstract
+	// or at least one of its enclosing classes is declared as abstract
+	eq CjVirtualClassDecl.isAbstract() {
+		return isDeclaredAbstract() ||
+		       (isNestedType() && enclosingType().isAbstract()); 
+	}
+	
+	// checks whether a class is declared as abstract:
+	// then it cannot be instantiated
+	syn lazy boolean TypeDecl.isDeclaredAbstract() {
+		return getModifiers().isAbstract();
+	}
+	
+	eq CjVirtualClassDecl.isDeclaredAbstract() {
+		if (isImplicitType()) {
+			// check if all furtherbounds are abstract 
+			for (Iterator it = getDirectFurtherbounds().iterator(); it.hasNext(); ) {
+				TypeDecl fb = (TypeDecl)it.next();
+				if (!fb.isDeclaredAbstract()) {
+					return false;
+				}				
+			}
+			return true;
+		}
+		else {
+			return getModifiers().isAbstract();
+		}
+	}
+}

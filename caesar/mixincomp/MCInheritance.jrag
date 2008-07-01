@@ -1,0 +1,109 @@
+// Implements semantic relations for multiple inheritance
+// - The direct parents of a class
+// - The subtype relationship for multiple class inheritance
+// - Mixin linearization
+
+import org.caesarj.parentsorter.TypeNodeParentSorter;
+
+aspect MCInheritance {
+
+    eq CjClassDecl.getSuperClasses().nameType() = NameType.TYPE_NAME;
+
+	syn boolean TypeDecl.isCjClassDecl() = false;
+	eq CjClassDecl.isCjClassDecl() = true;
+	
+	// indirect casting: necessary for dependent types
+	syn CjClassDecl TypeDecl.getCjClassDecl() = null;
+	eq CjClassDecl.getCjClassDecl() = this;
+	
+	// return an iterator of explicitly declared parent classes
+	syn lazy Collection CjClassDecl.getDeclaredParents() {
+		Collection parents = new ArrayList();
+		for (int i1 = 0; i1 < getNumSuperClasses(); i1++) {
+			Access a = getSuperClasses(i1);
+			parents.add(a.type());
+		}
+	    return parents;
+	}
+	
+	// multiple superclasses (cclasses) - none for TypeDecl
+	syn lazy Collection TypeDecl.getDirectParents() = new ArrayList();
+	// multiple superclasses - direct parents ordered as in extends clause
+	eq CjClassDecl.getDirectParents() = getDeclaredParents();
+		
+	// ---------- CjClassDecl.instanceOf ----------
+	eq CjClassDecl.instanceOf(TypeDecl type) = type.isSupertypeOfCjClassDecl(this);
+
+	syn boolean TypeDecl.isSupertypeOfCjClassDecl(CjClassDecl type) = false;
+	
+	eq UnknownType.isSupertypeOfCjClassDecl(CjClassDecl type) = true;
+
+	eq InterfaceDecl.isSupertypeOfCjClassDecl(CjClassDecl type) {
+		if (isSupertypeOfClassDecl(type)) 
+			return true;
+		// Check all base classes
+		Iterator i = type.getDirectParents().iterator();
+		while (i.hasNext()) {
+			TypeDecl base = (TypeDecl)i.next();
+			if (base.instanceOf(this))
+				return true;
+		}
+		return false;
+	}
+
+	//	Object is the only java class allowed as a base class
+	eq ClassDecl.isSupertypeOfCjClassDecl(CjClassDecl type) = isObject() || isCjObject();
+
+	eq CjClassDecl.isSupertypeOfCjClassDecl(CjClassDecl type) {
+		if (type == this)
+			return true;
+		// Check all base classes
+		Iterator i = type.getDirectParents().iterator();
+		while (i.hasNext()) {
+			TypeDecl base = (TypeDecl)i.next();
+			if (base.instanceOf(this))
+				return true;
+		}
+		return false;
+	}
+	
+	// only explicitly declared parents will be used for graph sorting
+	// the attribute is intended to be overridden for virtual classes
+	syn lazy Collection CjClassDecl.getExplicitParents() = getDirectParents();
+	
+	syn lazy Collection CjClassDecl.getSortedParents() {  
+		Collection parents = new ArrayList();
+		try {
+			// [0] is the subclass itself (i.e. "this")
+			// [1] is the next base class
+			// [2..n] are the remaining base classes
+			// Note: Accesses to interfaces are removed.
+			TypeNodeParentSorter sort = new TypeNodeParentSorter(this);
+			Iterator i = sort.getSortedTypeNodes().iterator();
+			assert(i.hasNext());
+			i.next(); // Remove "this"
+			while(i.hasNext())
+				parents.add(i.next());		
+		} catch (org.caesarj.parentsorter.GraphSorter.CycleFoundException e) {
+			System.out.println("mixin.GraphSorter.CycleFoundException occured");
+		}
+		return parents;
+	}
+	
+	// mixinList attribute holds linearized mixin list
+	// the attribute is intended to be overridden for virtual classes
+	syn lazy Collection CjClassDecl.mixinList() = getSortedParents();
+	
+	// direct parents in the sorted order	
+	syn lazy Collection CjClassDecl.getSortedDirectParents() {
+		Collection direct = getDirectParents();			 
+		Collection sortedDirect = new ArrayList(direct.size());
+		for (Iterator it = getSortedParents().iterator(); it.hasNext(); ) {
+			Object o = it.next();
+			if (direct.contains(o)) {
+				sortedDirect.add(o);
+			}			
+		}
+		return sortedDirect;
+	}
+}

@@ -1,0 +1,439 @@
+aspect Enums {
+
+  /* 
+     1) It is a compile-time error to attempt to explicitly instantiate an enum type
+     (§15.9.1).
+  */
+  syn boolean TypeDecl.isEnumDecl() = false;
+  eq EnumDecl.isEnumDecl() = true;
+  
+  syn boolean ClassInstanceExpr.isExactClassInstanceExpr() = true;
+  eq EnumInstanceExpr.isExactClassInstanceExpr() = false;
+  
+  rewrite ClassInstanceExpr {
+    when(isExactClassInstanceExpr() && getAccess().type().isEnumDecl())
+    to EnumInstanceExpr new EnumInstanceExpr(getAccess(), getArgList(), getTypeDeclOpt());
+  }
+
+  public void EnumInstanceExpr.nameCheck() {
+    if(!hostBodyDecl().isEnumConstant())
+      error("enum types may not be instatinated explicitly");
+    else 
+      super.nameCheck();
+  }
+  inh BodyDecl EnumInstanceExpr.hostBodyDecl();
+  eq EnumConstant.getInit().hostBodyDecl() = this;
+  syn boolean BodyDecl.isEnumConstant() = false;
+  eq EnumConstant.isEnumConstant() = true;
+
+  /*
+    5) Enum types (§8.9) must not be declared abstract; doing so will result in a
+    compile-time error. 
+  */
+  eq EnumDecl.getModifiers().mayBeAbstract() = false;
+  
+  /*
+    9) Nested enum types are implicitly static. It is permissable to explicitly
+    declare a nested enum type to be static.
+  */
+  eq EnumDecl.isStatic() = isNestedType();
+  eq EnumDecl.getModifiers().mayBeStatic() = isNestedType();
+  
+  /*
+    12) It is a compile-time error for an enum to declare a finalizer. An instance of
+    an enum may never be finalized.
+  */
+  public void EnumDecl.typeCheck() {
+    super.typeCheck();
+    for(Iterator iter = memberMethods("finalize").iterator(); iter.hasNext(); ) {
+      MethodDecl m = (MethodDecl)iter.next();
+      if(m.getNumParameter() == 0 && m.hostType() == this)
+        error("an enum may not declare a finalizer");
+    }
+    checkEnum(this);
+  }
+  
+  /*
+    10) The direct superclass of an enum type named E is Enum<E>. 
+  */  
+    
+  syn lazy Opt EnumDecl.getSuperClassAccessOpt() {
+    return new Opt(
+      new ParameterizedTypeAccess(
+        "java.lang",
+        "Enum",
+        new List().add(createQualifiedAccess())
+      )
+    );
+  }
+
+  /*
+    3b) If the enum type has no constructor declarations, a parameterless default
+    constructor is provided (which matches the implicit empty argument list).
+    This default constructor is private.
+  */
+
+
+  eq ParameterDeclaration.getTypeAccess().nameType() = NameType.TYPE_NAME;
+
+  private boolean EnumDecl.done = false;
+  private boolean EnumDecl.done() {
+    if(done) return true;
+    done = true;
+    return false;
+  }
+  rewrite EnumDecl {
+    when(!done())
+    to EnumDecl {
+      if(noConstructor()) {
+        List parameterList = new List();
+        parameterList.add(
+          new ParameterDeclaration(new TypeAccess("java.lang", "String"), "p0")
+        );
+        parameterList.add(
+          new ParameterDeclaration(new TypeAccess("int"), "p1")
+        );
+        addBodyDecl(
+          new ConstructorDecl(
+            new Modifiers(new List().add(new Modifier("private"))),
+            name(),
+            parameterList,
+            new List(),
+            new Opt(
+              new ExprStmt(
+                new SuperConstructorAccess(
+                  new List().add(
+                    new VarAccess("p0")
+                  ).add(
+                    new VarAccess("p1")
+                  ),
+                  "super"
+                )
+              )
+            ),
+            new Block(new List())
+          )
+        );
+      }
+      addValues(); // Add the values() and getValue(String s) methods
+      return this;
+    }
+  }
+  
+  /*
+    11) In addition to the members it inherits from Enum<E>, for each declared
+    enum constant with the name n the enum type has an implicitly declared
+    public static final field named n of type E. These fields are considered to
+    be declared in the same order as the corresponding enum constants, before
+    any static fields explicitly declared in the enum type. Each such field is
+    initialized to the enum constant that corresponds to it. Each such field is
+    also considered to be annotated by the same annotations as the
+    corresponding enum constant. The enum constant is said to be created when
+    the corresponding field is initialized.
+  */
+
+  eq EnumConstant.isPublic() = true;
+  eq EnumConstant.isStatic() = true;
+  eq EnumConstant.isFinal() = true;
+
+  syn lazy Access EnumConstant.getTypeAccess() {
+    return hostType().createQualifiedAccess();
+  }
+
+  syn lazy Opt EnumConstant.getInitOpt() {
+    return new Opt(
+        new EnumInstanceExpr(
+          hostType().createQualifiedAccess(),
+          createArgumentList(),
+          createOptAnonymousDecl()
+        )
+    );
+  }
+
+  /*
+    3) An enum constant may be followed by arguments, which are passed to the
+    constructor of the enum type when the constant is created during class
+    initialization as described later in this section. The constructor to be
+    invoked is chosen using the normal overloading rules (§15.12.2). If the
+    arguments are omitted, an empty argument list is assumed. 
+  */
+
+  private List EnumConstant.createArgumentList() {
+    List argList = new List();
+    argList.add(new StringLiteral(getID()));
+    argList.add(new IntegerLiteral(Integer.toString(((List)getParent()).getIndexOfChild(this))));
+    for(int i = 0; i < getNumArg(); i++)
+      argList.add(getArg(i));
+    setArgList(new List()); // TODO: get rid of this side-effect
+    return argList;
+  }
+
+  /*
+    4) The optional class body of an enum constant implicitly defines an anonymous
+    class declaration (§15.9.5) that extends the immediately enclosing enum type.
+    The class body is governed by the usual rules of anonymous classes; in
+    particular it cannot contain any constructors.
+
+    TODO: work on error messages
+  */
+  
+  private Opt EnumConstant.createOptAnonymousDecl() {
+    if(getNumBodyDecl() == 0)
+      return new Opt();
+    List list = getBodyDeclList();
+    setBodyDeclList(new List()); // TODO: get rid of this side-effect
+    return new Opt(
+      new AnonymousDecl(
+        new Modifiers(),
+        "Anonymous",
+        list
+      )
+    );
+  }
+
+  /*
+    7) It is a compile-time error for the class body of an enum constant to declare
+    an abstract method.
+
+    TODO: work on error messages
+  */
+  
+  /* 
+    8) An enum type is implicitly final unless it contains at least one enum
+    constant that has a class body. In any case, it is a compile-time error to
+    explicitly declare an enum type to be final.
+  */
+
+  eq EnumDecl.isFinal() {
+    for(Iterator iter = enumConstants().iterator(); iter.hasNext(); ) {
+      EnumConstant c = (EnumConstant)iter.next();
+      EnumInstanceExpr e = (EnumInstanceExpr)c.getInit();
+      if(e.hasTypeDecl())
+        return false;
+    }
+    return true;
+  }
+  eq EnumDecl.getModifiers().mayBeFinal() = false;
+
+  syn lazy ArrayList EnumDecl.enumConstants() {
+    ArrayList list = new ArrayList();
+    for(int i = 0; i < getNumBodyDecl(); i++)
+      if(getBodyDecl(i).isEnumConstant())
+        list.add(getBodyDecl(i));
+    return list;
+  }
+
+  /*
+    13) In addition, if E is the name of an enum type, then that type has the
+    following implicitly declared static methods:
+      public static E[] values();
+      public static E valueOf(String name);
+  */
+
+  private void EnumDecl.addValues() {
+    int numConstants = enumConstants().size();
+    List initValues = new List();
+    for(Iterator iter = enumConstants().iterator(); iter.hasNext(); ) {
+      EnumConstant c = (EnumConstant)iter.next();
+      initValues.add(c.createBoundFieldAccess());
+    }
+    FieldDeclaration values = new FieldDeclaration(
+      new Modifiers(new List().add(
+        new Modifier("private")).add(
+        new Modifier("static")).add(
+        new Modifier("final"))
+      ),
+      arrayType().createQualifiedAccess(),
+      "$VALUES",
+      new Opt(
+          new ArrayCreationExpr(
+            createQualifiedAccess(),
+            new List().add(
+              new Dims(
+                new Opt(
+                  new IntegerLiteral(Integer.toString(enumConstants().size()))
+                )
+              )
+            ),
+            new Opt(
+              new ArrayInit(
+                initValues
+              )
+            )
+          )
+      )
+    );
+    addBodyDecl(values);
+    // public static final Test[] values() { return (Test[])$VALUES.clone(); }
+    addBodyDecl(
+      new MethodDecl(
+        new Modifiers(new List().add(
+          new Modifier("public")).add(
+          new Modifier("static")).add(
+          new Modifier("final"))
+        ),
+        arrayType().createQualifiedAccess(),
+        "values",
+        new List(),
+        new List(),
+        new List(),
+        new Opt(
+          new Block(
+            new List().add(
+              new ReturnStmt(
+                new Opt(
+                  new CastExpr(
+                    arrayType().createQualifiedAccess(),
+                    values.createBoundFieldAccess().qualifiesAccess(
+                      new MethodAccess(
+                        new List(),
+                        "clone"
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    );
+    // public static Test valueOf(String s) { return (Test)java.lang.Enum.valueOf(Test.class, s); }
+    addBodyDecl(
+      new MethodDecl(
+        new Modifiers(new List().add(
+          new Modifier("public")).add(
+          new Modifier("static"))
+        ),
+        createQualifiedAccess(),
+        "valueOf",
+        new List().add(
+          new ParameterDeclaration(
+            new Modifiers(new List()),
+            typeString().createQualifiedAccess(),
+            "s"
+          )
+        ),
+        new List(),
+        new List(),
+        new Opt(
+          new Block(
+            new List().add(
+              new ReturnStmt(
+                new Opt(
+                  new CastExpr(
+                    createQualifiedAccess(),
+                    // TODO: Class is not yet working
+                    new NullLiteral("null")
+                    /*
+                    lookupType("java.lang", "Enum").createQualifiedAccess().qualifiesAccess(
+                      new MethodAccess(
+                        new List().add(
+                          new VarAccess(
+                            "s"
+                          )
+                        ),
+                        "valueOf"
+                      )
+                    )
+                    */
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+
+  inh TypeDecl EnumDecl.typeString();
+
+  /*
+    6) It is a compile-time error for an enum type E to have an abstract method m as
+    a member unless E has one or more enum constants, and all of E's enum
+    constants have class bodies that provide concrete implementations of m. 
+ 
+    TODO: better error messages
+  */
+
+  eq EnumDecl.isAbstract() {
+    for(int i = 0; i < getNumBodyDecl(); i++) {
+      if(getBodyDecl(i) instanceof MethodDecl) {
+        MethodDecl m = (MethodDecl)getBodyDecl(i);
+        if(m.isAbstract())
+          return true;
+      }
+    }
+    return false;
+  }
+  
+  /*
+    14) It is a compile-time error to reference a static field of an enum type that
+    is not a compile-time constant (§15.28) from constructors, instance
+    initializer blocks, or instance variable initializer expressions of that
+    type.
+  */
+
+  protected void ASTNode.checkEnum(EnumDecl enumDecl) {
+    for(int i = 0; i < getNumChild(); i++)
+      getChild(i).checkEnum(enumDecl);
+  }
+  protected void EnumDecl.checkEnum(EnumDecl enumDecl) {
+    for(int i = 0; i < getNumBodyDecl(); i++) {
+      if(getBodyDecl(i) instanceof ConstructorDecl)
+        getBodyDecl(i).checkEnum(enumDecl);
+      else if(getBodyDecl(i) instanceof InstanceInitializer)
+        getBodyDecl(i).checkEnum(enumDecl);
+      else if(getBodyDecl(i) instanceof FieldDeclaration) {
+        FieldDeclaration f = (FieldDeclaration)getBodyDecl(i);
+        if(!f.isStatic() && f.hasInit())
+          f.checkEnum(enumDecl);
+      }
+    }
+  }
+  protected void VarAccess.checkEnum(EnumDecl enumDecl) {
+    super.checkEnum(enumDecl);
+    if(decl().isStatic() && decl().hostType() == enumDecl && !isConstant())
+      error("may not reference a static field of an enum type from here");
+  }
+   
+  /*
+    15) It is a compile-time error for the constructors, instance initializer blocks,
+    or instance variable initializer expressions of an enum constant e to refer
+    to itself or to an enum constant of the same type that is declared to the
+    right of e.
+
+  traversal that checks for errors
+  */
+
+
+
+  // 8.9
+  
+  /* 2) An enum constant may be preceded by annotation (§9.7) modifiers. If an
+  annotation a on an enum constant corresponds to an annotation type T, and T
+  has a (meta-)annotation m that corresponds to annotation.Target, then m must
+  have an element whose value is annotation.ElementType.FIELD, or a
+  compile-time error occurs.
+  Comment: This is done in Annotations.jrag
+  */
+
+
+  eq EnumConstant.getTypeAccess().nameType() = NameType.TYPE_NAME;
+
+  // generic traversal should traverse NTA as well
+  // this should be done automatically by the JastAdd
+  public int EnumConstant.getNumChild() {
+    return 6;
+  }
+  public ASTNode EnumConstant.getChild(int i) {
+    switch(i) {
+      case 4: return getTypeAccess();
+      case 5: return getInitOpt();
+      default: return ASTNode.getChild(this, i);
+    }
+  }
+
+  
+}

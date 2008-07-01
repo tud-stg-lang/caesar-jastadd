@@ -1,0 +1,94 @@
+aspect DTNameResolving {
+	
+	/*****************************************************
+	 * 
+	 * Changing syntactic classification of names:
+	 *  - Variables are allowed to occur in prefixes of ambiguous names 
+	 * 
+	 */
+	
+	refine SyntacticClassification eq TypeAccess.predNameType() = NameType.AMBIGUOUS_NAME;
+	
+	/*****************************************************
+	 * 
+	 * Checking of type references
+	 * 
+	 */
+	
+	refine NameCheck public void TypeAccess.nameCheck() {
+		// VarAccess qualifiers are not allowed for normal classes
+		if (!type().isCjClassDecl() || (isQualified() && !qualifier().type().isCjClassDecl())) {
+			NameCheck.TypeAccess.nameCheck();
+			return;
+		}
+
+		// qualifier check
+		if(isQualified() && !qualifier().isTypeAccess() && !qualifier().isPackageAccess() && !(qualifier() instanceof VarAccess))
+			error("can not access the type named " + decl().typeName() + " in this context");
+
+		if(decls().isEmpty())
+			error("no visible type named " + typeName());
+		if(decls().size() > 1) {
+			error("several types named " + name());
+			for(Iterator iter = decls().iterator(); iter.hasNext(); ) {
+				TypeDecl t = (TypeDecl)iter.next();
+				error("    " + t.typeName());
+			}
+		}
+
+		// Family references (i.e. factories) must not change
+		if (!accessIsFinal())
+			error(typeName() + " must be final");
+	}
+	
+	/*****************************************************
+	 * 
+	 * Checking if an expression is final
+	 * 
+	 */
+	
+	// accessIsFinal tests whether a type reference and its
+	// qualifier are final, i.e. cannot change at runtime.
+	// This is always true for TypeAccess and PackageAccess,
+	// but not necessarily for VarAccess.
+	syn boolean Expr.accessIsFinal() = false;
+	syn boolean Access.qualifierIsFinal() = (!isQualified() || qualifier().accessIsFinal());
+	eq VarAccess.typeName() = isQualified() ? (qualifier().typeName() + "." + name()) : name();
+	eq CastExpr.accessIsFinal() = true;
+	eq Literal.accessIsFinal() = true;
+	eq ParExpr.accessIsFinal() = getExpr().accessIsFinal();
+	eq TypeAccess.accessIsFinal() = qualifierIsFinal();
+	eq ClassAccess.accessIsFinal() = qualifierIsFinal();
+	eq PackageAccess.accessIsFinal() = qualifierIsFinal();
+	eq VarAccess.accessIsFinal() = qualifierIsFinal() && decl().isFinal();
+	eq ThisAccess.accessIsFinal() = qualifierIsFinal();
+	eq SuperAccess.accessIsFinal() = qualifierIsFinal();
+	eq AbstractDot.accessIsFinal() = getLeft().accessIsFinal() && getRight().accessIsFinal();
+	
+	/*****************************************************
+	 * 
+	 * Override variable lookup in method and constructors
+	 * 
+	 */
+	
+	// enable occurring of context fields in the types of parameters
+	refine LookupVariable eq MethodDecl.getParameter().lookupVariable(String name) {
+		SimpleSet set = parameterDeclaration(name);
+		if(!set.isEmpty()) return set;
+		return lookupVariable(name);		
+	}
+	 
+	// enable occurring of context fields in the types of parameters
+	refine LookupVariable eq ConstructorDecl.getParameter().lookupVariable(String name) {
+		SimpleSet set = parameterDeclaration(name);
+		if(!set.isEmpty()) return set;
+		return lookupVariable(name);		
+	}
+	
+	// enable occurring of parameters in the return types
+	eq MethodDecl.getTypeAccess().lookupVariable(String name) {
+		SimpleSet set = parameterDeclaration(name);
+		if(!set.isEmpty()) return set;
+		return lookupVariable(name);		
+	}
+}

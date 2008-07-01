@@ -1,0 +1,51 @@
+aspect DTMethodTyping {
+	
+	public TypeDecl MethodDecl.substituteType(TypeDecl ta, MethodAccess ma, boolean strict) {
+		DependentType t = ta.depType();		
+		// substitute the type of this
+		DependentType t1 = ma.qualifyDepType(t, hostType());		
+		// substitute argument types
+		for (int i = 0; i < ma.getNumArg(); i++) {
+			t1 = t1.substituteParam(i, ma.getArg(i).depType());
+	    }
+	    if (!strict || t.getPrecision() == t1.getPrecision()) {
+	        // substitution successful	    	
+	    	return ma.typeDeclFor(t1);
+	    }
+	    else {
+	    	// substitution failed
+	    	return ma.unknownType();	    	
+	    }		
+	}
+	
+	refine LookupMethod eq MethodDecl.getParamType(int i, MethodAccess ma) {
+		try {    	
+			return substituteType(getParameter(i).type(), ma, true);
+    	}
+	    catch (DependentTypeException e) {
+	    	// error(e.msg);
+	    	return ma.unknownType();
+	    }	   
+	}
+			
+	// A dependent type is characterized by its top furtherbound (notably for method signature strings)
+	eq DependentTypeDecl.erasure() {
+    	if (!this.isVirtualClassDecl()) { 
+    		return super.erasure(); 
+    	}    	
+		CjVirtualClassDecl vc = this.getVirtualClassDecl();
+		return vc.getTopFurtherbound();
+	}
+	
+	// In constrast to signatureString() does not use erasure for dependent types
+    public String MethodDecl.rawSignatureString() {
+    	StringBuffer s = new StringBuffer();
+        s.append(name() + "(");
+        for(int i = 0; i < getNumParameter(); i++) {
+          if(i != 0) s.append(", ");
+          s.append(getParameter(i).type().typeName());
+        }
+        s.append(")");
+        return s.toString();
+    }
+}

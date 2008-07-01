@@ -1,0 +1,124 @@
+<!--
+	THIS IS AN EXAMPLE BUILDFILE, COPY IT TO PROJECT ROOT FOLDER
+	
+ Targets for working from terminal window:
+       gen             - generates java files
+       cleanGen        - removes all generated files
+-->
+<project name="v2" default="gen">
+
+<!-- "target.dir" is the directory where generated files will be stored -->
+<property name="target.dir" value="gen"/>
+<!-- "package" is the package name which jastadd gives to ast files -->
+<property name="package" value="org.caesarj.ast"/>
+
+<!-- "tools" is the directory where generators and libraries are located. -->
+<property name="tools" value="tools"/>
+	
+<!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
+<taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${tools}/JFlex.jar"/>
+<!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
+<taskdef name="beaver" classname="beaver.comp.run.AntTask" classpath="${tools}/beaver.jar"/>
+<!-- "jastadd" is an ant task class in jastadd2.jar -->
+<taskdef name="jastadd" classname="jastadd.JastAddTask" classpath="${tools}/jastadd2.jar"/>
+
+<!-- generate compiler source files and compile sources -->
+<target name="gen">
+	<mkdir dir="${target.dir}"/>
+	<!-- create AST node types and weave aspect modules -->
+	<jastadd package="${package}" rewrite="true" beaver="true" novisitcheck="true"
+		   outdir="${target.dir}" lazyMaps="true" noInhEqCheck="true">
+		<fileset dir="Java1.4Frontend">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>      
+		</fileset>
+		<fileset dir="BytecodeBackend">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
+		<fileset dir="Java1.5Frontend">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
+		<fileset dir="MixinComposition">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
+	</jastadd>
+	<!-- generate the scanner -->
+	<jflex file="MixinComposition/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/>
+	<!-- generate the parser phase 1, create a full .lalr specification from fragments-->
+	<concat destfile="${target.dir}/parser/JavaParser.all" binary="true" force="no">
+		<fileset dir="MixinComposition">
+			<include name="java14.parser"/>
+		</fileset>
+		<fileset dir="Java1.5Frontend">
+			<include name="*.parser"/>
+			<exclude name="java14.parser"/>
+		</fileset>
+		<fileset dir="MixinComposition">
+			<include name="mixcomp.parser"/>
+		</fileset>
+	</concat>
+	<!-- generate the parser phase 2, translating .lalr to .beaver -->
+	<java classpath="${tools}/proj.jar:${tools}/beaver-rt.jar" classname="Main" fork="true" dir="${target.dir}">
+		<arg path="${target.dir}/parser/JavaParser.all"/>
+		<arg path="${target.dir}/parser/JavaParser.beaver"/>
+	</java>
+	<!-- generate the parser phase 3, translating .beaver to .java -->
+	<beaver file="${target.dir}/parser/JavaParser.beaver" terminalNames="yes" compress="yes" useSwitch="yes"/>
+	<!-- copy library files-->
+	<!--copy todir="gen/beaver">
+		<fileset dir="Java1.4Frontend/beaver"/>
+	</copy-->
+	<copy todir="${target.dir}/parser" file="Java1.4Frontend/parser/Unicode.java"/>
+</target>
+
+<target name="cleanGen">
+	<delete includeemptydirs="true">
+		<fileset dir="${target.dir}" includes="**/*"/>
+	</delete>
+</target>
+
+<!-- generating jar files -->
+<!-- create compile jar, taking binaries from eclipse's bin folder -->
+<target name="compiler.jar">
+  <unjar src="${tools}/beaver-rt.jar" dest="./bin">
+	<patternset>
+        <include name="**/*.class"/>
+    </patternset>
+  </unjar>
+  <jar destfile="cjc.jar" basedir="./bin" includes="**/*.class" 
+	excludes="org/caesarj/runtime/mixer/*.class,test**/**">
+    <manifest>
+      <attribute name="Main-Class" value="org.caesarj.compiler.CaesarCompiler"/>
+    </manifest>
+  </jar>
+</target>
+
+<!-- create runtime jar, taking binaries from eclipse's bin folder -->
+<target name="runtime.jar">
+  <unjar src="${tools}/asm-3.1.jar" dest="./bin">
+	<patternset>
+        <include name="**/*.class"/>
+    </patternset>
+  </unjar>
+  <unjar src="${tools}/asm-util-3.1.jar" dest="./bin">
+	<patternset>
+        <include name="**/*.class"/>
+    </patternset>
+  </unjar>
+  <jar destfile="cj.jar" basedir="./bin" 
+	includes="org/caesarj/runtime/mixer/*.class,org/objectweb/asm/**">
+    <manifest>
+      <attribute name="Main-Class" value="org.caesarj.runtime.mixer.MixinLoader"/>
+    </manifest>
+  </jar>
+</target>
+
+</project>
+

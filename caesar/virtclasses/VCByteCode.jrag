@@ -1,0 +1,8 @@
+aspect VCByteCode {
+	
+	public void CjVirtualClassDecl.generateClassfile() {
+    	addFactoryMethods();
+    	addOuterAccessor();
+    	super.generateClassfile();
+	}
+}

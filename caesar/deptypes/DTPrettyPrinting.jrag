@@ -1,0 +1,31 @@
+aspect DTPrettyPrinting {
+   
+    public String DependentType.typeName();
+    
+    public String DepTypeThis.typeName() { return "this"; }
+	
+    public String DepTypeAbsVar.typeName() { return var.name(); }
+	
+    public String DepTypeRelVar.typeName() { 
+    	return prefix.typeName() + "." + var.name();
+    }
+	
+    public String DepTypeOut.typeName() { 
+    	return prefix.typeName() + ".out";
+	}
+	
+	public String DepTypeClass.typeName() {
+		return outType.typeName() + "." + virtualClass.name();		
+	}
+	
+	public String DepTypePlain.typeName() {
+		return type.typeName();		
+	}
+		
+	public String DepTypeThis.toString()   { return typeName(); }
+	public String DepTypeAbsVar.toString() { return typeName(); }
+	public String DepTypeRelVar.toString() { return typeName(); }
+    public String DepTypeOut.toString()    { return typeName(); }
+	public String DepTypeClass.toString()  { return typeName(); }
+	public String DepTypePlain.toString()  { return typeName(); }
+}

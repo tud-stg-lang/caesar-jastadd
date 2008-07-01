@@ -1,0 +1,216 @@
+import java.util.*;
+
+aspect AccessTypes {
+  syn boolean Expr.isTypeAccess() = false;
+  eq TypeAccess.isTypeAccess() = true;
+  eq AbstractDot.isTypeAccess() = getRight().isTypeAccess();
+
+  syn boolean Expr.isMethodAccess() = false;
+  eq AbstractDot.isMethodAccess() = getRight().isMethodAccess();
+  eq MethodAccess.isMethodAccess() = true;
+
+  syn boolean Expr.isFieldAccess() = false;
+  eq AbstractDot.isFieldAccess() = getRight().isFieldAccess();
+  syn lazy boolean VarAccess.isFieldAccess() = decl().isClassVariable() || decl().isInstanceVariable();
+
+  syn boolean Expr.isSuperAccess() = false;
+  eq AbstractDot.isSuperAccess() = getRight().isSuperAccess();
+  eq SuperAccess.isSuperAccess() = true;
+  eq ParExpr.isSuperAccess() = getExpr().isSuperAccess();
+  eq CastExpr.isSuperAccess() = getExpr().isSuperAccess();
+
+  syn boolean Expr.isThisAccess() = false;
+  eq AbstractDot.isThisAccess() = getRight().isThisAccess();
+  eq ThisAccess.isThisAccess() = true;
+  eq ParExpr.isThisAccess() = getExpr().isThisAccess();
+  eq CastExpr.isThisAccess() = getExpr().isThisAccess();
+
+  syn boolean Expr.isPackageAccess() = false;
+  eq AbstractDot.isPackageAccess() = getRight().isPackageAccess();
+  eq PackageAccess.isPackageAccess() = true;
+
+  syn boolean Expr.isArrayAccess() = false;
+  eq AbstractDot.isArrayAccess() = getRight().isArrayAccess();
+  eq ArrayAccess.isArrayAccess() = true;
+  
+  syn boolean Expr.isClassAccess() = false;
+  eq AbstractDot.isClassAccess() = getRight().isClassAccess();
+  eq ClassAccess.isClassAccess() = true;
+ 
+  syn boolean Expr.isSuperConstructorAccess() = false;
+  eq AbstractDot.isSuperConstructorAccess() = getRight().isSuperConstructorAccess();
+  eq SuperConstructorAccess.isSuperConstructorAccess() = true;
+}
+
+aspect QualifiedNames {
+  // begin vaidas
+  syn boolean Expr.isLeftChildOfDot() = hasParentDot() && parentDot().getLeftNoTransform() == this;
+  syn boolean Expr.isRightChildOfDot() = hasParentDot() && parentDot().getRightNoTransform() == this;
+  // end vaidas  
+  
+  syn boolean Access.isQualified() = hasPrevExpr();
+  eq AbstractDot.isQualified() = hasParentDot();
+
+  syn Expr Access.qualifier() = prevExpr();
+  
+  syn Expr AbstractDot.leftSide() = getLeft();
+  syn Access AbstractDot.rightSide() = getRight/*NoTransform*/() instanceof AbstractDot ? (Access)((AbstractDot)getRight/*NoTransform*/()).getLeft() : (Access)getRight();
+
+  syn Access Access.lastAccess() = this;
+  eq AbstractDot.lastAccess() = getRight().lastAccess();
+
+  syn AbstractDot Expr.parentDot() = getParent() instanceof AbstractDot ? (AbstractDot)getParent() : null;
+  syn boolean Expr.hasParentDot() = parentDot() != null;
+
+  syn Access Expr.nextAccess() = parentDot().nextAccess();
+  syn boolean Expr.hasNextAccess() = isLeftChildOfDot();
+  
+  syn Access AbstractDot.nextAccess() = rightSide();
+  
+  syn Expr AbstractDot.prevExpr() = leftSide();
+  syn lazy Expr Access.prevExpr() {
+    if(isLeftChildOfDot()) {
+      if(parentDot().isRightChildOfDot())
+        return parentDot().parentDot().leftSide();
+    }
+    else if(isRightChildOfDot())
+      return parentDot().leftSide();
+    throw new Error(this + " does not have a previous expression");
+  }
+
+  syn boolean AbstractDot.hasPrevExpr() = true;
+  syn lazy boolean Access.hasPrevExpr() {
+    if(isLeftChildOfDot()) {
+      if(parentDot().isRightChildOfDot())
+        return true;
+    }
+    else if(isRightChildOfDot())
+      return true;
+    return false;
+  }
+
+  public Dot Expr.qualifiesAccess(Access access) {
+    Dot dot = new Dot(this, access);
+    dot.lastDot = dot;
+    return dot;
+  }
+  
+  public Dot Dot.lastDot = null;
+  public Dot Dot.qualifiesAccess(Access access) {
+    if(lastDot == null) {
+      Dot node = this;
+      while(node.getRightNoTransform() instanceof Dot)
+        node = (Dot)node.getRightNoTransform();
+      lastDot = node;
+    }
+    Dot dot = new Dot(lastDot.getRightNoTransform(), access);
+    lastDot.setRight(dot);
+    lastDot = dot;
+    return this;
+  }
+  
+  // Used when replacing pairs from a list to concatenate the result to the tail of the current location.
+  private Access Dot.qualifyTailWith(Access expr) {
+    if(getRight/*NoTransform*/() instanceof AbstractDot) {
+      AbstractDot dot = (AbstractDot)getRight/*NoTransform*/();
+      return expr.qualifiesAccess(dot.getRight/*NoTransform*/());
+    }
+    return expr;
+  }
+
+
+  // These are used by the parser to extract the last name which
+  // will be replaced by a method name
+  public Access AbstractDot.extractLast() {
+    return getRightNoTransform();
+ }
+  public void AbstractDot.replaceLast(Access access) {
+    setRight(access);
+  }
+  public Access Dot.extractLast() {
+    return lastDot.getRightNoTransform();
+  }
+  public void Dot.replaceLast(Access access) {
+    lastDot.setRight(access);
+  }
+
+}
+
+aspect NameResolution {
+ 
+  // Resolve Package or Type name
+  rewrite PackageOrTypeAccess {
+    /*
+    when(!lookupType(name()).isEmpty())
+    to Access new TypeAccess(name());
+    when(hasPackage(name()))
+    to Access new PackageAccess(name());
+    */
+    //when(!duringSyntacticClassification())
+    when(!duringSyntacticClassification() &&
+      (!lookupType(name()).isEmpty() || hasPackage(name())))
+    to Access{
+      if(!lookupType(name()).isEmpty())
+        return new TypeAccess(name(), start());
+      else
+        return new PackageAccess(name(), start());
+    }
+  }
+
+  // Resolve Ambiguous name
+  rewrite AmbiguousAccess {
+    /*
+    when(!lookupVariable(name()).isEmpty())
+    to Access new VarAccess(name());
+    when(!lookupType(name()).isEmpty())
+    to Access new TypeAccess(name());
+    when(hasPackage(name()))
+    to Access new PackageAccess(name());
+    */
+    // This prevents strange errors with circular rewrites.
+    // At the beginning, only FieldDecls are in the AST. These will be rewritten
+    // to one or more FieldDeclarations. CaesarJ allows variables as qualifiers, so
+    // lookupVariable is called during rewrite (see below). This requires to check
+    // every body declaration in a class. However, FieldDecls will not be rewritten
+    // this time because inCircle is true. The lookup fails and we will always get
+    // a PackageAccess. Better delay the rewrite until we know for sure.
+    // I'm not sure if there is a cleaner solution, but this seems to work for now.
+    //when(!duringSyntacticClassification())
+    when(!duringSyntacticClassification() &&
+      (!lookupVariable(name()).isEmpty() || !lookupType(name()).isEmpty() || hasPackage(name())))
+    to Access {
+      if(!lookupVariable(name()).isEmpty()) {
+        return new VarAccess(name(), start());
+      }
+      else if(!lookupType(name()).isEmpty()) {
+        return new TypeAccess(name(), start());
+      }
+      else {
+        return new PackageAccess(name(), start());
+      }
+    }
+  }
+
+  // combine two package access into one node
+  rewrite Dot {
+    when(!duringSyntacticClassification() && leftSide().isPackageAccess() && rightSide().isPackageAccess())
+    to Access {
+      PackageAccess left = (PackageAccess)leftSide();
+      PackageAccess right = (PackageAccess)rightSide();
+      left.setPackage(left.getPackage() + "." + right.getPackage());
+      return qualifyTailWith(left);
+    }
+  }
+        
+  // combine PackageAccess + TypeAccess into one qualified TypeAccess
+  rewrite Dot {
+    when(!duringSyntacticClassification() && leftSide().isPackageAccess() && !((Access)leftSide()).hasPrevExpr() && rightSide().isTypeAccess())
+    to Access {
+      PackageAccess left = (PackageAccess)leftSide();
+      TypeAccess right = (TypeAccess)rightSide();
+      right.setPackage(left.getPackage());
+      right.setStart(left.start());
+      return qualifyTailWith(right);
+    }
+  }
+}

@@ -1,0 +1,15 @@
+CjClassDecl : ClassDecl ::= Modifiers <ID:String> /[SuperClassAccess:Access]/ 
+   /[CjInterface:InterfaceDecl]/ /[SuperType:CjSuperType]/ /AccessorMethods:MethodDecl*/
+   /RealConstructor:ConstructorDecl/ SuperClasses:Access* Implements:Access* BodyDecl*;
+                            
+CjSuperType : CjClassDecl ::= <Source:CjClassDecl>;
+
+CjAccessorMethodDecl : MethodDecl;
+
+CjInitMethodDecl : MethodDecl;
+
+DirectTypeAccess : Access ::= <Target:TypeDecl>; 
+
+InitMethodAccess : MethodAccess;
+
+CjConstructorDecl : ConstructorDecl;  

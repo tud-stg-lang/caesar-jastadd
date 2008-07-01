@@ -1,0 +1,134 @@
+// Implements a super type for a class with multiple super classes
+//
+// Since a class inherits from multiple classes, its super type
+// must represent multiple classes. This is achieved by a special
+// type CjSuperType, which joins the interfaces of all super classes
+// of a class. 
+//
+// - CjSuperType represents the super type of a class, if the class
+//   has more than one super class
+// - Lookup of methods and fields for the super type is implemented
+// - Bytecode generation for the super type is switched off
+// - The place holder "$$super" is generated in the extends clause
+//   of classes with multiple superclasses
+
+aspect MCSuperType {
+	
+	inh TypeDecl ASTNode.typeCjObject();
+	eq Program.getCompilationUnit().typeCjObject() = typeCjObject();
+	syn lazy TypeDecl Program.typeCjObject() = lookupType("org.caesarj.runtime", "CjObject");
+	
+	syn lazy boolean TypeDecl.isCjObject() = false;
+	eq ClassDecl.isCjObject() = name().equals("CjObject") && packageName().equals("org.caesarj.runtime");
+
+	// the access trough SuperClassAccessOpt creates CjSuperType 
+	syn lazy Opt CjClassDecl.getSuperClassAccessOpt() {
+		Iterator parents = getDirectParents().iterator();
+		if (parents.hasNext()) { // has parent
+			TypeDecl parent = (TypeDecl)parents.next();
+			if (parents.hasNext()) { // more than one parent
+				return new Opt(new DirectTypeAccess(getSuperType()));
+			}
+			else { // one parent
+				return new Opt(new DirectTypeAccess(parent));
+			}		
+		}
+		// no parents 
+		return new Opt();
+	}
+	
+	eq CjSuperType.getSuperClassAccessOpt() = new Opt();
+	
+	public ClassDecl CjClassDecl.superclass() {
+	    if (hasSuperClassAccess() && !isCircular() && getSuperClassAccess().type().isClassDecl())
+	    	return getSuperClassAccess().type().getClassDecl();
+	    return typeCjObject().getClassDecl();
+	}
+		
+	syn lazy Opt CjClassDecl.getSuperTypeOpt() {
+		return new Opt(
+				new CjSuperType(
+						new Modifiers(new List().add(new Modifier("public"))),
+						getID()+"$super",new List(),new List(),new List(),this)
+		);
+	}
+	
+	// instead of instanceof CjSuperType
+	syn boolean TypeDecl.isCjSuperType() = false;
+	eq CjSuperType.isCjSuperType() = true;
+
+	eq CjSuperType.isSupertypeOfCjClassDecl(CjClassDecl type) {
+		return type == getSource();
+	}
+	
+	// method map includes methods of all superclasses
+	// if two superclasses have methods with equal signatures - return them all
+    // this will cause an error message "several most specific methods"
+	eq CjSuperType.methodsSignatureMap() {
+	    HashMap map = new HashMap();
+	    for (Iterator t_iter = getSource().getSortedDirectParents().iterator(); t_iter.hasNext(); ) {
+	    	TypeDecl typeDecl = (TypeDecl)t_iter.next();
+	    	for(Iterator iter = typeDecl.methodsIterator(); iter.hasNext(); ) {
+		        MethodDecl m = (MethodDecl)iter.next();
+		        if(!m.isPrivate() && m.accessibleFrom(getSource())) {
+		        	if(allMethodsAbstract((SimpleSet)map.get(m.signature()))) {
+		        		if (m.isAbstract()) { 
+		        			// add one more abstract method
+		        			putSimpleSetElement(map, m.signature(), m);
+		        		}
+		        		else { 
+		        			// replace all abstract methods by a concrete one
+		        	   		map.put(m.signature(), SimpleSet.emptySet.add(m));
+		        		}
+		        	}
+		      	}
+	    	}
+		}
+	    return map;
+	}
+	
+	// look for specifield field in superclasses list
+	// if two superclasses have fields with equal names - returns them all 
+	// this will cause an error message "several fields named ..."
+	eq CjSuperType.fields(String name) {
+		SimpleSet fields = SimpleSet.emptySet; 
+	    for (Iterator t_iter = getSource().mixinList().iterator(); t_iter.hasNext(); ) {
+	    	TypeDecl typeDecl = (TypeDecl)t_iter.next();
+	        for(Iterator iter = typeDecl.localFields(name).iterator(); iter.hasNext(); ) {
+	            FieldDeclaration decl = (FieldDeclaration)iter.next();
+	            if(!decl.isPrivate() && decl.accessibleFrom(getSource())) {
+	              fields = fields.add(decl);
+	              // take the first field only
+	              return fields;
+	            }
+	          }
+		}
+		return fields;
+	}
+	
+	// name for error messages and pretty print
+	eq CjSuperType.typeName() {
+		CjClassDecl source = getSource();
+		StringBuffer s = new StringBuffer(getID()+" : supertype of "+source.name()+" { ");
+		// using mixin list, other possibility to use getDirectParents
+		Collection mixinList = source.mixinList();
+		if (mixinList.size() == 0)
+			s.append("java.lang.Object");
+		else
+			for (Iterator it = mixinList.iterator(); it.hasNext(); ) {
+				ClassDecl mixinClass = (ClassDecl) it.next();
+				s.append(mixinClass.name()+" ");
+			}
+		s.append(" }\n");
+		return s.toString();
+	}
+	
+	// CjSuperType returns placeholder $$super which must be replaced by classloader
+	eq CjSuperType.constantPoolName() {
+		return "$$super";
+	}
+	
+	// no bytecode for CjSuperType
+	public void CjSuperType.generateClassfile() {}
+	
+}

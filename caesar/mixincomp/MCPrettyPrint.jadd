@@ -1,0 +1,50 @@
+// Implements pretty printing for mixin composition
+
+aspect MCPrettyPrint {
+
+	public void CjClassDecl.toString(StringBuffer s) {
+		getModifiers().toString(s);
+		s.append("cclass " + name());
+		if(getNumSuperClasses() > 0) {
+			s.append(" extends ");
+			getSuperClasses(0).toString(s);
+			for(int i = 1; i < getNumSuperClasses(); i++) {
+				s.append(" & ");
+				getSuperClasses(i).toString(s);
+			}
+			s.append(" ");
+		}
+		if(getNumImplements() > 0) {
+			s.append(" implements ");
+			getImplements(0).toString(s);
+			for(int i = 1; i < getNumImplements(); i++) {
+				s.append(", ");
+				getImplements(i).toString(s);
+			}
+		}
+		s.append(" {\n");
+		if(getNumSuperClasses() > 1) {
+			s.append("\tmixin list : ");
+			for (Iterator it = mixinList().iterator(); it.hasNext(); ) {
+				ClassDecl mixinClass = (ClassDecl)it.next();
+				s.append(mixinClass.typeName()+" ");
+			}
+			s.append("\n");
+		}
+		indent++;
+		for(int i=0; i < getNumBodyDecl(); i++) {
+			getBodyDecl(i).toString(s);
+		}
+		indent--;
+		s.append(indent() + "}\n");
+		s.append(getCjInterface().toString()+ "\n");
+	}
+	
+	public void CjSuperType.toString(StringBuffer s) {
+		s.append(typeName());
+	}
+	
+	public void DirectTypeAccess.toString(StringBuffer s) {
+		s.append(getTarget().name());
+	}
+}

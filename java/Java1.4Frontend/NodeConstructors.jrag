@@ -1,0 +1,78 @@
+aspect NodeConstructors {
+  public ParameterDeclaration.ParameterDeclaration(Access type, String name) {
+    this(new Modifiers(new List()), type, name);
+  }
+
+  public ParameterDeclaration.ParameterDeclaration(Modifiers m, Access a, String i) {
+    this(m, a, i, new List());
+  }
+
+  public PackageAccess.PackageAccess(String name, int start) {
+    this(name);
+    this.start = start;
+  }
+  public TypeAccess.TypeAccess(String name, int start) {
+    this(name);
+    this.start = start;
+  }
+  public PackageOrTypeAccess.PackageOrTypeAccess(String name, int start) {
+    this(name);
+    this.start = start;
+  }
+  public AmbiguousAccess.AmbiguousAccess(String name, int start) {
+    this(name);
+    this.start = start;
+  }
+  public VarAccess.VarAccess(String name, int start) {
+    this(name);
+    this.start = start;
+  }
+
+  public TypeAccess.TypeAccess(String typeName) {
+    this("", typeName);
+  }
+
+  public IntegerLiteral.IntegerLiteral(int i) {
+    this(Integer.toString(i));
+  }
+
+  public BooleanLiteral.BooleanLiteral(boolean b) {
+    this(b ? "true" : "false");
+  }
+
+  public MethodAccess.MethodAccess(String name, List args) {
+    this(args, name);
+  }
+
+  public ReturnStmt.ReturnStmt(Expr expr) {
+    this(new Opt(expr));
+  }
+
+  public IfStmt.IfStmt(Expr cond, Stmt thenBranch) {
+    this(cond, thenBranch, new Opt());
+  }
+
+  public IfStmt.IfStmt(Expr cond, Stmt thenBranch, Stmt elseBranch) {
+    this(cond, thenBranch, new Opt(elseBranch));
+  }
+
+  public VariableDeclaration.VariableDeclaration(Access type, String name, Expr init) {
+    this(new Modifiers(new List()), type, name, new Opt(init));
+  }
+
+  public ClassInstanceExpr.ClassInstanceExpr(Access type, List args) {
+    this(type, args, new Opt());
+  }
+
+  public FieldDeclaration.FieldDeclaration(Modifiers m, Access type, String name) {
+    this(m, type, name, new Opt());
+  }
+  
+  public FieldDeclaration.FieldDeclaration(Modifiers m, Access type, String name, Expr init) {
+    this(m, type, name, new Opt(init));
+  }
+
+  public static Stmt AssignExpr.asStmt(Expr left, Expr right) {
+    return new ExprStmt(new AssignSimpleExpr(left, right));
+  }
+}

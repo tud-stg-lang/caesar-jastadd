@@ -1,0 +1,1 @@
+java -cp ./cj.jar org.caesarj.runtime.mixer.MixinLoader %1 %2 %3 %4 %5

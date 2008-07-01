@@ -1,0 +1,157 @@
+aspect DTBridge {
+	
+	/**********************
+	 *
+	 * DependentTypeDecl - type declaration for dependent types
+	 *
+	 */
+	
+	// reference to the actual representation of the dependent type 
+	protected DependentType DependentTypeDecl.depType;
+	
+	// reference to the type of this 
+	protected TypeDecl DependentTypeDecl.thist;
+	
+	// the constructor
+	// (the generated constructors should not be used)
+	public DependentTypeDecl.DependentTypeDecl(DependentType depType, TypeDecl thist) {
+		this.depType = depType;
+		this.thist = thist;
+	}
+	
+	// classifier for dependent types
+	syn boolean TypeDecl.isDependentType() = false;
+	eq DependentTypeDecl.isDependentType() = true;
+
+	// represent a type as a dependent type 
+	syn DependentType TypeDecl.depType() {
+		return new DepTypePlain(this);
+	}
+	syn DependentType CjVirtualClassDecl.depType() {
+		if (isNestedType()) {
+			DependentType outType = enclosingType().depType();
+			return new DepTypeClass(outType, this);
+		}
+		else {
+			return new DepTypePlain(this);
+		}
+	}
+	
+	eq DependentTypeDecl.depType() {
+		return depType;
+	}
+	
+	public boolean DependentTypeDecl.equals(Object o) {
+		if (!(o instanceof DependentTypeDecl) || 
+		    o instanceof DependentTypeSuperDecl) {
+			return false;
+		}
+		DependentTypeDecl dt = (DependentTypeDecl)o;
+		return depType.equals(dt.depType) && thist.equals(dt.thist);
+	}
+	
+	public int DependentTypeDecl.hashCode() {
+		return depType.hashCode() + thist.hashCode();	
+	}
+	
+	/***************************
+	 * 
+	 * DepTypesCompilationUnit - a synthetic compilation unit
+	 *    that keeps all dependent types (serves as a parent to them)
+	 */
+	
+	// create the compilation unit for dependent types
+	// it is intended to be cached after the first call
+	syn lazy DepTypesCompilationUnit Program.depTypesCompilationUnit() {
+	    DepTypesCompilationUnit unit = new DepTypesCompilationUnit();
+	    addCompilationUnit(unit);
+	    return unit;
+	}
+	
+	protected Map Program.depTypeWrappers = new HashMap();
+	
+	// use the returned declaration, because in future the declarations may be cached
+	inh DependentTypeDecl ASTNode.registerDepType(DependentTypeDecl decl);
+	eq Program.getCompilationUnit().registerDepType(DependentTypeDecl decl) {
+		DependentTypeDecl oldDecl = (DependentTypeDecl)depTypeWrappers.get(decl);
+		if (oldDecl == null) {
+			depTypeWrappers.put(decl, decl);
+			depTypesCompilationUnit().addDependentTypeDecl(decl);
+			return decl;
+		}
+		else {
+			return oldDecl;
+		}		
+	}
+	
+    // a shortcut to the absolute type of the dependent type at "index"	
+	private TypeDecl DepTypesCompilationUnit.absoluteType(int index) {
+		return getDependentTypeDecl(index).absoluteType(); 
+	}
+	
+	/**********************
+	 *
+	 * Implementation of TypeDecl methods for DependentTypeDecl
+	 * 
+	 */
+	
+	// override access to TypeDecl children
+	syn lazy Modifiers DependentTypeDecl.getModifiers() {
+		return (Modifiers)absoluteType().getModifiers().fullCopy();
+	}
+	
+	// delegate classifiers
+	eq DependentTypeDecl.isClassDecl() = absoluteType().isClassDecl();
+	eq DependentTypeDecl.getClassDecl() = (ClassDecl)absoluteType();
+	
+	eq DependentTypeDecl.isCjClassDecl() = absoluteType().isCjClassDecl();
+	eq DependentTypeDecl.getCjClassDecl() = (CjClassDecl)absoluteType();
+	
+	eq DependentTypeDecl.isVirtualClassDecl() = absoluteType().isVirtualClassDecl();
+	eq DependentTypeDecl.getVirtualClassDecl() = (CjVirtualClassDecl)absoluteType();
+	
+	// delegate inherited attributes to the absolute type
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).enclosingType() {
+		return absoluteType(index).enclosingType();
+	}
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).isNestedType() {
+		return absoluteType(index).isNestedType();
+	}
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).isLocalClass() {
+		return absoluteType(index).isLocalClass();
+	}
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).isAnonymous() {
+		return absoluteType(index).isAnonymous();
+	}
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).isMemberType() {
+		return absoluteType(index).isMemberType();
+	}
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).packageName() {
+		return absoluteType(index).packageName();
+	}
+	
+	// the available members are determined by the absolute type
+	eq DependentTypeDecl.memberFields(String name) = absoluteType().memberFields(name);
+	eq DependentTypeDecl.memberMethods(String name) = absoluteType().memberMethods(name);
+	eq DependentTypeDecl.memberTypes(String name) = absoluteType().memberTypes(name);
+	eq DependentTypeDecl.constructors() = absoluteType().constructors();
+	
+	// names
+	eq DependentTypeDecl.name() = absoluteType().name();
+	eq DependentTypeDecl.typeName() = depType().typeName();
+	
+	public String DependentTypeDecl.toString() {
+		return depType().typeName();
+	}
+	
+	// byte code generation
+	public void DependentTypeDecl.emitCastTo(CodeGeneration gen, TypeDecl type) {
+		absoluteType().emitCastTo(gen, type);
+	}
+	
+	eq DependentTypeDecl.typeForCasting() = absoluteType().typeForCasting();
+	
+	eq DependentTypeDecl.constantPoolName() = absoluteType().constantPoolName();
+	eq DependentTypeDecl.typeDescriptor() = absoluteType().typeDescriptor();
+	eq DependentTypeDecl.arrayTypeDescriptor() = absoluteType().arrayTypeDescriptor();
+}

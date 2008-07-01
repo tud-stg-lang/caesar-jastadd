@@ -1,0 +1,180 @@
+aspect VCExternalizedClasses {
+	
+	public void Program.initCjSourceFiles() {
+		this.sourceFiles = new CjFileNamesPart();
+	}
+	
+	// A modified version of FileNamesPart
+	class CjFileNamesPart extends FileNamesPart {
+		private HashMap sourceFiles = new HashMap();
+		private HashSet packages = new HashSet();
+
+		public CjFileNamesPart() {
+			isSource = true;
+		}
+
+		public boolean hasPackage(String name) { return packages.contains(name); }
+		public boolean isEmpty() { return sourceFiles.isEmpty(); }
+		public Collection keySet() { return sourceFiles.keySet(); }
+
+		public boolean selectCompilationUnit(String canonicalName) throws IOException {
+			if(sourceFiles.containsKey(canonicalName)) {
+				String f = (String)sourceFiles.get(canonicalName);
+				File classFile = new File(f);
+				if(classFile.isFile()) {
+					is = new FileInputStream(classFile);
+					pathName = "";
+					relativeName = f;
+					fullName = canonicalName;
+					sourceFiles.remove(canonicalName);
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public void addSourceFile(String fileName) {
+			try {
+				// compute cannonical name of the class in the file
+				Reader reader = new FileReader(fileName);
+				JavaScanner scanner = new JavaScanner(new Unicode(reader));
+				StringBuffer packageName = new StringBuffer();
+				Symbol sym = scanner.nextToken();
+				boolean isExternalized = false;
+				if (sym.getId() == JavaParser.Terminals.PACKAGE) {
+					while(true) {
+						sym = scanner.nextToken();
+						if(sym.getId() == JavaParser.Terminals.SEMICOLON)
+							break;
+						packageName.append(sym.value);
+					}
+				}
+				else if (sym.getId() == JavaParser.Terminals.CCLASS) {
+					while(true) {
+						sym = scanner.nextToken();
+						if (sym.getId() == JavaParser.Terminals.SEMICOLON) {
+							isExternalized = true;
+							break;
+						}
+						else if (sym.getId() == JavaParser.Terminals.IDENTIFIER ||
+								 sym.getId() == JavaParser.Terminals.DOT) {
+							packageName.append(sym.value);
+						}
+						else {
+							packageName = new StringBuffer();
+							break;
+						}
+					}
+				}
+				reader.close();
+				if(packageName.length() != 0)
+					packageName.append(".");
+				int begin = fileName.lastIndexOf(File.separatorChar);
+				begin = begin + 1;
+				int end = fileName.lastIndexOf('.');
+				packageName.append(fileName.substring(begin, end));
+				
+				// register the file for the cannonical name
+				String canonicalName = packageName.toString();
+				sourceFiles.put(canonicalName, fileName);
+				
+				// register package names
+				if (!isExternalized) {
+					String pathName = canonicalName;
+					if (!packages.contains(pathName)) {
+						int pos = 0;
+						while(pathName != null && -1 != (pos = pathName.indexOf('.', pos + 1))) {
+							String n = pathName.substring(0, pos);
+							if(!packages.contains(n))
+								packages.add(n);
+						}
+					}
+				}
+			}
+			catch (Exception e) {
+				sourceFiles.put(fileName, fileName);
+			}
+		}
+		
+	}
+	 
+  eq ExternCompUnit.getEnclCClass().nameType() = NameType.PACKAGE_OR_TYPE_NAME;
+  eq ExternCompUnit.getEnclCClass().hostPackage() = packageName();
+  eq ExternCompUnit.packageName() = "";
+ 
+  protected String TypeDecl.externSourceFile = null;
+  
+  public void TypeDecl.setExternSourceFile(String fileName) {
+	  externSourceFile = fileName;
+  }
+  
+  refine ErrorCheck protected String ASTNode.sourceFile() {
+	  ASTNode node = this;
+	  while (node != null && !(node instanceof CompilationUnit)) {
+		  if (node instanceof TypeDecl && ((TypeDecl)node).externSourceFile != null) {
+             return ((TypeDecl)node).externSourceFile; 
+		  }
+          node = node.getParent();
+      }
+      if (node == null)
+	      return "Unknown file";
+      CompilationUnit u = (CompilationUnit)node;
+      return u.relativeName();
+  }
+  
+  // clear all cached computations in the node and its children
+  public void ASTNode.flushCacheDeep() {
+	  for (int i = 0; i < getNumChild(); i++) {
+		  getChildNoTransform(i).flushCacheDeep();
+	  }
+	  flushCache();	  
+  }
+  
+  public void Program.insertExternalizedVC() {
+	  // force creation of compilation units
+	  for (Iterator iter = compilationUnitIterator(); iter.hasNext(); ) {
+		  CompilationUnit cu = (CompilationUnit)iter.next();
+	  }
+	  for (Iterator iter = compilationUnitIterator(); iter.hasNext(); ) {
+		  CompilationUnit cu = (CompilationUnit)iter.next();
+		  if (cu.fromSource() && cu instanceof ExternCompUnit) {
+			  ExternCompUnit ecu = (ExternCompUnit)cu;
+			  Access acc = ecu.getEnclCClass();
+			  if (!acc.isTypeAccess()) {
+				  acc.error("The enclosing cclass declaration cannot be resolved");
+				  continue;
+			  }
+			  TypeDecl td = acc.type();
+			  if (!td.isVirtualClassDecl()) {
+				  acc.error("The type in the enclosing cclass declaration does not refer to a cclass");
+				  continue;
+			  }
+
+			  // move type declarations to the enclosing class
+			  for (int i1 = 0; i1 < ecu.getNumTypeDecl(); i1++) {
+				  TypeDecl nested = ecu.getTypeDecl(i1);					
+				  if (nested.isVirtualClassDecl()) {
+					  nested.setExternSourceFile(ecu.relativeName());
+					  td.addBodyDecl(new MemberClassDecl((ClassDecl)nested));					  
+				  }
+				  else {
+					  nested.error("Only virtual classes can be externalized");
+				  }				  
+			  }
+			  
+			  // move all imports
+			  CompilationUnit targetCU = td.compilationUnit();			  
+			  for (int i = 0; i < ecu.getNumImportDecl(); i++)  {
+			      targetCU.addImportDecl(ecu.getImportDecl(i));
+			  }			  
+			  
+			  // remove type declarations
+			  ecu.setTypeDeclList(new List());			  
+		  }
+	  }
+	  // clear cached computations, which may be invalid because of
+	  // changed class relationships
+	  flushCacheDeep();	  
+  }
+  
+}

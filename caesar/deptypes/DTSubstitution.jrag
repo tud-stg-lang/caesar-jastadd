@@ -1,0 +1,144 @@
+aspect DTSubstitution {
+
+	// the order number of a parameter in the parameter list 
+	// of a method or constructor
+	inh lazy int ParameterDeclaration.getParamIndex();
+	eq MethodDecl.getParameter(int idx).getParamIndex() = idx;
+	eq ConstructorDecl.getParameter(int idx).getParamIndex() = idx;
+	
+	public int DepTypeAbsVar.getParamIndex() {
+	   if (var instanceof ParameterDeclaration) {
+	      return ((ParameterDeclaration)var).getParamIndex();
+	   }
+	   return -1;
+	}
+	
+	/**********************************************************
+	 * 
+	 * Subtitute 'this' reference in a type with the given type
+	 * 
+	 */
+	
+	public DependentType DependentType.substituteThis(DependentType thisType);
+	
+	public DependentType DepTypeThis.substituteThis(DependentType thisType) { 
+		return thisType; 
+	}
+	
+	public DependentType DepTypeAbsVar.substituteThis(DependentType thisType) { 
+	    return this; 
+	}
+	
+	public DependentType DepTypeRelVar.substituteThis(DependentType thisType) {
+		DependentType newPrefix = prefix.substituteThis(thisType);
+		if (newPrefix.isSingleton()) {
+			return new DepTypeRelVar(newPrefix, var);			
+		}
+		else {
+			return varType(newPrefix, var);
+		}
+	}
+	
+	public DependentType DepTypeOut.substituteThis(DependentType thisType) {
+		DependentType newPrefix = prefix.substituteThis(thisType);
+		return outType(newPrefix);
+	}
+	
+	public DependentType DepTypeClass.substituteThis(DependentType thisType) {
+		return new DepTypeClass(outType.substituteThis(thisType), virtualClass);
+	}
+	
+	public DependentType DepTypePlain.substituteThis(DependentType thisType) {
+		return this;
+	}
+	
+	/********************************************************
+	 * 
+	 *  Subtitution of parameters in types
+	 * 
+	 */
+	
+	public DependentType DependentType.substituteParam(int paramIndex, DependentType paramType);
+	
+	public DependentType DepTypeThis.substituteParam(int paramIndex, DependentType paramType) { 
+		return this; 
+	}
+	
+	public DependentType DepTypeAbsVar.substituteParam(int paramIndex, DependentType paramType) {
+		if (this.getParamIndex() == paramIndex) {
+			return paramType;
+		}
+		else {
+			return this;
+		}
+	}
+	
+	public DependentType DepTypeRelVar.substituteParam(int paramIndex, DependentType paramType) {
+		DependentType newPrefix = prefix.substituteParam(paramIndex, paramType);
+		if (newPrefix.isSingleton()) {
+			return new DepTypeRelVar(newPrefix, var);			
+		}
+		else {
+			return varType(newPrefix, var);
+		}
+	}
+	
+	public DependentType DepTypeOut.substituteParam(int paramIndex, DependentType paramType) {
+		DependentType newPrefix = prefix.substituteParam(paramIndex, paramType);
+		return outType(newPrefix);
+	}
+	
+	public DependentType DepTypeClass.substituteParam(int paramIndex, DependentType paramType) {
+		return new DepTypeClass(outType.substituteParam(paramIndex, paramType), virtualClass);
+	}
+	
+	public DependentType DepTypePlain.substituteParam(int paramIndex, DependentType paramType) {
+		return this;
+	}
+	
+	/**********************************************************
+	 * 
+	 * Calculate the precision of the type:
+	 *  0 for a singleton type
+	 *  +1 for each class access
+	 * 
+	 */
+	
+	public int DependentType.getPrecision();	
+	public int DepTypeThis.getPrecision()   { return 0; }	
+	public int DepTypeAbsVar.getPrecision() { return 0; }
+	public int DepTypeRelVar.getPrecision() { return 0; }
+	public int DepTypeOut.getPrecision()    { return 0; }	
+	public int DepTypeClass.getPrecision()  { return outType.getPrecision() + 1; }
+	public int DepTypePlain.getPrecision()  { return 100; } // a big enough number
+	
+	/**********************************************************
+	 * 
+	 * Utility methods useful in other situations too
+	 * 
+	 */
+	
+	public static DependentType DepTypeOut.outType(DependentType prefix) {
+		if (prefix instanceof DepTypeClass) {
+			return ((DepTypeClass)prefix).outType;
+		}
+		else if (prefix instanceof DepTypePlain) {
+			// error: out is not available for plain types
+			return ((DepTypePlain)prefix).type.unknownType().depType();
+		}
+		else {
+			return new DepTypeOut(prefix);
+		}
+	}
+	
+	public static DependentType DepTypeRelVar.varType(DependentType prefix, Variable var) {
+		TypeDecl varType = var.type();
+		if (varType.isDependentType()) {
+			DependentType type1 = ((DependentTypeDecl)varType).depType();
+			return type1.substituteThis(prefix);						
+		}
+		else {
+			return varType.depType();
+		}
+	}
+}

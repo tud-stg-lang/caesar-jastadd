@@ -1,0 +1,240 @@
+// Implements error checking for mixin composition
+//
+// Following checks are implemented:
+// - Correct usage of classes, cclasses and interfaces in extends and implement clauses
+// - No circular inheritance
+// - Public visibility for cclasses
+// - No package visibility for members of cclasses
+// - No arrays on cclasses
+// - Modifies collection of accestor methods, which is necessary for checking
+//   of correct method overriding
+// - Checks return types of inherited methods with same signature
+
+aspect MCErrorCheck {
+
+	refine TypeHierarchyCheck public void ClassDecl.nameCheck() { 
+		if(!isCjClassDecl() && hasSuperClassAccess() && getSuperClassAccess().type().isCjClassDecl())
+			error("class may only inherit from class and not a cclass " + getSuperClassAccess().type().typeName());
+		TypeHierarchyCheck.ClassDecl.nameCheck();
+	}
+
+	public void CjClassDecl.nameCheck() {
+		super.nameCheck();
+		
+		if (!isPublic())
+			error("cclass must have public visibility : " + name());
+
+		for (Iterator iter = getDeclaredParents().iterator(); iter.hasNext(); ) {
+			TypeDecl parent = (TypeDecl)iter.next();
+			if (parent.isInterfaceDecl())
+				error("a cclass "+ name() + " may not extend an interface " + parent.typeName());
+			else if (!parent.isCjClassDecl() && !parent.isUnknown())
+                error("a cclass "+ name() + " may only inherit from cclass, not java class " + parent.typeName());
+		}
+		
+	    HashSet set = new HashSet();
+	    for(int i = 0; i < getNumImplements(); i++) {
+	      TypeDecl decl = getImplements(i).type();
+	      if(!decl.isInterfaceDecl())
+	        error("type " + fullName() + " tries to implement non interface type " + decl.fullName());
+	      if(set.contains(decl))
+	        error("type " + decl.fullName() + " appears multiple times in implements clause");
+	      set.add(decl);
+	    }
+
+		if (isCircular())
+			error("circular inheritance dependency of cclasses in " + typeName()); 
+	}
+	
+	eq CjClassDecl.isCircular() {
+		// check circular dependency on the enclosing type
+    	if (isNestedType()) {
+    		if (enclosingType().isCircular()) 
+    			return true;
+    	}
+    	
+		for(int i = 0; i < getNumSuperClasses(); ++i) {
+			Access a = getSuperClasses(i);//.lastAccess();
+		    while (a != null) {
+		    	if (a.type().isCircular())
+		    		return true;
+		    	// check if inner class does not inherit from its outer
+		        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (TypeAccess)a.qualifier() : null;
+		    }
+		}
+		
+		for(int i = 0; i < getNumImplements(); i++) {
+			Access a = getImplements(i).lastAccess();
+			while(a != null) {
+			   if (a.type().isCircular())
+			       return true;
+			   a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (TypeAccess)a.qualifier() : null;
+			}
+		}
+		
+	    return false;
+	}
+	
+	// no default (package) visibility allowed for members of CjClasses
+	refine Modifiers public void Modifiers.checkModifiers() {
+		if ((hostType().isCjClassDecl()) && (getParent() instanceof MemberDecl)) // or BodyDecl ??
+			if (numProtectionModifiers() == 0)
+				error("default (package) visibility is not allowed for members of cclasses : "+hostType().typeName());
+		Modifiers.Modifiers.checkModifiers();
+	}
+	
+	// returns ancestor methods from all superclasses
+	// used while typechecking if overridden correctly
+	eq CjClassDecl.ancestorMethods(MethodSignature signature) {
+    	// fetch local methods from superclasses 
+        SimpleSet set = SimpleSet.emptySet;
+        for (Iterator parentIter = getSortedDirectParents().iterator(); parentIter.hasNext();) {
+        	TypeDecl t = (TypeDecl)parentIter.next();
+        	
+        	for (Iterator iter = t.methodsSignature(signature).iterator(); iter.hasNext();) {
+				MethodDecl m = (MethodDecl) iter.next();
+				if (!m.isPrivate())
+					set = set.add(m);
+			}
+		}
+    	
+        for (Iterator iter = interfacesMethodsSignature(signature).iterator(); iter.hasNext();) {
+			MethodDecl m = (MethodDecl) iter.next();
+			set = set.add(m);
+		}
+		return set;
+	}
+	
+	// collects all unimplemented methods in a cclass
+	eq CjClassDecl.unimplementedMethods() {
+		Collection unimpl = new ArrayList();
+		Iterator iter = methodsSignatureMap().values().iterator();
+		while (iter.hasNext()) {
+			SimpleSet methSet = (SimpleSet)iter.next();
+			Iterator iter2 = methSet.iterator();
+			if (iter2.hasNext()) {
+				MethodDecl meth = (MethodDecl)iter2.next();
+				// if one method is abstract, all other must be abstract too
+				if (meth.isAbstract()) {
+					// add all methods as unimplemented
+					unimpl.add(meth);
+					while (iter2.hasNext()) {
+						unimpl.add(iter2.next());
+					}
+				}
+			}
+		}		
+		return unimpl;
+	}
+	
+	public void CjClassDecl.typeCheck() {
+		super.typeCheck();
+	
+		// Unless none exist, ...
+		if ((methodsSignatureMap() == null) || (methodsSignatureMap().keySet() == null)) {
+			return;
+		}
+
+		for(Iterator itSigs = methodsSignatureMap().keySet().iterator(); itSigs.hasNext(); ) {
+			MethodSignature sig = (MethodSignature) itSigs.next();
+			MethodDecl lastMethod = null;
+			MethodDecl m;
+			
+			for(Iterator itAM = ancestorMethods(sig).iterator(); itAM.hasNext(); lastMethod = m) {
+				m = (MethodDecl)itAM.next();
+				typeCheckMethodReturns(m, lastMethod);
+			}
+
+			if (localMethodsSignatureMap().get(sig) != null) {	// only check for methods declared here
+				typeCheckDependentParamTypes(sig);
+			}
+		}
+		
+		// Note: If additional checks need be performed, remember to refactor the above null-check / return statement.
+	}
+	
+	/**
+	 * Check coherence of declared dependent parameter types and implicit (signature-string) 
+	 * parameter types for a given method signature.
+	 * 
+	 * @param sig	Signature to check.
+	 */	
+	private void CjClassDecl.typeCheckDependentParamTypes(MethodSignature sig) {
+		// Start with locally declared method:
+		MethodDecl lastMethod = (MethodDecl) localMethodsSignatureMap().get(sig);
+		MethodDecl thisMethod;
+		
+		// Initialize subcomponents of method declaration which need to be compared:
+		String thisRawSigString, lastRawSigString = null;
+		List lastParamList = lastMethod.getParameterList();
+		List thisParamList;
+		
+		// Iterate over ancestor methods sharing this signature:
+		for(Iterator itAM = ancestorMethods(sig).iterator(); itAM.hasNext(); lastMethod = thisMethod) {
+			thisMethod = (MethodDecl)itAM.next();
+			thisParamList = thisMethod.getParameterList();
+			
+			// (a) check that the parameters are syntactically equivalently declared: 
+			thisRawSigString = thisMethod.rawSignatureString();
+			lastRawSigString = lastMethod.rawSignatureString();
+			if (lastRawSigString != null && !lastRawSigString.equals(thisRawSigString)) {
+				error("Method " + thisMethod.signatureString()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the method declarations must match. Mismatch between "+thisRawSigString + " and " +lastRawSigString);
+			}
+			
+			// (b) check that beyond syntactical equivalence, the dependent parameter types are bound to the same value: 
+			// TODO assert same number of parameters?
+			DependentType        thisDepType,   lastDepType   = null;
+			ParameterDeclaration thisParamDecl, lastParamDecl;
+			// Iterate over parameters:
+			for (int i = 0; i < thisParamList.getNumChild(); i++) {
+				// TODO assert that the AST children are of correct type (necessary?)
+				// get respective i'th parameters of the two same-signature methods to compare:
+				thisDepType = ((ParameterDeclaration) thisParamList.getChild(i)).getTypeAccess().depType();
+				lastDepType = ((ParameterDeclaration) lastParamList.getChild(i)).getTypeAccess().depType();
+				
+				if (lastDepType != null && !DependentTypeDecl.areEquivalent(this, thisDepType, lastDepType)) {
+					error("Method " + thisMethod.signatureString()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the dependent parameters must refer to the same value.");
+				}
+				
+				lastDepType = thisDepType;
+			}
+		}
+	}
+
+
+    /**
+     * Checks that for a given pair of methods their return types match.
+     * 
+     * @param m
+     * @param lastMethod
+     */
+    private void CjClassDecl.typeCheckMethodReturns(MethodDecl m, MethodDecl lastMethod) {
+		if(lastMethod == null)
+			return; // skip first entry (nothing to compare to)
+
+    	TypeDecl mType = m.type();
+		TypeDecl lastType = lastMethod.type();
+		
+		if (mType != lastType) {
+			// check common root method return type:
+			if (mType.isVirtualClassDecl() && lastType.isVirtualClassDecl()) {
+				// mType is a DependentType and needs to be casted to its absolute (VirtualClass) type:
+				CjVirtualClassDecl mVirtualClass = ((DependentTypeDecl) mType).getVirtualClassDecl();
+				CjVirtualClassDecl lastVirtualClass = ((DependentTypeDecl) lastType).getVirtualClassDecl();
+				if (mVirtualClass.getTopFurtherbound() == lastVirtualClass.getTopFurtherbound())
+					return;
+			}
+			// make pretty error message:
+			String returnTypes;
+			if (mType.name().equals(lastType.name())) {
+				returnTypes = mType.fullName()+" (defined in "+m.hostType().fullName()+") and "+lastType.fullName() +" (defined in "+lastMethod.hostType().fullName()+")";
+			} else {
+				returnTypes = mType.name()+" and "+lastType.name();
+			}
+			error("the return types do not match: applicable methods found for " +m.signatureString()+ " in " +this.fullName()+ " with return types " +returnTypes);
+		}
+		
+	}
+
+	
+}

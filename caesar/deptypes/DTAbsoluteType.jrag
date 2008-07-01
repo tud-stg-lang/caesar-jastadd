@@ -1,0 +1,62 @@
+aspect DTAbsoluteType {
+	
+	syn lazy TypeDecl TypeDecl.absoluteType() = this;
+	eq DependentTypeDecl.absoluteType() = depType().absoluteType(thist);
+	
+	/*********************************
+	 * 
+	 * Computes the most precise absolute type corresponding to the dependent type
+	 * 
+	 */
+	
+	public TypeDecl DependentType.absoluteType(TypeDecl thist);
+	
+    public TypeDecl DepTypeThis.absoluteType(TypeDecl thist) { return thist; }
+	
+	public TypeDecl DepTypeAbsVar.absoluteType(TypeDecl thist) { return var.type().absoluteType(); }
+	
+	public TypeDecl DepTypeRelVar.absoluteType(TypeDecl thist) {
+		return varType(prefix, var).absoluteType(thist);
+	}
+	
+	public TypeDecl DepTypeOut.absoluteType(TypeDecl thist) { 
+		TypeDecl prefixType = prefix.absoluteType(thist);
+		TypeDecl enclType = prefixType.enclosingType();
+		if (enclType == null) {
+			throw new DependentTypeException("Enclosing type not available for " + prefixType);
+		}
+		else {
+			return enclType;
+		}
+	}
+	
+	public TypeDecl DepTypeClass.absoluteType(TypeDecl thist) {
+		TypeDecl outAbs = outType.absoluteType(thist);
+		SimpleSet set = outAbs.memberTypes(virtualClass.name());
+		if (set.isEmpty()) {
+			throw new DependentTypeException("Virtual class " + virtualClass.name() + " is not available for " + outType);			
+		}
+		else {
+			return (TypeDecl)set.iterator().next();			
+		}		
+	}
+	
+	public TypeDecl DepTypePlain.absoluteType(TypeDecl thist) {
+		return type;		
+	}
+	
+	/*********************************
+	 * 
+	 * Checks if a dependent type is absolute 
+	 * 
+	 */
+	
+	public boolean DependentType.isAbsolute();
+	
+    public boolean DepTypeThis.isAbsolute() { return false; }	
+	public boolean DepTypeAbsVar.isAbsolute() { return false; }
+	public boolean DepTypeRelVar.isAbsolute() { return false; }
+	public boolean DepTypeOut.isAbsolute() { return false; }
+	public boolean DepTypeClass.isAbsolute() { return outType.isAbsolute(); }
+	public boolean DepTypePlain.isAbsolute() { return true; }
+}

@@ -1,0 +1,69 @@
+// Implementation of factory methods for virtual classes
+aspect VCFactoryMethod {
+	
+	// every nested class has one factory method
+	// returns factory method, creates it if required
+	syn lazy Opt CjVirtualClassDecl.getFactoryMethodOpt() {
+		
+		if (isStatic() || isPrivate() || isDeclaredAbstract() || !isNestedType())
+			return new Opt();
+		
+		ClassInstanceExpr cie = new ClassInstanceExpr(
+				createQualifiedAccess(),
+				new List(),
+				new Opt()) 
+				{   // Don't rewrite this
+					protected boolean rewriteWithFactory() { return false; } };
+		cie.isGeneratedCIE = true;					
+	
+		FactoryMethodDecl fact = new FactoryMethodDecl(
+			new Modifiers(isAbstract() ?
+					new List().add(new Modifier("public")).add(new Modifier("abstract")) :
+					new List().add(new Modifier("public"))),
+			// Note: This depends on covariant return types.
+			new TypeAccess(this.name()),
+			"new$" + name(),
+			new List(), // Parameters
+			new List(), // Brackets
+			new List(), // Exceptions
+			isAbstract() ? new Opt() : new Opt(
+					new Block(new List().add(new ReturnStmt(cie)))));
+		return new Opt(fact);
+	}
+	
+	eq DirectMethodAccess.decls() = SimpleSet.emptySet.add(getTarget());
+	
+	protected boolean ClassInstanceExpr.rewriteWithFactory() { return factoryMethod() != null; }
+	
+	rewrite ClassInstanceExpr {
+		when ( isGeneratedCIE && rewriteWithFactory() )
+		to Expr {
+			MethodDecl factory = factoryMethod();
+			return new DirectMethodAccess(new List(), factory.name(), factory);
+		}
+	}
+	
+	syn lazy MethodDecl ClassInstanceExpr.factoryMethod() {
+		if (type().isVirtualClassDecl()) {
+			CjVirtualClassDecl vc = type().getVirtualClassDecl();
+			if( vc.hasFactoryMethod() && // only nested virtual classes have one		
+				!noEnclosingInstance()       // if it's in a static context (nicer error message)
+			)
+			return vc.getFactoryMethod();
+		}
+		return null;
+	}
+	
+	public void CjVirtualClassDecl.addFactoryMethods() {
+		List ifcBody = getCjInterface().getBodyDeclList();
+		for (Iterator it = getAllVirtualClasses().iterator(); it.hasNext(); ) {
+			CjVirtualClassDecl vc = (CjVirtualClassDecl)it.next();
+			if (vc.hasFactoryMethod()) {
+				MethodDecl fm = vc.getFactoryMethod();
+				fm.addToCjInterfaceBody(ifcBody);
+				getBodyDeclList().add(fm.fullCopy());
+			}
+			
+		}
+	}
+}

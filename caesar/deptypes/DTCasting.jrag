@@ -1,0 +1,10 @@
+aspect DTCasting {
+	eq DependentTypeDecl.castingConversionTo(TypeDecl type) {
+		return super.castingConversionTo(type) || 
+		       absoluteType().castingConversionTo(type);
+    }
+    
+    // TODO implement runtime check for casting to a dependent type
+	
+	// TODO implement propagation of object identity over casts
+}

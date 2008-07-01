@@ -1,0 +1,161 @@
+// Implements field access for mixin composition
+// - Creates accessor methods in order to enable field access over interfaces 
+// - Changes bytecode generation of field access: 
+//   Instead of field access, calls to corresponding accessor methods are
+//   generated
+
+aspect MCFieldAccess {
+	
+	// returns accessor methods, creates them if required
+	syn lazy List CjClassDecl.getAccessorMethodsList() {
+		List accessors = new List();
+		for(int i = 0; i < getNumBodyDecl(); i++) 
+			if(getBodyDecl(i) instanceof FieldDeclaration) {
+				FieldDeclaration decl = (FieldDeclaration)getBodyDecl(i);
+				if (/*!decl.isPrivate() &&*/ !decl.isStatic()) {
+					MethodDecl getter = decl.createGetterAccessor();
+					accessors.add(getter);
+					if (!decl.isFinal()) {
+						MethodDecl setter = decl.createSetterAccessor();
+						accessors.add(setter);
+					}
+				}
+			}
+		return accessors;
+	}
+	
+	syn lazy String TypeDecl.uniqueName() {
+		String fn = fullName();
+		return fn.replace('.','$');
+	}
+	
+	// make host type accessible from accessor methods
+	eq CjClassDecl.getAccessorMethods().hostType() = hostType();
+	
+	// provide type lookup as if the method is in a body declaration
+	eq CjClassDecl.getAccessorMethods().lookupType(String name) {
+	    SimpleSet c = memberTypes(name);
+	    if(!c.isEmpty()) 
+	      return c;
+	    if(name().equals(name))
+	      return SimpleSet.emptySet.add(this);
+
+	    c = lookupType(name);
+	    // 8.5.2
+	    if(isClassDecl() && isStatic() && !isTopLevelType()) {
+	      SimpleSet newSet = SimpleSet.emptySet;
+	      for(Iterator iter = c.iterator(); iter.hasNext(); ) {
+	        TypeDecl d = (TypeDecl)iter.next();
+	        if(d.isStatic() || d.isTopLevelType() || this.instanceOf(d.enclosingType())) {
+	          newSet = newSet.add(d);
+	        }
+	      }
+	      c = newSet;
+	    }
+	    return c;
+	  }
+	
+	// create getter: public X get$Y() { return Y; }
+	public MethodDecl FieldDeclaration.createGetterAccessor() {
+		return new CjAccessorMethodDecl(
+				new Modifiers(new List().add(new Modifier("public"))),
+				new DirectTypeAccess(getTypeAccess().type()),
+				"get$" + hostType().uniqueName() + "$" + getID(),
+				new List(),
+				new List(), new List(), new Opt(new Block(new List().add(
+						new ReturnStmt(new VarAccess(name()))
+				))));
+	}
+	 
+	// create setter: public void set$Y(X Y) { this.Y = Y; }
+	public MethodDecl FieldDeclaration.createSetterAccessor() {
+		return new CjAccessorMethodDecl(
+				new Modifiers(new List().add(new Modifier("public"))),
+				new TypeAccess("void"),
+				"set$" + hostType().uniqueName() + "$" + getID(),
+				new List().add(new ParameterDeclaration(
+						new Modifiers(), new DirectTypeAccess(getTypeAccess().type()), name(), new List())),
+				new List(), new List(), new Opt(new Block(new List().add(
+						new ExprStmt(new AssignSimpleExpr(
+								new Dot(new ThisAccess(), new VarAccess(name())),
+								new VarAccess(name())))
+				))));
+	}
+
+	// Variable accesses inside accessors must not be rewritten
+	inh boolean Expr.isInsideAccessor();
+	eq Program.getCompilationUnit().isInsideAccessor() = false;
+	eq MethodDecl.getBlock().isInsideAccessor() = false;
+	eq CjAccessorMethodDecl.getBlock().isInsideAccessor() = true;
+	
+	// variables do not have accessor methods 
+	public MethodDecl Variable.getGetter() { return null; }
+	public MethodDecl Variable.getSetter() { return null; }
+	
+	// returns field's getter accessor if exists 
+	public MethodDecl FieldDeclaration.getGetter() {
+		MethodSignature sig = MethodSignature.factory("get$" + hostType().uniqueName() + "$" + name() + "()");
+		if (hostType().isCjClassDecl()) {
+			CjClassDecl c = hostType().getCjClassDecl();
+			return c.getAccessorMethod(sig);
+		}
+		return null;
+	}
+	// returns field's setter accessor if exists 
+	public MethodDecl FieldDeclaration.getSetter() {
+		MethodSignature sig = MethodSignature.factory("set$" + hostType().uniqueName() + "$" + name() + "(" + type().signatureString() + ")");
+		if (hostType().isCjClassDecl()) {
+			CjClassDecl c = hostType().getCjClassDecl();
+			return c.getAccessorMethod(sig);
+		}
+		return null;
+	}
+	
+	// erasure() is required for generics
+	// used in FieldDeclaration.getSetter() only
+	syn String TypeDecl.signatureString() = erasure().typeName();
+	
+	// returns accessor method for given signature if exists
+	public MethodDecl CjClassDecl.getAccessorMethod(MethodSignature sig){
+		for (int i=0; i<getNumAccessorMethods(); i++) {
+			MethodDecl m = getAccessorMethods(i);
+			if (m.signature().equals(sig))
+				return m;
+		}
+		return null;
+	}
+	
+    public void CjClassDecl.addAccessorsToBody() {
+     	List bodyDecls = getBodyDeclList();
+		for (int i=0; i< getNumAccessorMethods(); i++) {
+			MethodDecl m = getAccessorMethods(i);
+			bodyDecls.add(m);
+		}
+	}
+	
+    public void InterfaceDecl.addAccessorsToBody(CjClassDecl source) {
+     	List body = getBodyDeclList();
+		for (int i=0; i< source.getNumAccessorMethods(); i++) {
+			MethodDecl m = source.getAccessorMethods(i);
+			m.addToCjInterfaceBody(body);
+		}
+	}
+    
+	// Tweak byte code to call accessor methods instead of getfield/putfield
+	refine CodeGeneration public void VarAccess.emitStore(CodeGeneration gen) {
+		Variable v = decl();
+		if(!isInsideAccessor() && v.getSetter() != null)
+			v.getSetter().emitInvokeMethod(gen, fieldQualifierType());
+		else
+			CodeGeneration.VarAccess.emitStore(gen);
+	}
+	refine CreateBCode public void VarAccess.createBCode(CodeGeneration gen) {
+		Variable v = decl();
+		if(!isInsideAccessor() && v.getGetter() != null) {
+			createLoadQualifier(gen);
+			v.getGetter().emitInvokeMethod(gen, fieldQualifierType());
+		}
+		else
+			CreateBCode.VarAccess.createBCode(gen);
+	}
+}

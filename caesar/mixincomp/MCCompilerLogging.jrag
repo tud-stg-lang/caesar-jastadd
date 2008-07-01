@@ -1,0 +1,24 @@
+aspect MCCompilerLogging {
+	
+	public static boolean Program.logCompiler() {
+	    return hasOption("-verbose") || hasOption("-logcompiler");
+	}
+	
+	public void CompilationUnit.collectErrors() {
+		if (Program.logCompiler()) {
+			System.out.println("Checking file " + relativeName() + " for errors");			
+		}
+		super.collectErrors();
+		if (Program.logCompiler()) {
+			System.out.println("" + errors.size() + " errors found");			
+		}		
+    }
+	
+	public void TypeDecl.collectErrors() {
+		if (Program.logCompiler()) {
+			System.out.println("Checking declaration " + typeName() + " for errors");
+		}
+		super.collectErrors();
+    }
+	
+}

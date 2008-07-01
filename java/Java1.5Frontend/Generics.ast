@@ -1,0 +1,33 @@
+// generic type declarations
+GenericClassDecl : ClassDecl ::= Modifiers <ID:String> [SuperClassAccess:Access] Implements:Access* BodyDecl* TypeParameter:TypeVariable* ParTypeDecl:ParClassDecl* [RawType:TypeDecl];
+GenericInterfaceDecl : InterfaceDecl ::= Modifiers <ID:String> SuperInterfaceId:Access* BodyDecl* TypeParameter:TypeVariable* ParTypeDecl:ParInterfaceDecl*  [RawType:TypeDecl];
+
+// parameterized type declarations
+ParClassDecl : ClassDecl ::= Argument:Access* /TypeParameter:TypeVariable*/ /[SuperClassAccess:Access]/ /Implements:Access*/ /BodyDecl*/;
+RawClassDecl : ParClassDecl;
+
+ParInterfaceDecl : InterfaceDecl ::= Argument:Access* /TypeParameter:TypeVariable*/ /SuperInterfaceId:Access*/ /BodyDecl*/;
+RawInterfaceDecl : ParInterfaceDecl;
+
+// parameterized object instantiation
+ParClassInstanceExpr : ClassInstanceExpr ::= TypeArgument:Access*;
+//ParNestedClassInstanceExpr : NestedClassInstanceExpr ::= TypeArgument:Access*;
+
+// parameterized type access
+ParTypeAccess : Access ::= TypeAccess:Access TypeArgument:Access*;
+
+ParameterizedTypeAccess : TypeAccess ::= TypeArgument:Access*;
+RawTypeAccess : ParameterizedTypeAccess;
+
+TypeVariableAccess : Access ::= Access <ID:String>;
+
+TypeVariable : ReferenceType ::= Modifiers <ID:String> BodyDecl* TypeBound:Access*;
+
+
+Wildcard : Access;
+WildcardExtends : Wildcard ::= Access;
+WildcardSuper : Wildcard ::= Access;
+
+WildcardType : TypeDecl;
+WildcardExtendsType : WildcardType ::= Access;
+WildcardSuperType : WildcardType ::= Access;

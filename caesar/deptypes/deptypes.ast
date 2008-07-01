@@ -1,0 +1,7 @@
+DepTypesCompilationUnit : CompilationUnit ::= DependentTypeDecl*;
+
+DependentTypeDecl : ReferenceType ::= /Modifiers/;
+
+DependentTypeSuperDecl : DependentTypeDecl ::= /Modifiers/;  
+
+

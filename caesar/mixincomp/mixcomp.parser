@@ -1,0 +1,33 @@
+ClassDecl class_declaration =
+    cclass_declaration.c                       {: return c; :}
+  ;
+
+CjClassDecl cclass_declaration =
+    modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
+                                               {: return new CjClassDecl(m, id, s, i, b); :}
+  |             CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
+                                               {: return new CjClassDecl(new Modifiers(), id, s, i, b); :}
+  | modifiers.m CCLASS IDENTIFIER.id         interfaces.i class_body.b 
+                                               {: return new CjClassDecl(m, id, new List(), i, b); :}
+  |             CCLASS IDENTIFIER.id         interfaces.i class_body.b 
+                                               {: return new CjClassDecl(new Modifiers(), id, new List(), i, b); :}
+  | modifiers.m CCLASS IDENTIFIER.id mixin.s              class_body.b 
+                                               {: return new CjClassDecl(m, id, s, new List(), b); :}
+  |             CCLASS IDENTIFIER.id mixin.s              class_body.b 
+                                               {: return new CjClassDecl(new Modifiers(), id, s, new List(), b); :}
+  | modifiers.m CCLASS IDENTIFIER.id                      class_body.b 
+                                               {: return new CjClassDecl(m, id, new List(), new List(), b); :}
+  |             CCLASS IDENTIFIER.id                      class_body.b 
+                                               {: return new CjClassDecl(new Modifiers(), id, new List(), new List(), b); :}
+  ;
+
+List mixin =
+    EXTENDS mixin_type_list.i                  {: return i; :}
+  ;
+List mixin_type_list =
+    mixin_type.t                               {: return new List().add(t); :}
+  | mixin_type_list.l AND mixin_type.t         {: return l.add(t); :}
+  ;
+Access mixin_type =
+    name.n                                     {: return n; :}
+  ;
