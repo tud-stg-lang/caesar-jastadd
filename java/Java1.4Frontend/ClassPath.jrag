@@ -15,29 +15,28 @@ aspect ClassPath {
 
   // iterate over all source files and demand-loaded compilation units
   public Iterator Program.compilationUnitIterator() {
-    initPaths();
-    return new Iterator() {
-      int index = 0;
-      public boolean hasNext() {
-        return index < getNumCompilationUnit() || !sourceFiles.isEmpty();
-      }
-      public Object next() {
-        if(getNumCompilationUnit() == index) {
-          String typename = (String)sourceFiles.keySet().iterator().next();
-          CompilationUnit u = getCompilationUnit(typename);
-          if(u != null) {
-            addCompilationUnit(u);
-            getCompilationUnit(getNumCompilationUnit()-1);
-          }
-          else
-            throw new Error("File " + typename + " not found");
-        }
-        return getCompilationUnit(index++);
-      }
-      public void remove() {
-        throw new UnsupportedOperationException();
-      }
-    };
+	  initPaths();
+	  
+	  return new Iterator() {
+		  int index = 0;
+		  public boolean hasNext() {
+			  return index < getNumCompilationUnit() || !sourceFiles.isEmpty();
+		  }
+		  public Object next() {
+			  if(getNumCompilationUnit() == index) {
+				  String typename = (String)sourceFiles.keySet().iterator().next();
+				  CompilationUnit u = getCompilationUnit(typename);
+				  if (u == null) throw new Error("File " + typename + " not found");
+				  addCompilationUnit(u);
+				  getCompilationUnit(getNumCompilationUnit()-1);
+
+			  }
+			  return getCompilationUnit(index++);
+		  }
+		  public void remove() {
+			  throw new UnsupportedOperationException();
+		  }
+	  };
   }
   
   // get the input stream for a compilation unit specified using
@@ -62,35 +61,38 @@ aspect ClassPath {
   //   2) class file not older than source file
   //   3) source file
   public CompilationUnit Program.getCompilationUnit(String name) {
-    initPaths();
-    try {
-      if(sourceFiles.selectCompilationUnit(name))
-        return sourceFiles.getCompilationUnit();
-      PathPart sourcePart = null;
-      PathPart classPart = null;
-      for(Iterator iter = sourcePath.iterator(); iter.hasNext() && sourcePart == null; ) {
-        PathPart part = (PathPart)iter.next();
-        if(part.selectCompilationUnit(name))
-          sourcePart = part;
-      }
-      for(Iterator iter = classPath.iterator(); iter.hasNext() && classPart == null; ) {
-        PathPart part = (PathPart)iter.next();
-        if(part.selectCompilationUnit(name))
-          classPart = part;
-      }
-      
-      if(classPart != null && sourcePart != null)
-        return classPart.age >= sourcePart.age ? 
-          classPart.getCompilationUnit() : sourcePart.getCompilationUnit();
-      else if(classPart != null)
-        return classPart.getCompilationUnit();
-      else if(sourcePart != null)
-        return sourcePart.getCompilationUnit();
-      return null;
-    }
-    catch(IOException e) {
-    }
-    return null;
+	  initPaths();
+	  try {
+		  // Look for class files
+		  if (sourceFiles.selectCompilationUnit(name))
+			  return sourceFiles.getCompilationUnit();
+		  
+		  PathPart sourcePart = null, classPart = null;
+		  // Look for compilation unit in the source paths:
+		  for (Iterator iter = sourcePath.iterator(); iter.hasNext() && sourcePart == null; ) {
+			  PathPart part = (PathPart)iter.next();
+			  if(part.selectCompilationUnit(name))
+				  sourcePart = part;
+		  }
+		  // Look for compilation unit in the class paths:
+		  for (Iterator iter = classPath.iterator(); iter.hasNext() && classPart == null; ) {
+			  PathPart part = (PathPart)iter.next();
+			  if(part.selectCompilationUnit(name))
+				  classPart = part;
+		  }
+
+		  if (classPart != null && sourcePart != null) { // CU found both in source path and classpath
+			  return classPart.age >= sourcePart.age ? 
+					  classPart.getCompilationUnit() : sourcePart.getCompilationUnit();
+		  } else if(classPart != null) { 				// CU only found in classpath
+			  return classPart.getCompilationUnit();
+		  } else if(sourcePart != null) { 				// CU only found in source path
+			  return sourcePart.getCompilationUnit();
+		  }
+		  return null;	// else
+	  }
+	  catch(IOException e) {  }
+	  return null;
   }
   
   // is there a package named name on the path
@@ -355,45 +357,51 @@ aspect ClassPath {
       String packageName = index == -1 ? "" : canonicalName.substring(0, index);
       String typeName = canonicalName.substring(index + 1, canonicalName.length());
       Collection c = filesInPackage(packageName);
-      return c != null && c.contains(typeName + fileSuffix());
+      return c != null && (c.contains(typeName + fileSuffix()) || c.contains(typeName + ".cjclass"));
     }
     
     private Collection filesInPackage(String packageName) {
-      if(!map.containsKey(packageName)) {
-        File f = new File(folder, packageName.replace('.', File.separatorChar));
-        Collection c = Collections.EMPTY_LIST;
-        if(f.exists() && f.isDirectory()) {
-          String[] files = f.list();
-          if(files.length > 0) {
-            c = new HashSet();
-            for(int i = 0; i < files.length; i++)
-              c.add(files[i]);
-          }
-        }
-        else
-          c = null;
-        map.put(packageName, c);
-      }
-      return (Collection)map.get(packageName);
+    	if(!map.containsKey(packageName)) {
+    		File f = new File(folder, packageName.replace('.', File.separatorChar));
+    		Collection c = Collections.EMPTY_LIST;
+    		if(f.exists() && f.isDirectory()) {
+    			String[] files = f.list();
+    			if(files.length > 0) {
+    				c = new HashSet();
+    				for(int i = 0; i < files.length; i++)
+    					c.add(files[i]);
+    			}
+    		}
+    		else
+    			c = null;
+    		map.put(packageName, c);
+    	}
+    	return (Collection)map.get(packageName);
     }
     
     public boolean selectCompilationUnit(String canonicalName) throws IOException {
-      if(hasCompilationUnit(canonicalName)) {
-        String fileName = canonicalName.replace('.', File.separatorChar);
-        File classFile = new File(folder, fileName + fileSuffix());
-        if(classFile.isFile()) {
-          is = new FileInputStream(classFile);
-          age = classFile.lastModified();
-          pathName = classFile.getPath();
-          relativeName = fileName + fileSuffix();
-          fullName = canonicalName;
-          return true;
-        }
-      }
-      return false;
+    	if(hasCompilationUnit(canonicalName)) {
+    		String fileName = canonicalName.replace('.', File.separatorChar);
+    		String fs = fileSuffix();
+    		File classFile = new File(folder, fileName + fs); 	// try getting .java/.class file
+    		if (!classFile.isFile()) {
+    			fs = ".cjclass";
+    			classFile = new File(folder, fileName + fs);	// try again with .cjclass extension
+    		}
+    		if(classFile.isFile()) {
+    			is = new FileInputStream(classFile);
+    			age = classFile.lastModified();
+    			pathName = classFile.getPath();
+    			relativeName = fileName + fs;
+    			fullName = canonicalName;
+    			return true;
+    		}
+    	}
+    	return false;
     }
   }
-
+  
+  
   // load files in a zip file
   class ZipFilePart extends PathPart {
     private HashSet set = new HashSet();
@@ -461,7 +469,7 @@ aspect ClassPath {
         String f = (String)sourceFiles.get(canonicalName);
         File classFile = new File(f);
         if(classFile.isFile()) {
-          is = new FileInputStream(classFile);
+          is = new FileInputStream(classFile); // make class file contents available through input stream
           pathName = "";
           relativeName = f;
           fullName = canonicalName;

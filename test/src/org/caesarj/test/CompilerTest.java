@@ -75,29 +75,25 @@ public abstract class CompilerTest extends TestCase {
 	protected void parseSource() throws IOException {
 		try {
 			final String outdir = genSrcDir() + File.separator + pkgname.replace('.', File.separatorChar);
-//			clean(new File(outdir));
+			clean(new File(outdir));
 			
-			JavaParser parser = new JavaParser();
 			/*
 			 * TODO: Unicode und StringReader passen irgendwie nicht zusammen.
 			 * Scheinbar wird EOF nicht richtig erkannt.
 			 */
-			for (Source code : sources) { // Binaries were previously added to sources.
+			for (Source code : sources) {
 				
-				StringBuffer sourceCode = new StringBuffer();
-				sourceCode.append("package " + pkgname + ";\n");
-				sourceCode.append(code.code);
-				
+				// create source files
+				String sourceCode = "package " + pkgname + ";\n" + code.code;
 				String sourceFileName = absoluteSourceFileName(code.name);
-		        	        
 				File f = new File(sourceFileName);
 		        f.getParentFile().mkdirs();
 		        FileOutputStream fos = new FileOutputStream(f);
-		        fos.write(sourceCode.toString().getBytes());
+		        fos.write(sourceCode.getBytes());
 		        fos.close();
 				
 				// necessary for resolving package names in the program
-				prog.addSourceFile(f.getAbsolutePath()); 
+	        	prog.addSourceFile(f.getAbsolutePath());
 			}
 			
 			// force creation of compilation units
@@ -145,7 +141,7 @@ public abstract class CompilerTest extends TestCase {
 	protected void prepareBinaries() throws Exception{
 		if (binaries.size() > 0) {
 			if (testcaseVerbose) System.out.println("Processing binary code block ...");
-			Vector<Source> nonBinarySources = sources; // clone?
+			Vector<Source> nonBinarySources = (Vector<Source>) sources.clone(); // clone?
 			sources = new Vector<Source>();
 			int i = 0;
 			for (Object o : binaries) {
@@ -160,8 +156,8 @@ public abstract class CompilerTest extends TestCase {
 			parseSource();
 			errorCheck();
 			generateClassfiles();
-//			sources = nonBinarySources;
-			prog = new Program();
+			sources = nonBinarySources;
+			prog = new Program(); // reset program state (AST tree)
 			if (testcaseVerbose) System.out.println("Processing binary code block done.");
 		}
 	}
@@ -179,6 +175,7 @@ public abstract class CompilerTest extends TestCase {
 
 	protected void runTest() throws Throwable {
 		prepareBinaries();
+//		prog.initCjSourceFiles(); // ?
 		if (testcaseVerbose) System.out.println("\nFinished preparing binaries.\n");
 		parseSource();
 	}
