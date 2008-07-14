@@ -19,7 +19,7 @@ aspect MCSuperType {
 	syn lazy TypeDecl Program.typeCjObject() = lookupType("org.caesarj.runtime", "CjObject");
 	
 	syn lazy boolean TypeDecl.isCjObject() = false;
-	eq ClassDecl.isCjObject() = name().equals("CjObject") && packageName().equals("org.caesarj.runtime");
+	eq ClassDecl.isCjObject() = (name().equals("CjObject") && packageName().equals("org.caesarj.runtime")) || superclass().isCjObject();
 
 	// the access trough SuperClassAccessOpt creates CjSuperType 
 	syn lazy Opt CjClassDecl.getSuperClassAccessOpt() {
