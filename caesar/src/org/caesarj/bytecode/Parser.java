@@ -23,6 +23,8 @@ import org.caesarj.ast.ParseName;
 import org.caesarj.ast.Program;
 import org.caesarj.ast.TypeDecl;
 
+import sun.text.CompactShortArray.Iterator;
+
 //import sun.management.MethodInfo;
 //import sun.reflect.FieldInfo;
 
@@ -47,7 +49,7 @@ public class Parser {
   }
   
 	public Parser(String name) throws FileNotFoundException {
-		if (!name.endsWith(".class") /* && !name.endsWith(".cjclass") */) {
+		if (!name.endsWith(".class") && !name.endsWith(".cjclass") ) {
 			//name = name.replaceAll("\\.", "/") + ".class";
 			name = name.replace('.', '/') + ".class";
 		}
@@ -233,7 +235,7 @@ public class Parser {
 	}
 
 	public void print(String s) {
-		//System.out.print(s);
+		System.out.print(s);
 	}
 
 	public void println(String s) {
@@ -258,7 +260,7 @@ public class Parser {
 		parseFields(typeDecl);
 		parseMethods(typeDecl);
 		Attributes attrs = new Attributes(this, typeDecl, outerTypeDecl, classPath);
-
+		
 		if(attrs.superclassesList() != null) {
 			List body = typeDecl.getBodyDeclListNoTransform();
 			List newbody = new List();
@@ -287,8 +289,10 @@ public class Parser {
 			cu.addTypeDecl(typeDecl);
 		}
 
+		
 		is.close();
 		is = null;
+		
 		return cu;
 	}
 
@@ -319,6 +323,7 @@ public class Parser {
 		int flags = u2();
 		Modifiers modifiers = modifiers(flags & 0xfddf);
 		if ((flags & 0x0200) == 0) {
+			
 			ClassDecl decl = new ClassDecl();
 			decl.setModifiers(modifiers);
 			decl.setID(parseThisClass());
@@ -326,7 +331,32 @@ public class Parser {
 			decl.setSuperClassAccessOpt(superClass == null ? new Opt()
 					: new Opt(superClass));
 			decl.setImplementsList(parseInterfaces(new List()));
-
+			
+			/* @Vaidas: 
+			 * 
+			 * Hier sollte unterschieden werden, ob eine ClassDecl oder 
+			 * eine CjClassDecl erzeugt werden muss. Wenn CjClassDecl, dann 
+			 * übernehme die Angaben aus der bereits erstellten ClassDecl.
+			 * 
+			 * Das Problem ist, dass ClassDecl.getSuperClassAccess() nicht 
+			 * funktioniert. Diese Methode wird insbesondere bei 
+			 * ClassDecl.superclass() aufgerufen, und diese wird in der neuen 
+			 * Methode ClassDecl.isSubtypeOfCjObject() benötigt.  
+			 */
+			
+			/*
+			if (decl.isSubtypeOfCjObject()) {
+				org.caesarj.ast.List superclassesList = new org.caesarj.ast.List();
+				superclassesList.add(decl.superclass()); // TODO anpassen an AST-Struktur für Superklassen bei CjClasses
+				decl = new CjClassDecl(
+							decl.getModifiersNoTransform(),
+							decl.getID(),
+							superclassesList,
+							decl.getDynamicTypeListNoTransform(),
+							decl.getBodyDeclListNoTransform());
+			}
+			*/
+			
 			if ((flags & 0x0008) == 0 && outerClassInfo != null)
 				isInnerClass = true;
 			return decl;

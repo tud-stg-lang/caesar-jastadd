@@ -67,6 +67,17 @@ aspect MCInheritance {
 		return false;
 	}
 	
+	/**
+     * Used for creating a proper CjClassDecl AST node when parsing binaries.
+     * 
+     * @return whether the current class declaration is a subtype of CjObject.
+     */
+    public boolean ClassDecl.isSubtypeOfCjObject() {
+    	if (superclass() == null) return false;
+    	return superclass().isCjObject() || superclass().isSubtypeOfCjObject(); // ClassDecls can only have one superclass.
+    }
+    
+	
 	// only explicitly declared parents will be used for graph sorting
 	// the attribute is intended to be overridden for virtual classes
 	syn lazy Collection CjClassDecl.getExplicitParents() = getDirectParents();

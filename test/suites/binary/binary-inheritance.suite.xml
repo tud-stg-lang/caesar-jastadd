@@ -33,9 +33,18 @@
     </compile-run>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile id="binaryinheritance001a" description="Inheritance of methods (CjClasses)">
+    <compile-run id="binaryinheritance001a" description="Inheritance of methods (CjClasses)">
+		<test>			
+		    BinaryClass b = new BinaryClass();
+			SourceClass s = new SourceClass();
+			assertEquals(s.x("s.x"),1);
+			assertEquals(b.x("b.x"),2);
+			assertEquals(s.y("s.y"),3);
+			assertEquals(b.y("b.y"),3);
+		</test>
         <code>
         	public cclass SourceClass extends BinaryClass {
+        		public SourceClass() { } // TODO remove explicit default constructor
 			    public int x(String p1) {
 					System.out.println("Subclass SourceClass.x(p1) : p1 = "+p1);
 					return 1;
@@ -54,7 +63,7 @@
 				}				
 			}
 		</binary>
-    </compile>
+    </compile-run>
     
 	<compile id="binaryinheritance002" description="Two levels of inheritance (CjClasses)">
 		<code>
@@ -73,7 +82,7 @@
 		</binary>
 	</compile>
 	
-	<compile id="binaryinheritance003" description="Simple multiple inheritance">
+	<compile id="binaryinheritance003" description="Simple multiple inheritance, constructor inheritance">
 		<binary>
 			public cclass Test1 {
 				public void f() { System.out.println("f1"); }
@@ -94,6 +103,26 @@
 					Test t = new Test();
 					t.t();
 					Test.main(null);
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile id="binaryinheritance003a" description="Simple multiple inheritance, without constructor inheritance">
+		<binary>
+			public cclass Test1 {
+				public void f() { System.out.println("f1"); }
+			}
+			public cclass Test2 {
+				public void f() { System.out.println("f2"); }
+				public void g() { System.out.println("g2"); }
+			}
+		</binary>
+		<code>
+			public cclass Test extends Test1 &amp; Test2 {
+				public void t() {
+					f();
+					g();
 				}
 			}
 		</code>
@@ -202,4 +231,25 @@
 		</code>
 	</compile>
 	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="binaryinheritance006" description="Using super() in constructor.">
+    	<test>
+    		SourceClass s = new SourceClass();
+    	</test>
+        <code>
+        	public class SourceClass extends BinaryClass {
+			    public SourceClass() {
+					super();			    
+					System.out.println("Subclass SourceClass constructor");
+				}
+			}
+        </code>
+		<binary>
+        	public class BinaryClass {
+			    public BinaryClass() {
+			    	System.out.println("Superclass BinaryClass constructor");
+				}				
+			}
+		</binary>
+    </compile-run>
 </testsuite>
