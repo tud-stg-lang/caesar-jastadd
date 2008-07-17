@@ -29,6 +29,14 @@ aspect MCByteCode {
 		return c;
 	}
 
+	private Collection ClassDecl.attributes(boolean isCjClass) {
+		Collection attrs = attributes();
+		if (isCjClass)
+			attrs.add(new IsCjClassAttribute(constantPool()));
+		return attrs;
+	}
+	
+
    public void CjClassDecl.mixinCompTransform() {
 	   // generate interface
 	   InterfaceDecl ccifc = getCjInterface();
@@ -46,7 +54,7 @@ aspect MCByteCode {
 		// generate byte code of the generated interface
 		getCjInterface().generateClassfile();
 		// changed caesar binary file extension
-    	super.generateClassfile(".cjclass");
+    	super.generateClassfile(".cjclass", true);
 	    // for testing only - to open with DJ Decompiler an additional class file must be created
 //	    super.generateClassfile("_.class");
 	}
@@ -55,8 +63,12 @@ aspect MCByteCode {
 	refine GenerateClassfile public void ClassDecl.generateClassfile() {
 		generateClassfile(".class");
 	}
-		
-	public void ClassDecl.generateClassfile(String fileExtension) {
+	
+  	public void ClassDecl.generateClassfile(String fileExtension) {
+  		generateClassfile(fileExtension, false);
+	}
+  
+	public void ClassDecl.generateClassfile(String fileExtension, boolean isCjClass) {
 		// super call forces nested types to be generated first
 	    super.generateClassfile();
 	    String fileName = destinationPath() + File.separator + constantPoolName() + fileExtension;
@@ -109,7 +121,7 @@ aspect MCByteCode {
 	        cp.addUtf8("()V");
 	        clinit_attributes();
 	      }
-	      attributes();
+	      attributes(isCjClass);
 
 
 	      // Actual ClassFile generation
@@ -146,7 +158,7 @@ aspect MCByteCode {
 	      }
 	      if(isInnerType()) {
 	        TypeDecl type = enclosingType();
-	        out.writeChar(0 /*Modifiers.ACC_PRIVATE*/);
+	        out.writeChar(0 /* Modifiers.ACC_PRIVATE */);
 	        out.writeChar(cp.addUtf8("this$0"));
 	        out.writeChar(cp.addUtf8(type.typeDescriptor()));
 	        out.writeChar(1);
@@ -183,8 +195,8 @@ aspect MCByteCode {
 	        for(Iterator itera = clinit_attributes().iterator(); itera.hasNext();)
 	          ((Attribute)itera.next()).emit(out);
 	      }
-	      out.writeChar(attributes().size());
-	      for(Iterator itera = attributes().iterator(); itera.hasNext();)
+	      out.writeChar(attributes(isCjClass).size());
+	      for(Iterator itera = attributes(isCjClass).iterator(); itera.hasNext();)
 	        ((Attribute)itera.next()).emit(out);
 
 	      out.close();
@@ -192,5 +204,6 @@ aspect MCByteCode {
 	      e.printStackTrace();
 	    }
 	}
+
 
 }

@@ -18,6 +18,7 @@ class Attributes {
 	private boolean isSynthetic;
 	private CONSTANT_Info constantValue;
 	private List superclassesList;
+	private boolean isCjClass;
 
 	public Attributes(Parser parser) {
 		this(parser, null, null, null);
@@ -27,6 +28,7 @@ class Attributes {
 		p = parser;
 		exceptionList = new List();
 		isSynthetic = false;
+		isCjClass = false;
 		
 		int attributes_count = p.u2();
     if(Parser.VERBOSE)
@@ -48,6 +50,8 @@ class Attributes {
 				isSynthetic = true;
 			} else if (attribute_name.equals("de.tud.caesarj.superclasses")) {
 				superclasses();
+			} else if (attribute_name.equals("de.tud.caesarj.IsCjClass")) {
+				isCjClass = true;
 			} else {
 				this.p.skip(attribute_length);
 			}
@@ -179,6 +183,10 @@ class Attributes {
 	
 	public boolean isSynthetic() {
 		return isSynthetic;
+	}
+
+	public boolean isCjClass() {
+		return isCjClass;
 	}
 
 }

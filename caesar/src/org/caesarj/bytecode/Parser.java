@@ -10,6 +10,7 @@ import java.io.InputStream;
 import org.caesarj.ast.Access;
 import org.caesarj.ast.BodyDecl;
 import org.caesarj.ast.CjClassDecl;
+import org.caesarj.ast.CjVirtualClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.CompilationUnit;
 import org.caesarj.ast.Dot;
@@ -30,7 +31,7 @@ import sun.text.CompactShortArray.Iterator;
 
 
 public class Parser {
-  public static final boolean VERBOSE = true;
+  public static final boolean VERBOSE = false;
 
 	private DataInputStream is;
 	public CONSTANT_Class_Info classInfo;
@@ -261,7 +262,8 @@ public class Parser {
 		parseMethods(typeDecl);
 		Attributes attrs = new Attributes(this, typeDecl, outerTypeDecl, classPath);
 		
-		if(attrs.superclassesList() != null) {
+		if(attrs.superclassesList() != null || attrs.isCjClass()) {
+			// Create AST nodes as CjClassDecls, not normal ClassDecls
 			List body = typeDecl.getBodyDeclListNoTransform();
 			List newbody = new List();
 			for(int i = 0; i < body.getNumChild(); ++i) {
@@ -273,10 +275,17 @@ public class Parser {
 				}
 				newbody.add(decl);
 			}
-			typeDecl = new CjClassDecl(
+			
+			List superclassesList;
+			if (attrs.superclassesList() != null) 
+				superclassesList = attrs.superclassesList(); // ignore typeDecl.getSuperClassAccess()
+			else
+				superclassesList = new List(); // empty list TODO @Yang check
+			
+			typeDecl = new CjVirtualClassDecl(
 					typeDecl.getModifiersNoTransform(),
 					typeDecl.getID(),
-					attrs.superclassesList(), // ignore typeDecl.getSuperClassAccess()
+					superclassesList,
 					typeDecl.getDynamicTypeListNoTransform(),
 					newbody);
 		}
@@ -288,7 +297,6 @@ public class Parser {
 		if (typeDecl.getParent() == null) {
 			cu.addTypeDecl(typeDecl);
 		}
-
 		
 		is.close();
 		is = null;

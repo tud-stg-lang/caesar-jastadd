@@ -136,6 +136,14 @@ aspect Attributes {
       }
     }
   }
+  
+  class IsCjClassAttribute extends Attribute {
+		public IsCjClassAttribute(ConstantPool p) {
+			super(p, "de.tud.caesarj.IsCjClass");
+			 // attribute of length zero (just like DeprecatedAttribute in Java)
+		}
+	}
+
 
   interface ExceptionHolder {
     public int getNumException();
