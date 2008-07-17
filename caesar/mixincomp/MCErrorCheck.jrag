@@ -25,17 +25,9 @@ aspect MCErrorCheck {
 			error("cclass must have public visibility : " + name());
 
 		for (Iterator iter = getDeclaredParents().iterator(); iter.hasNext(); ) {
-			TypeDecl parent = (TypeDecl) iter.next();
-			
-			/* TODO New variable "parentClass" is instantiated with static type 
-			 * 		ClassDecl because dynamic dispatch for method "isCjClassDecl()"
-			 * 		on "parent" (of dynamic type ClassDecl) does not seem to work - !? */
-			ClassDecl parentClass = null;
-			if (parent.isClassDecl()) parentClass = (ClassDecl) parent;
-			
+			TypeDecl parent = (TypeDecl)iter.next();
 			if (parent.isInterfaceDecl())
 				error("a cclass "+ name() + " may not extend an interface " + parent.typeName());
-			else if (parentClass != null && !parentClass.isCjClassDecl() && !parent.isUnknown()) { } // TODO This is a work-around. See above.
 			else if (!parent.isCjClassDecl() && !parent.isUnknown())
                 error("a cclass "+ name() + " may only inherit from cclass, not java class " + parent.typeName());
 		}
