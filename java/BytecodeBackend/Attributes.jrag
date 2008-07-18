@@ -144,6 +144,19 @@ aspect Attributes {
 		}
 	}
 
+  class CjSuperclassesAttribute extends Attribute {
+		// Declared in Attributes.jrag at line 141
+		public CjSuperclassesAttribute(CjClassDecl decl) {
+			super(decl.constantPool(), "de.tud.caesarj.Superclasses");
+			ConstantPool c = decl.constantPool();
+			Collection list = decl.getDeclaredParents();
+			u2(list.size()); 										// cj_superclasses_length
+			for(Iterator iter = list.iterator(); iter.hasNext(); ) {
+				TypeDecl superclassType = (TypeDecl)iter.next();
+				u2(c.addClass(superclassType.constantPoolName()));	// cj_superclasses_index
+			}
+		}
+	}
 
   interface ExceptionHolder {
     public int getNumException();

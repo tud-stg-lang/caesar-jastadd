@@ -31,8 +31,10 @@ aspect MCByteCode {
 
 	private Collection ClassDecl.attributes(boolean isCjClass) {
 		Collection attrs = attributes();
-		if (isCjClass)
+		if (isCjClass) {
 			attrs.add(new IsCjClassAttribute(constantPool()));
+			attrs.add(new CjSuperclassesAttribute((CjClassDecl) this));
+		}
 		return attrs;
 	}
 	

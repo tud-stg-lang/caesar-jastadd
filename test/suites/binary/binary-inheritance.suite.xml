@@ -82,6 +82,71 @@
 		</binary>
 	</compile>
 	
+	
+	<compile id="binaryinheritance002a" description="Two levels of inheritance (CjClasses) - method inheritance">
+		<code>
+			public cclass Inherit2 extends Inherit {
+				public void foo() {		m();	}
+			}
+		</code>
+		<binary>
+			public cclass TestClass { 
+				public int m() { return 3; } 
+			}
+			public cclass Inherit extends TestClass { }
+		</binary>
+	</compile>
+	
+	
+	<compile id="binaryinheritance002b" description="Two levels of inheritance (CjClasses) - method inheritance, Java classes">
+		<code>
+			public class Inherit2 extends Inherit {
+				public void foo() {		m();	}
+			}
+		</code>
+		<binary>
+			public class TestClass { 
+				public int m() { return 3; } 
+			}
+			public class Inherit extends TestClass { }
+		</binary>
+	</compile>
+	
+	<compile id="binaryinheritance002c" description="Two levels of inheritance (CjClasses) - no methods">
+		<code>
+			public cclass Inherit2 extends Inherit { }
+		</code>
+		<binary>
+			public cclass TestClass { }
+			public cclass Inherit extends TestClass { }
+		</binary>
+	</compile>
+	
+	
+	
+	<compile id="binaryinheritance002d" description="Two levels of inheritance (CjClasses) - method inheritance among binaries">
+		<code>
+			public cclass SourceClass extends Inherit2 {
+				public static void main(String args[]) {
+					SourceClass sc = new SourceClass();
+					sc.foo();
+				}
+			}
+		</code>
+		<binary>
+			public cclass TestClass { 
+				public int m() { return 3; } 
+			}
+			public cclass Inherit extends TestClass { }
+			public cclass Inherit2 extends Inherit {
+				public void foo() {		m();	}
+			}
+			
+		</binary>
+	</compile>
+	
+	
+	
 	<compile id="binaryinheritance003" description="Simple multiple inheritance, constructor inheritance">
 		<binary>
 			public cclass Test1 {
@@ -128,58 +193,73 @@
 		</code>
 	</compile>
 	
-	<compile id="binaryinheritance004" description="Diamond inheritance">
+	<compile id="binaryinheritance003b" description="Simple multiple inheritance among binaries">
 		<binary>
-			public abstract cclass A {
-				protected void doA() {
-					System.out.println("diamond.a");
-				}
-				public abstract void doAction();
+			public cclass Test1 {
+				public void f() { System.out.println("f1"); }
 			}
-
-			public cclass B extends A {
-				public void doAction() {
-					doA();
-					doB();
-				}
-				private void doB() {
-					System.out.println("diamond.b");
-				}
+			public cclass Test2 {
+				public void f() { System.out.println("f2"); }
+				public void g() { System.out.println("g2"); }
 			}
-
-			public cclass C extends A {
-				public void doAction() {
-					doA();
-					doC();
-				}
-				private void doC() {
-					System.out.println("diamond.C");
+			public cclass Test extends Test1 &amp; Test2 {
+				public void t() {
+					f();
+					g();
 				}
 			}
 		</binary>
 		<code>
-			public cclass D extends B &amp; C {
-				private void doD() {
-					System.out.println("diamond.d");
-				}
-				public void doAction() {
-					super.doAction();
-					doD();
-				}
-				public static void main(String args[]) {
-					new D().doAction();
+			public cclass SourceTest extends Test {
+				static public void main(String[] args) {
+					SourceTest st = new SourceTest();
+					st.t();
+					SourceTest.main(null);
 				}
 			}
 		</code>
 	</compile>
 	
-		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-	<compile id="binaryinheritance005" description="Diamond inheritance with extra subclass">
+	<compile-run id="binaryinheritance004" description="Diamond inheritance">
 		<binary>
 			public abstract cclass A {
-				protected void doA() {
-					System.out.println("diamond.a");
+				protected String doA() {	return "diamond.a -> ";	}
+				public abstract String doAction();
+			}
+
+			public cclass B extends A {
+				public String doAction() {
+					return doA() + doB();
 				}
+				private String doB() {	return "diamond.b -> ";	}
+			}
+
+			public cclass C extends A {
+				public String doAction() {
+					return doA() + doC();
+				}
+				private String doC() {	return "diamond.C -> ";	}
+			}
+		</binary>
+		<code>
+			public cclass D extends B &amp; C {
+				private String doD() {	return "diamond.d -> ";	}
+				public String doAction() {
+					return super.doAction() + doD();
+				}
+			}
+		</code>
+		<test>
+			String result = new D().doAction();
+			assertEquals("diamond.a -> diamond.b -> diamond.d -> ", result);
+		</test>
+	</compile-run>
+	
+		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="binaryinheritance005" description="Diamond inheritance with extra subclass">
+		<binary>
+			public abstract cclass A {
+				protected void doA() {	System.out.println("diamond.a");	}
 				public abstract void doAction();
 			}
 
@@ -188,9 +268,7 @@
 					doA();
 					doB();
 				}
-				private void doB() {
-					System.out.println("diamond.b");
-				}
+				private void doB() {	System.out.println("diamond.b");	}
 			}
 
 			public cclass C extends A {
@@ -198,38 +276,30 @@
 					doA();
 					doC();
 				}
-				private void doC() {
-					System.out.println("diamond.C");
-				}
+				private void doC() {	System.out.println("diamond.C");	}
 			}
 			public cclass D extends B &amp; C {
-				private void doD() {
-					System.out.println("diamond.d");
-				}
+				private void doD() {	System.out.println("diamond.d");	}
 				public void doAction() {
 					super.doAction();
 					doD();
-				}
-				public static void main(String args[]) {
-					new D().doAction();
 				}
 			}
 		</binary>
 		<code>
 			public cclass E extends D {
-				private void doD() {
-					System.out.println("diamond.e");
-				}
+				private void doD() {	System.out.println("diamond.e");	}
 				public void doAction() {
 					super.doAction();
 					doD();
 				}
-				public static void main(String args[]) {
-					new D().doAction();
-				}
 			}
 		</code>
-	</compile>
+		<test>
+			new E().doAction();
+//			assertEquals("diamond.a -> diamond.b -> diamond.d -> diamond.e -> ", result);		
+		</test>
+	</compile-run>
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-run id="binaryinheritance006" description="Using super() in constructor.">

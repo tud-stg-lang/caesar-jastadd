@@ -48,7 +48,7 @@ class Attributes {
 				innerClasses(typeDecl, outerTypeDecl, classPath);
 			} else if (attribute_name.equals("Synthetic")) {
 				isSynthetic = true;
-			} else if (attribute_name.equals("de.tud.caesarj.superclasses")) {
+			} else if (attribute_name.equals("de.tud.caesarj.Superclasses")) {
 				superclasses();
 			} else if (attribute_name.equals("de.tud.caesarj.IsCjClass")) {
 				isCjClass = true;

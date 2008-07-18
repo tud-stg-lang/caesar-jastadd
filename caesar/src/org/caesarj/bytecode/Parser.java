@@ -248,11 +248,13 @@ public class Parser {
 	}
 
 	public CompilationUnit parse(TypeDecl outerTypeDecl, CONSTANT_Class_Info outerClassInfo, Program classPath) 
-	throws FileNotFoundException, IOException {
+					throws FileNotFoundException, IOException {
 		if(Parser.VERBOSE) 
 			println("Parsing byte codes in " + name);
 
 		this.outerClassInfo = outerClassInfo;
+		
+		// Read blocks of Java class file format:
 		parseMagic();
 		parseMinor();
 		parseMajor();
@@ -262,26 +264,23 @@ public class Parser {
 		parseMethods(typeDecl);
 		Attributes attrs = new Attributes(this, typeDecl, outerTypeDecl, classPath);
 		
+		// If the type is a Caesar class, make it a CjClassDecls and add inherited members:
 		if(attrs.superclassesList() != null || attrs.isCjClass()) {
-			// Create AST nodes as CjClassDecls, not normal ClassDecls
 			List body = typeDecl.getBodyDeclListNoTransform();
 			List newbody = new List();
 			for(int i = 0; i < body.getNumChild(); ++i) {
 				BodyDecl decl = (BodyDecl)body.getChildNoTransform(i);
 				if(decl instanceof MemberInterfaceDecl) {
 					// Ignore implicit interface
-					if(((MemberInterfaceDecl)decl).getInterfaceDeclNoTransform().getID().equals("_ccIfc"))
+					if(((MemberInterfaceDecl)decl).getInterfaceDeclNoTransform().getID().endsWith("_ccIfc")) // equals?
 						continue;
 				}
 				newbody.add(decl);
 			}
 			
-			List superclassesList;
-			if (attrs.superclassesList() != null) 
-				superclassesList = attrs.superclassesList(); // ignore typeDecl.getSuperClassAccess()
-			else
-				superclassesList = new List(); // empty list TODO @Yang check
-			
+			List superclassesList = (attrs.superclassesList() != null ? attrs.superclassesList() : new List()); //ignore typeDecl.getSuperClassAccess()
+
+			// Make a CjClassDecl, including its superclasses and its inherited members:
 			typeDecl = new CjVirtualClassDecl(
 					typeDecl.getModifiersNoTransform(),
 					typeDecl.getID(),
@@ -340,30 +339,6 @@ public class Parser {
 					: new Opt(superClass));
 			decl.setImplementsList(parseInterfaces(new List()));
 			
-			/* @Vaidas: 
-			 * 
-			 * Hier sollte unterschieden werden, ob eine ClassDecl oder 
-			 * eine CjClassDecl erzeugt werden muss. Wenn CjClassDecl, dann 
-			 * übernehme die Angaben aus der bereits erstellten ClassDecl.
-			 * 
-			 * Das Problem ist, dass ClassDecl.getSuperClassAccess() nicht 
-			 * funktioniert. Diese Methode wird insbesondere bei 
-			 * ClassDecl.superclass() aufgerufen, und diese wird in der neuen 
-			 * Methode ClassDecl.isSubtypeOfCjObject() benötigt.  
-			 */
-			
-			/*
-			if (decl.isSubtypeOfCjObject()) {
-				org.caesarj.ast.List superclassesList = new org.caesarj.ast.List();
-				superclassesList.add(decl.superclass()); // TODO anpassen an AST-Struktur für Superklassen bei CjClasses
-				decl = new CjClassDecl(
-							decl.getModifiersNoTransform(),
-							decl.getID(),
-							superclassesList,
-							decl.getDynamicTypeListNoTransform(),
-							decl.getBodyDeclListNoTransform());
-			}
-			*/
 			
 			if ((flags & 0x0008) == 0 && outerClassInfo != null)
 				isInnerClass = true;
