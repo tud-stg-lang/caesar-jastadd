@@ -107,8 +107,8 @@
         <include name="**/*.class"/>
     </patternset>
   </unjar>
-  <jar destfile="${dist.dir}/cjc.jar" basedir="./bin" includes="**/*.class"
-	excludes="org/caesarj/runtime/mixer/*.class,test**/**">
+  <jar destfile="${dist.dir}/caesar-compiler.jar" basedir="./bin" includes="**/*.class"
+	excludes="org/caesarj/runtime/**/*.class,test**/**">
     <manifest>
       <attribute name="Main-Class" value="org.caesarj.compiler.CaesarCompiler"/>
     </manifest>
@@ -127,7 +127,7 @@
         <include name="**/*.class"/>
     </patternset>
   </unjar>
-  <jar destfile="${dist.dir}/cj.jar" basedir="./bin"
+  <jar destfile="${dist.dir}/caesar-runtime.jar" basedir="./bin"
 	includes="org/caesarj/runtime/**/*.class,org/objectweb/asm/**">
     <manifest>
       <attribute name="Main-Class" value="org.caesarj.runtime.mixer.MixinLoader"/>
