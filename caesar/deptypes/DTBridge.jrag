@@ -129,6 +129,9 @@ aspect DTBridge {
 	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).packageName() {
 		return absoluteType(index).packageName();
 	}
+	eq DepTypesCompilationUnit.getDependentTypeDecl(int index).hostPackage() {
+		return absoluteType(index).hostPackage();
+	}
 	
 	// the available members are determined by the absolute type
 	eq DependentTypeDecl.memberFields(String name) = absoluteType().memberFields(name);
