@@ -1,0 +1,375 @@
+<testsuite name="Test super keyword" package="binary.mixin.supercall">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-check-error id="stcsuper001ma" error="METHOD_NOT_FOUND"
+		                 description="called super method does not exist in class Object">
+		<code></code>
+		<binary>
+				public cclass AA { 
+					public void n() {
+						super.m();
+					}
+				}			
+		</binary>
+    </compile-check-error>
+	
+	<compile-check-error id="stcsuper001mb" error="METHOD_NOT_FOUND"
+		                 description="called super method does not exist in superclass">
+		<code>
+				public cclass BB extends AA { 
+					public void n() {
+						super.m();
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+				}
+		</binary>
+    </compile-check-error>
+	
+	<compile-check-error id="stcsuper001mb_allbinary" error="METHOD_NOT_FOUND"
+		                 description="called super method does not exist in superclass">
+		<code></code>
+		<binary>
+				public cclass AA { 
+				}
+				public cclass BB extends AA { 
+					public void n() {
+						super.m();
+					}
+				}
+		</binary>
+    </compile-check-error>
+	
+	<compile-check-error id="stcsuper001mc" error="METHOD_NOT_FOUND"
+		                 description="called super method does not exist in superclasses">
+		<code>
+				public cclass DD extends BB &amp; CC {
+					public void n() {
+						super.m();
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { }
+				public cclass BB extends AA { }
+				public cclass CC extends AA { }
+		</binary>
+    </compile-check-error> 
+	
+	<compile  id="stcsuper002ma" description="test simple super call to Object">
+        <code>
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   super.hashCode();
+				}
+			}
+        </code>
+		<binary>
+			public cclass BBB {	}
+		</binary>
+    </compile> 
+	
+    <compile id="stcsuper002mb" description="Test simple super call">
+		<code>
+				public cclass BB extends AA { 
+					public String n() {
+						return "BB.n," + super.m();
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+					public String m() { return "AA.m"; }
+				}
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper003m" description="Test super calls to methods with same name but different signatures">
+		<code>
+				public cclass BB extends AA { 
+					public String n() {
+					    String r = super.m() + super.m("3") + super.m("$",4);
+						return r;
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA {
+					public String m() { return "AA.m,"; }
+					public String m(String ps) { return ps+"!,"; }
+					public String m(String ps, int pi) { return ps+pi; }
+				}
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper004ma" description="Test simple super call to Object within long inheritance chain">
+		<code>
+				public cclass EE extends DD { 
+					public String n() {
+						super.hashCode();
+						return "EE.n";
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+					public String m() { return "AA.m"; }
+				}
+				public cclass BB extends AA {
+					public String m() { return "BB.m"; }
+				}
+				public cclass CC extends BB { }
+				public cclass DD extends CC { }
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper004mb" description="Test simple super call within long inheritance chain">
+		<code>
+				public cclass EE extends DD { 
+					public String n() {
+						return "EE.n," + super.m();
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+					public String m() { return "AA.m"; }
+				}
+				public cclass BB extends AA {
+					public String m() { return "BB.m"; }
+				}
+				public cclass CC extends BB { }
+				public cclass DD extends CC { }
+		</binary>
+	</compile>
+		
+	<compile id="stcsuper005m" description="Simple test with one method within diamond">
+		<code>
+			public cclass D extends B &amp; C {
+				public String m() { return "D.m," + super.m(); }
+			}
+		</code>
+		<binary>
+			public cclass A { 
+				public String m() { return "A.m"; }
+			}
+			public cclass B extends A {
+				public String m() { return "B.m," + super.m(); }
+			}
+			public cclass C extends A {
+				public String m() {	return "C.m," + super.m(); }
+			}
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper006m" description="Test accessibility of every method in every superclass within diamond">
+		<code>
+			public cclass D extends B &amp; C {
+				public String q() { return "D.q,"+ super.n(); }
+				public String r() { return "D.r,"+ super.p(); }
+				public String s() { return "D.s,"+ super.m(); }
+			}
+		</code>
+		<binary>
+			public cclass A { 
+				public String m() { return "A.m"; }
+			}
+			public cclass B extends A {
+				public String n() { return "B.n,"+ super.m();	}
+			}
+			public cclass C extends A {
+				public String p() {	return "C.p,"+ super.m(); }
+			}
+		</binary>
+	</compile>
+	
+	<!--
+	<compile-check-error id="stcsuper001fa" error="VAR_UNKNOWN"
+		                 description="accessed field does not exist in superclass Object">
+		<code>
+				public cclass AA { 
+					public void n() {
+						String s = super.f;
+					}
+				}
+		</code>
+    </compile-check-error>
+	-->
+	
+	<compile-check-error id="stcsuper001fb" error="VAR_UNKNOWN"
+		                 description="accessed field does not exist in superclass">
+		<code>
+				public cclass BB extends AA { 
+					public void n() {
+						String s = super.f;
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+				}
+		</binary>
+    </compile-check-error>
+	
+	<compile-check-error id="stcsuper001fc" error="VAR_UNKNOWN"
+		                 description="accessed field does not exist in superclasses (diamond)">
+		<code>
+				public cclass DD extends BB &amp; CC {
+					public void n() {
+						String s = super.f;
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { }
+				public cclass BB extends AA { }
+				public cclass CC extends AA { }
+		</binary>
+    </compile-check-error> 
+	
+    <compile id="stcsuper002fb" description="Test simple field access in superclass">
+		<code>
+				public cclass BB extends AA { 
+					public String n() {
+						return "BB.n," + super.s;
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+					public String s;
+				}
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper004fb" description="Test simple field access within long inheritance chain">
+		<code>
+				public cclass EE extends DD { 
+					public String n() {
+						return "EE.n," + super.s;
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { 
+					public String s;
+				}
+				public cclass BB extends AA { }
+				public cclass CC extends BB { }
+				public cclass DD extends CC { }
+		</binary>
+	</compile>
+		
+	<compile id="stcsuper005f" description="Simple test with field access within diamond">
+		<code>
+			public cclass D extends B &amp; C {
+				public String s = "D.m," + super.s;
+			}
+		</code>
+		<binary>
+			public cclass A { 
+				public String s = "A.m";
+			}
+			public cclass B extends A {
+				public String s = "B.m," + super.s;
+			}
+			public cclass C extends A {
+				public String s = "C.m," + super.s;
+			}
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper006f" description="Test accessibility of every field in every superclass within diamond">
+		<code>
+			public cclass D extends B &amp; C {
+				public String q() { return "D.q,"+ super.sn; }
+				public String r() { return "D.r,"+ super.sp; }
+				public String s() { return "D.s,"+ super.sm; }
+			}
+		</code>
+		<binary>
+			public cclass A { 
+				public String sm = "A.sm"; 
+			}
+			public cclass B extends A {
+				public String sn = "B.sn";
+			}
+			public cclass C extends A {
+				public String sp = "C.sp";
+			}
+		</binary>
+	</compile>
+	
+	<!--
+	<compile id="stcsuper010" description="Simple default constructor access to Object">
+		<code>
+				public cclass AA { 
+					public AA() {
+						super();
+					}
+				}
+		</code>
+	</compile>
+	-->
+	
+	<compile id="stcsuper011" description="Simple default constructor access">
+		<code>
+				public cclass BB extends AA { 
+					public BB() {
+						super();
+					}
+                }
+		</code>
+		<binary>
+				public cclass AA { 
+					public AA() {
+						System.out.println("A");
+					}
+				}
+		</binary>
+	</compile>
+	
+	<compile id="stcsuper012" description="Simple implicit default constructor access">
+		<code>
+				public cclass BB extends AA { 
+					public BB() {
+						super();
+					}
+				}
+		</code>
+		<binary>
+				public cclass AA { }
+		</binary>
+	</compile>
+	
+	<compile-check-error id="stcsuper013" error="x"
+						 description="Only default constructor allowed in cclass">
+		<code>
+				// @Yang - Wirklich??
+				public cclass AA {
+					public AA() { }
+					public AA(String ps) { }
+					public AA(String ps, int pi) { }
+				}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="stcsuper014" error="x"
+		                 description="Access to only default constructor allowed in cclass">
+		<code>
+				// @Yang - Wirklich??
+				public cclass AA {
+					public AA(String s) { }
+				}
+				public cclass BB extends AA { 
+					public BB(String s) {
+						super(s);
+					}
+				}
+		</code>
+	</compile-check-error>
+	
+</testsuite>

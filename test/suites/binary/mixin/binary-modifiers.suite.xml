@@ -1,0 +1,229 @@
+<testsuite name="Test Modifiers except visibility" package="binary.modifiers">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile id="stcmodifiers001" description="test simple inheritance with abstract method">
+		<code>
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+		</code>
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }
+			public cclass BBB extends AAA { public void m() {} }
+		</binary>
+	</compile>
+	
+	<compile-check-error id="stcmodifiers001e" error="CLASS_MUST_IMPLEMENT"
+		                 description="test error simple inheritance with abstract method">
+		<code>
+			public cclass Test {
+				public void test() {
+				   BBB b = null;
+				   b.m();
+				}
+			}
+		</code>
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public cclass BBB extends AAA { }
+		</binary>
+	</compile-check-error>
+	
+	<compile id="stcmodifiers002" description="test simple indirect inheritance with abstract method">
+		<code>
+			public cclass Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public abstract cclass BBB extends AAA { }
+			public cclass CCC extends BBB { public void m() {} }
+		</binary>
+	</compile>
+	
+	<compile-check-error id="stcmodifiers002e" error="CLASS_MUST_IMPLEMENT"
+		                 description="test error simple indirect inheritance with abstract method">
+		<code>
+			public abstract cclass AAA { public abstract void m(); }	
+			public abstract cclass BBB extends AAA { }
+			public cclass CCC extends BBB { }
+			public cclass Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile id="stcmodifiers003" description="test multiple inheritance with abstract method">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public cclass BBB { public void m() {} }
+			public cclass CCC extends AAA &amp; BBB { public void m() {} }
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile id="stcmodifiers004" description="test indirect multiple inheritance with abstract method">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public cclass BBB { public void m() {} }
+			public abstract cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { public void m() {} } 
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   DDD d = null;
+				   d.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="stcmodifiers005e" error="CLASS_MUST_IMPLEMENT"
+	                     description="test error multiple inheritance of two abstracts methods">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public abstract cclass BBB { public abstract void m(); }
+			public cclass CCC extends AAA &amp; BBB { }
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile id="stcmodifiers006" description="test indirect multiple inheritance of two abstracts methods">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public abstract cclass BBB { public abstract void m(); }
+			public cclass CCC extends AAA &amp; BBB { public void m(){} }
+			public cclass DDD extends CCC { } 
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   DDD d = null;
+				   d.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="stcmodifiers006e" error="CLASS_MUST_IMPLEMENT"
+		                 description="test indirect multiple inheritance of two abstracts methods">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public abstract cclass BBB { public abstract void m(); }
+			public cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { } 
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   DDD d = null;
+				   d.m();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile id="stcmodifiers007" description="test inheritance of several abstracts classes">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public abstract cclass BBB { public abstract void m(); }
+			public abstract cclass CCC extends AAA &amp; BBB { }
+			public abstract cclass DDD extends CCC { }
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				   DDD d = null;
+				   d.m();
+				}
+			}
+		</code>
+	</compile>	
+	
+	<compile id="stcmodifiers010" description="test static field access">
+		<binary>
+			public abstract cclass AAA { public static String s; }	
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   String ss = AAA.s;
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile id="stcmodifiers011" description="test static method access">
+		<binary>
+			public abstract cclass AAA { public static void m(){} }	
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   AAA.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile id="stcmodifiers012" description="test joining abstract and concrete method">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public cclass BBB { public void m() {} }
+			public cclass CCC extends AAA &amp; BBB { }
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   CCC c = null;
+				   c.m();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile id="stcmodifiers013" description="test joining abstract and concrete method in abstract class">
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+			public cclass BBB { public void m() {} }
+			public abstract cclass CCC extends AAA &amp; BBB { }
+			public cclass DDD extends CCC { } 
+		</binary>
+	<code>
+		public class Test {
+				public void test() {
+				   DDD d = null;
+				   d.m();
+				}
+			}
+		</code>
+	</compile>
+	
+</testsuite>
