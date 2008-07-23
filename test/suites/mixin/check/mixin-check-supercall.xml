@@ -178,7 +178,7 @@
     </compile-check-error>
 	
 	<compile-check-error id="stcsuper001fc" error="VAR_UNKNOWN"
-		                 description="called super method does not exist in superclasses">
+		                 description="accessed field does not exist in superclasses (diamond)">
 		<code>
 				public cclass AA { }
 				public cclass BB extends AA { }
@@ -204,7 +204,7 @@
 		</code>
 	</compile>
 	
-	<compile id="stcsuper004fb" description="Test simplefield access within long inheritance chain">
+	<compile id="stcsuper004fb" description="Test simple field access within long inheritance chain">
 		<code>
 				public cclass AA { 
 					public String s;
