@@ -175,7 +175,6 @@ public abstract class CompilerTest extends TestCase {
 
 	protected void runTest() throws Throwable {
 		prepareBinaries();
-//		prog.initCjSourceFiles(); // ?
 		if (testcaseVerbose) System.out.println("\nFinished preparing binaries.\n");
 		parseSource();
 	}
