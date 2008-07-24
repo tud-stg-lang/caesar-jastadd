@@ -9,7 +9,6 @@ import java.io.InputStream;
 
 import org.caesarj.ast.Access;
 import org.caesarj.ast.BodyDecl;
-import org.caesarj.ast.CjClassDecl;
 import org.caesarj.ast.CjVirtualClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.CompilationUnit;
@@ -23,8 +22,6 @@ import org.caesarj.ast.Opt;
 import org.caesarj.ast.ParseName;
 import org.caesarj.ast.Program;
 import org.caesarj.ast.TypeDecl;
-
-import sun.text.CompactShortArray.Iterator;
 
 //import sun.management.MethodInfo;
 //import sun.reflect.FieldInfo;
