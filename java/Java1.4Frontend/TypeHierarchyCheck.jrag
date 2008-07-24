@@ -177,13 +177,13 @@ aspect TypeHierarchyCheck {
           }
           // 8.4.6.3
           if(decl.isPublic() && !m.isPublic())
-            error("overriding access modifier error");
+            m.error("overriding access modifier error");
           // 8.4.6.3
           if(decl.isProtected() && !(m.isPublic() || m.isProtected()))
-            error("overriding access modifier error");
+            m.error("overriding access modifier error");
           // 8.4.6.3
           if((!decl.isPrivate() && !decl.isProtected() && !decl.isPublic()) && m.isPrivate())
-            error("overriding access modifier error");
+            m.error("overriding access modifier error");
  
           // regardless of overriding
           if(decl.isFinal())
