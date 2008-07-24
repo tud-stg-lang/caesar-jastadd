@@ -73,7 +73,7 @@ aspect VCErrorCheck {
 				if ((lastMethodModifier != null) &&
 						! (    (modifiers.isProtected() && lastMethodModifier.equalsIgnoreCase("protected"))
 							|| (modifiers.isPublic() && lastMethodModifier.equalsIgnoreCase("public")) )) {
-						error("overriding access modifier error");
+						error("overriding access modifier error in method " + m.getID());
 				}
 
 				if (modifiers.isPublic()) {
@@ -81,7 +81,7 @@ aspect VCErrorCheck {
 				} else if (modifiers.isProtected()) {
 					lastMethodModifier = "protected";
 				} else {
-					error("overriding access modifier error");
+					error("overriding access modifier error in method " + m.getID());
 				}
 			}
 		}
