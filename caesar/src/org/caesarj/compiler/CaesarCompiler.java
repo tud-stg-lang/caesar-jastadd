@@ -34,8 +34,7 @@ public class CaesarCompiler {
 		program.addKeyOption("-checkonly");
 
 		program.addOptions(args);
-		Collection files = program.files();
-
+		
 		if (program.hasOption("-version")) {
 			printVersion();
 			return false;
@@ -44,6 +43,41 @@ public class CaesarCompiler {
 			printUsage();
 			return false;
 		}
+		
+		if (!collectSourceFiles(program)) {
+			return false;
+		}
+		
+		try {
+			program.insertExternalizedVC();
+			
+			if (Program.verbose()) {
+				System.out.println("Parsed source code:");
+				System.out.println(program.toString());
+			}
+
+			if (containsErrors(program)) return false;
+
+			if (!program.hasOption("-checkonly")) {
+				System.out.println("Generating class files ...");
+				program.java2Transformation();
+				program.generateClassfile();
+			}
+
+			System.out.println("Done.");
+		} catch (JavaParser.SourceError e) {
+			System.err.println(e.getMessage());
+			return false;
+		} /* catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+			return false;
+		} */
+		return true;
+	}
+	
+	public static boolean collectSourceFiles(Program program) {
+		Collection files = program.files();
 		
 		if (files.isEmpty()) {
 			if (program.hasValueForOption("-sourcepath")) {
@@ -85,32 +119,7 @@ public class CaesarCompiler {
 			}
 			program.addSourceFile(name);
 		}
-
-		try {
-			program.insertExternalizedVC();
-			
-			if (Program.verbose()) {
-				System.out.println("Parsed source code:");
-				System.out.println(program.toString());
-			}
-
-			if (containsErrors(program)) return false;
-
-			if (!program.hasOption("-checkonly")) {
-				System.out.println("Generating class files ...");
-				program.java2Transformation();
-				program.generateClassfile();
-			}
-
-			System.out.println("Done.");
-		} catch (JavaParser.SourceError e) {
-			System.err.println(e.getMessage());
-			return false;
-		} /* catch (Exception e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			return false;
-		} */
+		
 		return true;
 	}
 
