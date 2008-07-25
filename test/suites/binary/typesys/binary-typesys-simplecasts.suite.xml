@@ -1,0 +1,31 @@
+<testsuite name="Test casts to dependent types" package="binary.typesys.casts">
+
+	<common-code-base>		
+		public cclass G {
+			public cclass N {
+				public void x(M m) {}
+			}
+			public cclass M {
+			}
+		}
+	</common-code-base>
+	
+	<compile id="simplecasts001" description="Return a cast CJ object (in binary), assign it to a CJ-type variable (in code). Adapted from dungeon.">
+		<code>
+			public cclass Test {
+				public SpriteSet playerSpriteSet = GraphicsRegistry.getSpriteSet();
+			}
+		</code>
+		<binary>
+			public cclass SpriteSet { }
+			public cclass GraphicsRegistry {
+				public static SpriteSet getSpriteSet() {
+					Object s = new SpriteSet();
+					s = (Object) s;
+					return (SpriteSet) s; 
+				}
+			} 
+		</binary>
+	</compile>
+	    
+</testsuite>
