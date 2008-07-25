@@ -1,4 +1,4 @@
-<testsuite name="Test reading binary Caesar classes" package="binary.inheritance">
+<testsuite name="Test reading binary Caesar classes" package="binary.mixin.inheritance">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-run id="binaryinheritance001" description="Inheritance of methods">

@@ -1,4 +1,4 @@
-<testsuite name="Test Inheritance of Methods" package="binary.inhmethods">
+<testsuite name="Test Inheritance of Methods" package="binary.mixin.inhmethods">
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<!--
@@ -197,20 +197,20 @@
 	</compile>
 	-->
 	
-	<compile-check-error id="stcinhmethods012" error="DUPLICATE_DECL"
+	<compile-check-error id="stcinhmethods012" error="METHOD_RETURN_DIFFERENT"
 		                 description="Test calls to methods with same name but different return types">
 		<code>
-				public cclass BB extends AA { 
+				public cclass BB extends AA {
+					public int m() { return 1; }
 					public String n() {
-						int i = super.m();
-					    String r = i + "," + super.m();
+						int i = m();
+					    String r = i + "," + m();
 						return r;
 					}
 				}
 		</code>
 		<binary>
 				public cclass AA {
-					public int m() { return 1; }
 					public String m() { return "!"; }
 				}
 		</binary>

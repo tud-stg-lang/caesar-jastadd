@@ -1,4 +1,4 @@
-<testsuite name="Test Subtyping" package="binary.subtyping">
+<testsuite name="Test Subtyping" package="binary.mixin.subtyping">
 	
 		<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 		<compile  id="stcsubtyping001" description="test simple inheritance">

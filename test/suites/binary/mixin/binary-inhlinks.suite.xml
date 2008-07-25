@@ -1,4 +1,4 @@
-<testsuite name="Test Multiple Inheritance Links" package="binary.inhlinks">
+<testsuite name="Test Multiple Inheritance Links" package="binary.mixin.inhlinks">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile  id="stcinhlinks001" description="simple inheritance">
@@ -63,26 +63,26 @@
     </compile-check-error>
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<!--
     <compile-check-error id="stcinhlinks007" error="CLASS_CIRCULARITY" 
 		                 description="cclass inherits from itself">
         <code>
-        </code>
-		<binary>
 			public cclass CCC extends CCC { }
-		</binary>
+        </code>
     </compile-check-error>
-	
+	-->
+		
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<!--
     <compile-check-error id="stcinhlinks008" error="CLASS_CIRCULARITY" 
 		                 description="cclass inherits indirectly from itself">
         <code>
-        </code>
-		<binary>
 			public cclass AAA extends CCC { }
 			public cclass BBB extends AAA { }
-			public cclass CCC extends BBB { }   <!-- move to code block? -->
-		</binary>
+			public cclass CCC extends BBB { }
+        </code>
     </compile-check-error>
+	-->
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-check-error id="stcinhlinks009" error="WRONG_INHERITANCE_RELATIONSHIP" 
