@@ -93,7 +93,8 @@ public class XMLSuite extends TestSuite {
 								+ item.getNodeName());
 			}
 			
-			newTest.setBinaries(getBinaryNodes(item, "binary"));
+			Set binaryNodes = getBinaryNodes(item, "binary");
+			newTest.setBinaries(binaryNodes);
 			
 			if (newTest instanceof CompileAndRun) {
 				String testMethodBlock = elt(item, "test").getTextContent();
@@ -102,8 +103,14 @@ public class XMLSuite extends TestSuite {
 
 			newTest.setName(id + " - " + description);
 			newTest.addSource("Code.java", codeBlock);
-			if (commonCodeBase.length() > 0)
+			if (commonCodeBase.length() > 0) {
 				newTest.addSource("Common.java", commonCodeBase);
+				if (!binaryNodes.isEmpty()) {
+					Set binariesWithCommonCodeBase = new HashSet(binaryNodes);
+					binariesWithCommonCodeBase.add(commonCodeBase);
+					newTest.setBinaries(binariesWithCommonCodeBase);
+				}
+			}
 			res.addTest(newTest);
 		}
 

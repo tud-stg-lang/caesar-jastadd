@@ -13,7 +13,6 @@ public class CompileAndRun extends CompileOnly {
 	public CompileAndRun(String pkgname) {
 		super(pkgname);
 		// Do not reuse class files
-		// *** DO reuse class files! (?) or at least don't delete .java files created from binary block
 		 final String outdir = binDir() + File.separator + pkgname.replace(".", File.separator);
 		 clean(new File(outdir));
 		loader.setTrace(TestProperties.instance().getTraceLoader());

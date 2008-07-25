@@ -18,8 +18,7 @@ public class CompileAndFail extends CompilerTest {
 	}
 
 	public void runTest() throws Throwable {
-		prepareBinaries();
-		parseSource();
+		super.runTest();
 		
 		Collection<String> errors = new LinkedList<String>();
 		prog.errorCheck(errors);
@@ -27,17 +26,6 @@ public class CompileAndFail extends CompilerTest {
 			assertFalse("Should not compile", errors.isEmpty());
 			verifyErrorMessage(expectedError, errors);
 		}
-	}
-	
-	protected void errorCheck() {
-		if (printCode) System.out.println("Compiled code : \n"+prog.toString());
-		if (testcaseVerbose) System.out.println("Checking for errors ... ");
-		Collection<String> errors = new LinkedList<String>();
-		prog.errorCheck(errors);
-		assertFalse("Should not compile", errors.isEmpty());
-		verifyErrorMessage(expectedError, errors);
-		if (!errors.isEmpty()) binariesHaveErrors = true;	// set flag, so the test is considered to have failed
-		if (testcaseVerbose) System.out.println("Error check done.");
 	}
 	
 	public void verifyErrorMessage(String expected, Collection<String> actual) {
