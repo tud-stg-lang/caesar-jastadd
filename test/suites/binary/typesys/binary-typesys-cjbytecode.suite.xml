@@ -1,0 +1,45 @@
+<testsuite package="binary.typesys.cjbytecode"
+		name="Test bytecode generated for CaesarJ classes, notably the separation into X.cjclass and X_ccIfc.class">
+
+	<common-code-base>		
+		public cclass G {
+			public cclass N {
+				public void x(M m) {}
+			}
+			public cclass M {
+			}
+		}
+	</common-code-base>
+	
+	<compile id="cjbytecode001" description="Return a CJ object (in binary), assign it to a CJ-type variable (in code). Adapted from dungeon.">
+		<code>
+			public cclass Test {
+				public SpriteSet playerSpriteSet = GraphicsRegistry.getSpriteSet();
+			}
+		</code>
+		<binary>
+			public cclass SpriteSet { }
+			public cclass GraphicsRegistry {
+				public static SpriteSet getSpriteSet() {
+					return new SpriteSet(); 
+				}
+			} 
+		</binary>
+	</compile>
+	
+	<compile id="cjbytecode002" description="Use an inherited field and assign it">
+		<code>
+			public cclass Test {
+				public A a = new A();
+				public B b = a.b;
+			}
+		</code>
+		<binary>
+			public cclass A {
+				public B b = new B();
+			}
+			public cclass B { }
+		</binary>
+	</compile>
+	    
+</testsuite>
