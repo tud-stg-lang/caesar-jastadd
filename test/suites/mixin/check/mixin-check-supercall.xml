@@ -292,8 +292,7 @@
 		</code>
 	</compile>
 	
-	<compile-check-error id="stcsuper013" error="x"
-						 description="Only default constructor allowed in cclass">
+	<compile id="stcsuper013" description="Check constructors with parameters">
 		<code>
 				public cclass AA {
 					public AA() { }
@@ -301,10 +300,9 @@
 					public AA(String ps, int pi) { }
 				}
 		</code>
-	</compile-check-error>
+	</compile>
 	
-	<compile-check-error id="stcsuper014" error="x"
-		                 description="Access to only default constructor allowed in cclass">
+	<compile id="stcsuper014" error="x"  description="Check super calls">
 		<code>
 				public cclass AA {
 					public AA(String s) { }
@@ -315,6 +313,6 @@
 					}
 				}
 		</code>
-	</compile-check-error>
+	</compile>
 	
 </testsuite>
