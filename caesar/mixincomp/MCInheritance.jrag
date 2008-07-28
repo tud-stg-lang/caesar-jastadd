@@ -32,7 +32,14 @@ aspect MCInheritance {
 	eq CjClassDecl.getDirectParents() = getDeclaredParents();
 		
 	// ---------- CjClassDecl.instanceOf ----------
-	eq CjClassDecl.instanceOf(TypeDecl type) = type.isSupertypeOfCjClassDecl(this);
+	eq CjClassDecl.instanceOf(TypeDecl type) {
+	    if (isCircular()) {
+	       return false;
+	    }
+	    else {
+	       return type.isSupertypeOfCjClassDecl(this);
+	    }
+	}
 
 	syn boolean TypeDecl.isSupertypeOfCjClassDecl(CjClassDecl type) = false;
 	

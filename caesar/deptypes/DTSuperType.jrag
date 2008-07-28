@@ -12,7 +12,8 @@ aspect DTSuperType {
 	// dependent type is identical to that of this access
 	eq SuperAccess.depType() {
     	if (isQualified()) {
-    		return generateOutPathFor(hostType(), qualifier().type());
+    		DependentType dt = generateOutPathFor(hostType(), qualifier().type());
+    		return dt == null ? unknownDepType() : dt;
     	}
     	else {
     		return new DepTypeThis();    		

@@ -53,14 +53,14 @@ aspect MCErrorCheck {
     			return true;
     	}
     	
-		for(int i = 0; i < getNumSuperClasses(); ++i) {
-			Access a = getSuperClasses(i);//.lastAccess();
-		    while (a != null) {
-		    	if (a.type().isCircular())
-		    		return true;
-		    	// check if inner class does not inherit from its outer
-		        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (TypeAccess)a.qualifier() : null;
-		    }
+    	Iterator it = getDirectParents().iterator();
+    	while (it.hasNext()) {
+			TypeDecl td = (TypeDecl)it.next();
+			while (td != null) {
+				if (td.isCircular())
+					return true;
+				td = td.enclosingType();
+			}
 		}
 		
 		for(int i = 0; i < getNumImplements(); i++) {

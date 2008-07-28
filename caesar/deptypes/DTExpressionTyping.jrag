@@ -92,7 +92,8 @@ aspect DTExpressionTyping {
     
     eq ThisAccess.depType() {
     	try {
-    		return generateOutPathFor(hostType(), decl());
+    		DependentType dt = generateOutPathFor(hostType(), decl());
+    		return dt == null ? unknownDepType() : dt;
     	}
 	    catch (DependentTypeException e) {
 	    	// error(e.msg);
