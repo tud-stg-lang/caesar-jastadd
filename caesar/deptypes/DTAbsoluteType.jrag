@@ -59,4 +59,19 @@ aspect DTAbsoluteType {
 	public boolean DepTypeOut.isAbsolute() { return false; }
 	public boolean DepTypeClass.isAbsolute() { return outType.isAbsolute(); }
 	public boolean DepTypePlain.isAbsolute() { return true; }
+	
+	/*********************************
+	 * 
+	 * Checks if a dependent type depends on 'this' 
+	 * 
+	 */
+	
+	public boolean DependentType.dependsOnThis();
+	
+    public boolean DepTypeThis.dependsOnThis() { return true; }	
+	public boolean DepTypeAbsVar.dependsOnThis() { return false; }
+	public boolean DepTypeRelVar.dependsOnThis() { return prefix.dependsOnThis(); }
+	public boolean DepTypeOut.dependsOnThis() { return prefix.dependsOnThis(); }
+	public boolean DepTypeClass.dependsOnThis() { return outType.dependsOnThis(); }
+	public boolean DepTypePlain.dependsOnThis() { return false; }
 }
