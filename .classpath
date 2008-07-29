@@ -8,6 +8,6 @@
 	<classpathentry kind="lib" path="tools/beaver-rt.jar"/>
 	<classpathentry kind="lib" path="tools/asm-3.1.jar"/>
 	<classpathentry kind="lib" path="tools/asm-util-3.1.jar"/>
-	<classpathentry kind="lib" path="test/out/bin"/>
+	<classpathentry kind="lib" path="test/out/bin" sourcepath="test/out/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
