@@ -26,18 +26,10 @@ aspect MCByteCode {
 		Collection c = super.attributes();
 		if (getDirectParents().size() > 1)
 			c.add(new MixerConfigAttribute(this));
+		c.add(new IsCjClassAttribute(constantPool()));
+		c.add(new CjSuperclassesAttribute((CjClassDecl)this));				
 		return c;
 	}
-
-	private Collection ClassDecl.attributes(boolean isCjClass) {
-		Collection attrs = attributes();
-		if (isCjClass) {
-			attrs.add(new IsCjClassAttribute(constantPool()));
-			attrs.add(new CjSuperclassesAttribute((CjClassDecl) this));
-		}
-		return attrs;
-	}
-	
 
    public void CjClassDecl.mixinCompTransform() {
 	   // generate interface
@@ -101,7 +93,7 @@ aspect MCByteCode {
 	          field.accessorWriteAttributes();
 	        }
 	      }
-	      if(isInnerType()) {
+	      if(isInnerType() && !isCjClassDecl()) {
 	        TypeDecl type = enclosingType();
 	        cp.addUtf8("this$0");
 	        cp.addUtf8(type.typeDescriptor());
@@ -123,7 +115,7 @@ aspect MCByteCode {
 	        cp.addUtf8("()V");
 	        clinit_attributes();
 	      }
-	      attributes(isCjClass);
+	      attributes();
 
 
 	      // Actual ClassFile generation
@@ -148,7 +140,7 @@ aspect MCByteCode {
 	      for(Iterator iter = interfacesIterator(); iter.hasNext(); )
 	        out.writeChar(cp.addClass(((TypeDecl)iter.next()).constantPoolName()));
 	      Collection fields = bcFields();
-	      out.writeChar(fields.size() + (isInnerType() ? 1 : 0) + enclosingVariables().size());
+	      out.writeChar(fields.size() + ((isInnerType() && !isCjClassDecl()) ? 1 : 0) + enclosingVariables().size());
 	      for(Iterator iter = fields.iterator(); iter.hasNext(); ) {
 	        FieldDeclaration field = (FieldDeclaration) iter.next();
 	        out.writeChar(field.flags());
@@ -158,7 +150,7 @@ aspect MCByteCode {
 	        for(Iterator itera = field.attributes().iterator(); itera.hasNext();)
 	          ((Attribute)itera.next()).emit(out);
 	      }
-	      if(isInnerType()) {
+	      if(isInnerType() && !isCjClassDecl()) {
 	        TypeDecl type = enclosingType();
 	        out.writeChar(0 /* Modifiers.ACC_PRIVATE */);
 	        out.writeChar(cp.addUtf8("this$0"));
@@ -197,8 +189,8 @@ aspect MCByteCode {
 	        for(Iterator itera = clinit_attributes().iterator(); itera.hasNext();)
 	          ((Attribute)itera.next()).emit(out);
 	      }
-	      out.writeChar(attributes(isCjClass).size());
-	      for(Iterator itera = attributes(isCjClass).iterator(); itera.hasNext();)
+	      out.writeChar(attributes().size());
+	      for(Iterator itera = attributes().iterator(); itera.hasNext();)
 	        ((Attribute)itera.next()).emit(out);
 
 	      out.close();
