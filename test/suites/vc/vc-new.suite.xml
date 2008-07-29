@@ -1,7 +1,7 @@
 <testsuite name="Test new operator with Caesar classes" package="vc.newop">
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="CTOR_NOT_FOUND"  id="vcnew001" description="new operator with parameter">
+    <compile-check-error error="METHOD_NOT_FOUND"  id="vcnew001" description="new operator with parameter">
         <code>
         	public class Test {
 				public void test() {
@@ -13,7 +13,7 @@
     </compile-check-error>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="CCLASS_ARRAYS_NOT_ALLOWED"  id="vcnew002" description="new array on cclass">
+    <compile id="vcnew002" description="new array on cclass">
         <code>
         	public class Test {
 				public void test() {
@@ -22,12 +22,11 @@
 			}
 			public cclass ClassA { }
         </code>
-    </compile-check-error>
+    </compile>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="UNDEF_MESSAGE"  id="vcnew003" description="direct construction of inner class">
-	<!--identical with vcnew005 ??? -->
-        <code>
+    <compile-check-error error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT"  id="vcnew003" description="direct construction of inner class">
+	    <code>
         	public class Test {
 				public void test() {
 					OuterA.InnerA a = new OuterA.InnerA();
@@ -41,7 +40,7 @@
     </compile-check-error>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="UNDEF_MESSAGE"  id="vcnew004" description="constructing external inner class">
+    <compile-check-error error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT"  id="vcnew004" description="constructing external inner class">
         <code>
         	public cclass OuterA {
 				public cclass InnerA {
@@ -58,8 +57,7 @@
     </compile-check-error>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT"  id="vcnew005" description="statically qualified new operator">
-	<!--identical with vcnew003 ??? -->
+    <compile-check-error error="TYPE_UNKNOWN"  id="vcnew005" description="statically qualified new operator">
         <code>
         	public class Test {
 				public void test() {
@@ -74,7 +72,7 @@
     </compile-check-error>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT"  id="vcnew006" description="qualified new operator inside cclass">
+    <compile-check-error error="TYPE_UNKNOWN"  id="vcnew006" description="qualified new operator inside cclass">
         <code>
         	public cclass OuterA {
 				public cclass InnerA {
@@ -87,7 +85,7 @@
     </compile-check-error>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="METHOD_NOT_FOUND"  id="vcnew007" description="constructing non-existing inner class">
+    <compile-check-error error="TYPE_UNKNOWN"  id="vcnew007" description="constructing non-existing inner class">
 		<!-- error=TYPE_UNKNOWN ??? -->
         <code>
         	public cclass OuterA {
