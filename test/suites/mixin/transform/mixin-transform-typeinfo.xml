@@ -1,0 +1,257 @@
+<testsuite name="Testcases for runtime type information" package="mixin.transform.typeinfo">
+
+    <compile-run id="mctypeinfo001" description="Test cclass name">
+		<test>		
+			assertEquals(AA.class.getName(), AA.cclass.getName());
+		</test>
+		<code>
+			public cclass AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo002" description="Test cclass implementation class">
+		<test>		
+			assertEquals(AA.class, AA.cclass.implClass());
+		</test>
+		<code>
+			public cclass AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo003" description="Test cclass interface class">
+		<test>
+			try {
+				Class cls = Class.forName(AA.class.getName() + "_ccIfc");
+				assertEquals(cls, AA.cclass.ifcClass());
+			}
+			catch (Exception e) {
+				fail();
+			}			
+		</test>
+		<code>
+			public cclass AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo004" description="Test class name">
+		<test>		
+			assertEquals(AA.class.getName(), AA.cclass.getName());
+		</test>
+		<code>
+			public class AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo005" description="Test class implementation class">
+		<test>		
+			assertEquals(AA.class, AA.cclass.implClass());
+		</test>
+		<code>
+			public class AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo006" description="Test class interface class">
+		<test>
+			assertEquals(AA.class, AA.cclass.ifcClass());			
+		</test>
+		<code>
+			public class AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo007" description="Test forClass for cclass">
+		<test>
+			try {
+				RuntimeClass rtc = RuntimeClass.forClass(AA.class);
+				assertEquals(AA.cclass, rtc);
+			}
+			catch (Exception e) {
+				fail();
+			}						
+		</test>
+		<code>
+			public cclass AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo008" description="Test forClass for class">
+		<test>
+			try {
+				RuntimeClass rtc = RuntimeClass.forClass(AA.class);
+				assertEquals(AA.cclass, rtc);
+			}
+			catch (Exception e) {
+				fail();
+			}						
+		</test>
+		<code>
+			public class AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo009" description="Test forName for cclass">
+		<test>
+			try {
+				RuntimeClass rtc = RuntimeClass.forName(AA.class.getName());
+				assertEquals(AA.cclass, rtc);
+			}
+			catch (Exception e) {
+				fail();
+			}						
+		</test>
+		<code>
+			public cclass AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo010" description="Test forName for class">
+		<test>
+			try {
+				RuntimeClass rtc = RuntimeClass.forName(AA.class.getName());
+				assertEquals(AA.cclass, rtc);
+			}
+			catch (Exception e) {
+				fail();
+			}						
+		</test>
+		<code>
+			public class AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo011" description="Test isInstance for cclass">
+		<test>
+			assertTrue(AA.cclass.isInstance(new AA()));						
+		</test>
+		<code>
+			public cclass AA {	}
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo012" description="Test isInstance for class">
+		<test>
+			assertTrue(AA.cclass.isInstance(new BB()));						
+		</test>
+		<code>
+			public class AA {	}
+			public class BB extends AA { }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo013" description="Test negative isInstance for class">
+		<test>
+			assertFalse(BB.cclass.isInstance(new AA()));						
+		</test>
+		<code>
+			public class AA {	}
+			public class BB extends AA { }
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo014" description="Test isInstance for mixin composition">
+		<test>
+			assertTrue(AA.cclass.isInstance(new CC()));						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB {	}
+			public cclass CC extends AA &amp; BB {	}			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo015" description="Test negative isInstance">
+		<test>
+			assertFalse(CC.cclass.isInstance(new AA()));						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB {	}
+			public cclass CC extends AA &amp; BB {	}			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo016" description="Test isAssignableFrom for mixin composition">
+		<test>
+			assertTrue(AA.cclass.isAssignableFrom(CC.cclass));						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB {	}
+			public cclass CC extends AA &amp; BB {	}			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo017" description="Test negative isAssignableFrom">
+		<test>
+			assertFalse(CC.cclass.isAssignableFrom(AA.cclass));						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB {	}
+			public cclass CC extends AA &amp; BB {	}			
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo018" description="Test isAssignableFrom for class">
+		<test>
+			assertTrue(AA.class.isAssignableFrom(BB.class));						
+		</test>
+		<code>
+			public class AA {	}
+			public class BB extends AA {  }						
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo019" description="Test negative isAssignableFrom for class">
+		<test>
+			assertFalse(BB.class.isAssignableFrom(AA.class));						
+		</test>
+		<code>
+			public class AA {	}
+			public class BB extends AA {  }				
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo020" description="Test getRuntimeClass">
+		<test>
+			assertEquals(BB.cclass, new BB().getRuntimeClass());						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB extends AA {  }				
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo021" description="Test instanceOf">
+		<test>
+			assertTrue(new BB() instanceof AA);						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB extends AA {  }				
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo022" description="Test negative instanceOf">
+		<test>
+			assertFalse(new AA() instanceof BB);						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB extends AA {  }				
+		</code>
+	</compile-run>
+	
+	<compile-run id="mctypeinfo023" description="Test instanceOf for mixin composition">
+		<test>
+			assertTrue((new CC() instanceof AA) &amp;&amp; (new CC() instanceof BB));						
+		</test>
+		<code>
+			public cclass AA {	}
+			public cclass BB {	}
+			public cclass CC extends AA &amp; BB {	}
+		</code>
+	</compile-run>
+	
+</testsuite>

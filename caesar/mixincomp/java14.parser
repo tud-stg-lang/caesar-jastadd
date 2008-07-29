@@ -559,6 +559,9 @@ Expr primary_no_new_array =
   | name.n DOT CLASS                           {: return n.qualifiesAccess(new ClassAccess()); :}
   | name.n dims.d DOT CLASS                    {: return new ArrayTypeAccess(n, d.getNumChild()).qualifiesAccess(new ClassAccess()); :}
   | VOID DOT CLASS                             {: return new PrimitiveTypeAccess("void").qualifiesAccess(new ClassAccess()); :}
+  | primitive_type.n DOT CCLASS                 {: return new CjClassAccess(n); :}
+  | name.n DOT CCLASS                           {: return new CjClassAccess(n); :}
+  | VOID DOT CCLASS                             {: return new CjClassAccess(new PrimitiveTypeAccess("void")); :}
   | THIS                                       {: return new ThisAccess("this"); :}
   | name.n DOT THIS                            {: return n.qualifiesAccess(new ThisAccess("this")); :}
   | LPAREN expression_nn.e RPAREN                 {: return new ParExpr(e); :}

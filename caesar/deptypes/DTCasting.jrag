@@ -4,6 +4,21 @@ aspect DTCasting {
 		       absoluteType().castingConversionTo(type);
     }
     
+    // low-end solution for instanceof on dependent types
+    public void DependentTypeDecl.emitInstanceOf(CodeGeneration gen) {
+		absoluteType().emitInstanceOf(gen);
+	}
+    
+    syn boolean CastExpr.isCjCastExpr() = false;
+    eq CjCastExpr.isCjCastExpr() = true;
+    
+    rewrite CastExpr {
+		when ( !isCjCastExpr() && !type().depType().isAbsolute() )
+		to Expr {
+			return new CjCastExpr(getTypeAccess(), getExpr());
+		}
+	}
+        
     // TODO implement runtime check for casting to a dependent type
 	
 	// TODO implement propagation of object identity over casts

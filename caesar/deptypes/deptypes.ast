@@ -2,6 +2,8 @@ DepTypesCompilationUnit : CompilationUnit ::= DependentTypeDecl*;
 
 DependentTypeDecl : ReferenceType ::= /Modifiers/;
 
-DependentTypeSuperDecl : DependentTypeDecl ::= /Modifiers/;  
+DependentTypeSuperDecl : DependentTypeDecl ::= /Modifiers/;
+
+CjCastExpr : CastExpr;  
 
 

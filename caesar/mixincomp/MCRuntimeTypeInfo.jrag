@@ -1,0 +1,43 @@
+aspect MCRuntimeTypeInfo {
+
+	refine LookupType eq CompilationUnit.localLookupType(String name) {
+		SimpleSet set = LookupType.CompilationUnit.localLookupType(name);
+		if (!set.isEmpty()) {
+			return set;
+		}
+		
+		// Additional automatic Imports
+    	TypeDecl result = lookupType("org.caesarj.runtime", name);
+    	if (result != null) {
+      		set = set.add(result);
+      		return set;
+    	}
+    	return set;
+	}
+	
+	eq CjClassAccess.getType().nameType() = NameType.TYPE_NAME;
+
+  	rewrite CjClassAccess {
+  		to Access {
+			return new Dot(
+				new TypeAccess("org.caesarj.runtime", "RuntimeClass"),
+				new MethodAccess(
+					new List().add(new Dot(getType(), new ClassAccess())),
+					"forClassUnsafe"));
+		}
+	} 
+	
+	public void TypeDecl.emitInstanceOf(CodeGeneration gen) {
+		gen.emitInstanceof(this);
+	}
+	
+	public void CjClassDecl.emitInstanceOf(CodeGeneration gen) {
+		gen.emitInstanceof(getCjInterface());
+	}
+	
+	refine CreateBCode public void InstanceOfExpr.createBCode(CodeGeneration gen) {
+    	getExpr().createBCode(gen);
+    	getTypeAccess().type().emitInstanceOf(gen);    	
+  	}
+  	
+}

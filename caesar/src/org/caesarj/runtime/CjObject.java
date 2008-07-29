@@ -15,4 +15,16 @@ public class CjObject implements CjObjectIfc {
 	public CjObjectIfc cjFamily() {
 		return $cj$family;
 	}
+	
+	public RuntimeCaesarClass getRuntimeClass() {
+		try {
+			return (RuntimeCaesarClass)RuntimeClass.forClass(getClass());
+		}
+		catch (RuntimeTypeException e) {
+			throw new RuntimeInconsistencyError(e.getMessage());
+		}
+		catch (ClassCastException e) {
+			throw new RuntimeInconsistencyError(e.getMessage());
+		}
+	}
 }

@@ -15,3 +15,5 @@ InitMethodAccess : MethodAccess;
 CjConstructorDecl : ConstructorDecl;  
 
 CjClassInstanceExpr : ClassInstanceExpr;
+
+CjClassAccess : Access ::= Type:Access;
