@@ -70,12 +70,6 @@ public class ChildMixer extends ClassAdapter {
 		public void visitMethodInsn(int opcode, String owner, String name, String desc) {
 			// fix reference to the owner type
 			owner = update(owner);
-			// fix descriptor of the call to the super constructor
-			if (name.equals("<init>") && owner.equals(info.newSuper)) {
-				if (info.newSuperOut != null) {
-					desc = "(Ljava/lang/Object;)V"; 					
-				}				
-			}
 			super.visitMethodInsn(opcode, owner, name, desc);			
 		}
 	}

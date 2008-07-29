@@ -31,16 +31,6 @@ public class MixinMixer extends ClassAdapter {
 			owner = update(owner);
 			
 			// fix descriptor of the call to the super constructor
-			if (name.equals("<init>") && owner.equals(newSuper)) {
-				if (newSuperOut != null) {
-					// add passing of enclosing object
-					if (oldSuperOut == null) {
-						super.visitVarInsn(Opcodes.ALOAD, 1);
-					}
-					desc = "(Ljava/lang/Object;)V";					
-				}
-			}
-				
 			super.visitMethodInsn(opcode, owner, name, desc);
 		}
 	}
@@ -82,10 +72,6 @@ public class MixinMixer extends ClassAdapter {
 	
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-		// special handling of constructors
-		if (name.equals("<init>") && desc.equals(String.format("(L%s$_ccIfc;)V", oldOut)))
-			desc = String.format("(L%s$_ccIfc;)V", newOut);
-		
 		// ignore static methods (except static initializers)
 		if ((access & Opcodes.ACC_STATIC) != 0 && !name.equals("<clinit>"))
 			return null;

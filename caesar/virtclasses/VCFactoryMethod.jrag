@@ -1,6 +1,6 @@
 // Implementation of factory methods for virtual classes
 aspect VCFactoryMethod {
-	
+
 	// every nested class has one factory method
 	// returns factory method, creates it if required
 	syn lazy Opt CjVirtualClassDecl.getFactoryMethodOpt() {
@@ -8,13 +8,12 @@ aspect VCFactoryMethod {
 		if (isStatic() || isPrivate() || isDeclaredAbstract() || !isNestedType())
 			return new Opt();
 		
-		ClassInstanceExpr cie = new ClassInstanceExpr(
+		ClassInstanceExpr cie = new CjClassInstanceExpr(
 				createQualifiedAccess(),
-				new List(),
+				new List().add(new ThisAccess("this")),
 				new Opt()) 
 				{   // Don't rewrite this
 					protected boolean rewriteWithFactory() { return false; } };
-		cie.isGeneratedCIE = true;					
 	
 		FactoryMethodDecl fact = new FactoryMethodDecl(
 			new Modifiers(isAbstract() ?
@@ -33,17 +32,19 @@ aspect VCFactoryMethod {
 	
 	eq DirectMethodAccess.decls() = SimpleSet.emptySet.add(getTarget());
 	
-	protected boolean ClassInstanceExpr.rewriteWithFactory() { return factoryMethod() != null; }
+	protected boolean CjClassInstanceExpr.rewriteWithFactory() { 
+		return factoryMethod() != null; 
+	}
 	
-	rewrite ClassInstanceExpr {
-		when ( isGeneratedCIE && rewriteWithFactory() )
+	rewrite CjClassInstanceExpr {
+		when ( rewriteWithFactory() )
 		to Expr {
 			MethodDecl factory = factoryMethod();
 			return new DirectMethodAccess(new List(), factory.name(), factory);
 		}
 	}
 	
-	syn lazy MethodDecl ClassInstanceExpr.factoryMethod() {
+	syn lazy MethodDecl CjClassInstanceExpr.factoryMethod() {
 		if (type().isVirtualClassDecl()) {
 			CjVirtualClassDecl vc = type().getVirtualClassDecl();
 			if( vc.hasFactoryMethod() && // only nested virtual classes have one		

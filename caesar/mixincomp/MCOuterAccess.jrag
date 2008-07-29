@@ -1,0 +1,41 @@
+aspect MCOuterAccess {
+	
+	refine CreateBCode public void Access.emitThis(CodeGeneration gen, TypeDecl targetDecl) {
+		if(targetDecl == hostType())
+			gen.emit(Bytecode.ALOAD_0);
+		else {
+			TypeDecl enclosing = hostType();
+			if(inExplicitConstructorInvocation()) {
+				gen.emit(Bytecode.ALOAD_1);
+				enclosing = enclosing.enclosingType();
+			}
+			else {
+				gen.emit(Bytecode.ALOAD_0);
+			}
+			while(!targetDecl.instanceOf(enclosing)) {
+				enclosing.emitEnclosingThis(gen, this);
+				enclosing = enclosing.enclosingType();
+			}
+		}
+	}
+	
+	public void TypeDecl.emitEnclosingThis(CodeGeneration gen, Access acc) {
+		int index = gen.constantPool().addFieldref(
+				constantPoolName(), "this$0", enclosingType().typeDescriptor());
+		gen.emit(Bytecode.GETFIELD, 0).add2(index);
+	}
+	
+	// access the outer reference though a method call
+	// on an interface
+	public void CjClassDecl.emitEnclosingThis(CodeGeneration gen, Access acc) {
+		if (acc.isInsideAccessor()) {
+			super.emitEnclosingThis(gen, acc);
+		}
+		else {
+			String classname = getCjInterface().constantPoolName();
+			int index = gen.constantPool().addInterfaceMethodref(classname, "cjFamily", "()Lorg/caesarj/runtime/CjObjectIfc;");
+			gen.emit(Bytecode.INVOKEINTERFACE, 0).add2(index).add(1).add(0);
+			gen.emitCheckCast(enclosingType().typeForCasting());
+		}
+	}
+}

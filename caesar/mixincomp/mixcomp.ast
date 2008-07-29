@@ -13,3 +13,5 @@ DirectTypeAccess : Access ::= <Target:TypeDecl>;
 InitMethodAccess : MethodAccess;
 
 CjConstructorDecl : ConstructorDecl;  
+
+CjClassInstanceExpr : ClassInstanceExpr;
