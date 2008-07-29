@@ -225,7 +225,7 @@ aspect DTExpressionTyping {
 	 */
     
     public DependentType Access.qualifyDepType(DependentType type, TypeDecl declaringType) {
-    	if (type.isAbsolute()) {
+    	if (!type.dependsOnThis()) {
     		return type;
     	}
     	DependentType qualType = qualifierDepType(declaringType);
