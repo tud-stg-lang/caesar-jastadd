@@ -28,7 +28,9 @@ public class MixinMixer extends ClassAdapter {
 		
 		@Override
 		public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-			owner = update(owner);
+			if (opcode != Opcodes.INVOKESTATIC) {
+				owner = update(owner);
+			}
 			
 			// fix descriptor of the call to the super constructor
 			super.visitMethodInsn(opcode, owner, name, desc);
