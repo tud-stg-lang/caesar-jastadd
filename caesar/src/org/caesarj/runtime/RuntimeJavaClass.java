@@ -28,6 +28,10 @@ public class RuntimeJavaClass extends RuntimeClass {
 		return javaClass.isAssignableFrom(cls.ifcClass());
 	}
 	
+	public boolean isAssignableFrom(Class<?> cls) {
+		return javaClass.isAssignableFrom(cls);
+	}
+	
 	public boolean equals(Object other) {
 		if (!(other instanceof RuntimeJavaClass)) {
 			return false;

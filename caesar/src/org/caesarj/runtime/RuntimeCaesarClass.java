@@ -21,6 +21,10 @@ public class RuntimeCaesarClass extends RuntimeClass {
 		return ifcClass.isAssignableFrom(cls.ifcClass());
 	}
 	
+	public boolean isAssignableFrom(Class<?> cls) {
+		return ifcClass.isAssignableFrom(cls);
+	}
+	
 	public Class<?> ifcClass() {
 		return ifcClass;
 	}

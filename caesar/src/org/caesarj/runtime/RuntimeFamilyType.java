@@ -55,6 +55,10 @@ public class RuntimeFamilyType extends RuntimeType {
 		return (family == famType.family && virtClass.isAssignableFrom(famType.virtClass));		
 	}
 	
+	public boolean isAssignableFrom(Class<?> cls) {
+		return false;
+	}
+	
 	public boolean isInstance(Object o) {
 		if (!virtClass.isInstance(o)) {
 			return false;
