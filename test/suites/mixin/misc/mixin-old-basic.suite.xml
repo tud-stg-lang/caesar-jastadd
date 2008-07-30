@@ -150,5 +150,22 @@
 		}
 		</code>
 	</compile>
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="mixinbasic012" description="Must static method call in a mixin copy">
+		<test>
+			assertEquals("A", new C().normalMethod());
+		</test>
+		<code>
+			public cclass A {
+				public static String staticMethod() { return "A"; }
+				public String normalMethod() {
+					return staticMethod();
+				}
+			}
+			public cclass B { }
+			public cclass C extends A &amp; B { }
+		</code>
+	</compile-run>
 
 </testsuite>
