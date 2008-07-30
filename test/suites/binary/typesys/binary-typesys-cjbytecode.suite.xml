@@ -1,6 +1,7 @@
 <testsuite package="binary.typesys.cjbytecode"
 		name="Test bytecode generated for CaesarJ classes, notably the separation into X.cjclass and X_ccIfc.class">
 
+	<!--
 	<common-code-base>		
 		public cclass G {
 			public cclass N {
@@ -10,6 +11,7 @@
 			}
 		}
 	</common-code-base>
+	-->
 	
 	<compile id="cjbytecode001" description="Return a CJ object (in binary), assign it to a CJ-type variable (in code). Adapted from dungeon.">
 		<code>
@@ -41,17 +43,71 @@
 			public cclass B { }
 		</binary>
 	</compile>
-	    
 	
-	<compile id="cjbytecode002_simplified" description="Use an inherited field and assign it">
+	<compile id="cjbytecode003" description="Use an inherited static field and assign it">
 		<code>
+			public cclass Test {
+				public A a = A.instance;
+			}
 		</code>
 		<binary>
 			public cclass A {
-				public B b = new B();
+				public static A instance = new A();
+			}
+		</binary>
+	</compile>
+	
+	<compile id="cjbytecode004" description="Use an inherited static final field and assign it">
+		<!-- used in dungeon.graphicslib.SpriteSetFactory -->
+		<code>
+			public cclass Test {
+				public A a = A.instance;
+			}
+		</code>
+		<binary>
+			public cclass A {
+				public static final A instance = new A();
+			}
+		</binary>
+	</compile>
+	
+	
+	<compile id="cjbytecode005" description="Use an inherited nested type and assign it">
+		<!-- used in dungeon with nested type MWorld.World -->
+		<code>
+			public cclass Test extends A {
+				public B a = new InnerA().getB();
+			}
+		</code>
+		<binary>
+			public cclass A {
+				public cclass InnerA { 
+					public B getB() { return new B(); }
+				}
 			}
 			public cclass B { }
 		</binary>
 	</compile>
-	    
+	
+	
+	
+	<compile id="cjbytecode006" description="Use an inherited method return value and assign it (longer chain)">
+		<!-- used in dungeon with nested type MWorld.World -->
+		<code>
+			public cclass Test extends A {
+				public C a = getB().getC();
+			}
+		</code>
+		<binary>
+			public cclass A {
+				public B getB() { return new B(); }
+			}
+			public cclass B { 
+				public C getC() { return new C(); }
+			}
+			public cclass C { }
+		</binary>
+	</compile>
+	
+
 </testsuite>
