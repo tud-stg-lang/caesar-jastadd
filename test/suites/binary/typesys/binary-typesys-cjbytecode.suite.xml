@@ -42,4 +42,16 @@
 		</binary>
 	</compile>
 	    
+	
+	<compile id="cjbytecode002_simplified" description="Use an inherited field and assign it">
+		<code>
+		</code>
+		<binary>
+			public cclass A {
+				public B b = new B();
+			}
+			public cclass B { }
+		</binary>
+	</compile>
+	    
 </testsuite>

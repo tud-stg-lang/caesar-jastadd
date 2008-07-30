@@ -28,20 +28,6 @@
 		</binary>
     </compile-check-error>
 	
-	<compile-check-error id="stcsuper001mb_allbinary" error="METHOD_NOT_FOUND"
-		                 description="called super method does not exist in superclass">
-		<code></code>
-		<binary>
-				public cclass AA { 
-				}
-				public cclass BB extends AA { 
-					public void n() {
-						super.m();
-					}
-				}
-		</binary>
-    </compile-check-error>
-	
 	<compile-check-error id="stcsuper001mc" error="METHOD_NOT_FOUND"
 		                 description="called super method does not exist in superclasses">
 		<code>
@@ -345,6 +331,7 @@
 		</binary>
 	</compile>
 	
+	<!--
 	<compile-check-error id="stcsuper013" error="x"
 						 description="Only default constructor allowed in cclass">
 		<code>
@@ -356,20 +343,21 @@
 				}
 		</code>
 	</compile-check-error>
+	-->
 	
-	<compile-check-error id="stcsuper014" error="x"
-		                 description="Access to only default constructor allowed in cclass">
+	<compile id="stcsuper014" description="Check super calls">
 		<code>
-				// @Yang - Wirklich??
-				public cclass AA {
-					public AA(String s) { }
-				}
 				public cclass BB extends AA { 
 					public BB(String s) {
 						super(s);
 					}
 				}
 		</code>
-	</compile-check-error>
+		<binary>
+				public cclass AA {
+					public AA(String s) { }
+				}
+		</binary>
+	</compile>
 	
 </testsuite>

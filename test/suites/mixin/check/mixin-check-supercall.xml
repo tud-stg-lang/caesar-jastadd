@@ -302,7 +302,7 @@
 		</code>
 	</compile>
 	
-	<compile id="stcsuper014" error="x"  description="Check super calls">
+	<compile id="stcsuper014" description="Check super calls">
 		<code>
 				public cclass AA {
 					public AA(String s) { }

@@ -434,20 +434,33 @@ aspect ClassPath {
     }
 
     public boolean selectCompilationUnit(String canonicalName) throws IOException {
-      String name = canonicalName.replace('.', '/'); // ZipFiles do always use '/' as separator
-      name = name + fileSuffix();
-      if(set.contains(name)) {
-        ZipEntry zipEntry = file.getEntry(name);
-        if(zipEntry != null && !zipEntry.isDirectory()) {
-          is = file.getInputStream(zipEntry);
-          age = zipEntry.getTime();
-          pathName = file.getName();
-          relativeName = name + fileSuffix();
-          fullName = canonicalName;
-          return true;
-        }
-      }
-      return false;
+    	String name = canonicalName.replace('.', '/'); // ZipFiles do always use '/' as separator
+    	String nameWithExt = name + fileSuffix();
+    	if(set.contains(nameWithExt)) {
+    		ZipEntry zipEntry = file.getEntry(nameWithExt);
+    		if(zipEntry != null && !zipEntry.isDirectory()) {
+    			is = file.getInputStream(zipEntry);
+    			age = zipEntry.getTime();
+    			pathName = file.getName();
+    			relativeName = nameWithExt + fileSuffix();
+    			fullName = canonicalName;
+    			return true;
+    		}
+    	} else if (set.contains(name + ".cjclass")) {
+    		// TODO refactor the whole fileSuffix() thing to accomodate CaesarJ binaries
+    		
+    		nameWithExt = name + ".cjclass";
+    		ZipEntry zipEntry = file.getEntry(nameWithExt);
+    		if(zipEntry != null && !zipEntry.isDirectory()) {
+    			is = file.getInputStream(zipEntry);
+    			age = zipEntry.getTime();
+    			pathName = file.getName();
+    			relativeName = nameWithExt + ".cjclass";
+    			fullName = canonicalName;
+    			return true;    	  
+    		}
+    	}
+    	return false;
     }
   }
   

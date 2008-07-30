@@ -199,5 +199,40 @@ aspect MCByteCode {
 	    }
 	}
 
-
+	refine TypeAnalysis eq TypeDecl.identityConversionTo(TypeDecl type) {
+		if (TypeAnalysis.TypeDecl.identityConversionTo(type)) {
+    		return true;
+    	}
+    	if (type.isCjClassDecl()) {
+    		InterfaceDecl temp = type.getCjClassDecl().getCjInterface();
+    		return temp.typeName().equals(this.typeName()); 
+    	}
+    	return false;	
+	}
+	
+	/*
+	refine ClassPath boolean ZipFilePart.selectCompilationUnit(String canonicalName) throws IOException {
+		if (ClassPath.ZipFilePart.selectCompilationUnit(canonicalName))
+			return true;
+		
+		// TODO refactor the whole fileSuffix() thing to accomodate CaesarJ binaries
+		
+    	String name = canonicalName.replace('.', '/'); // ZipFiles do always use '/' as separator
+    	if (set.contains(name + ".cjclass")) {
+    		nameWithExt = name + ".cjclass";
+    		ZipEntry zipEntry = file.getEntry(nameWithExt);
+    		if(zipEntry != null && !zipEntry.isDirectory()) {
+    			is = file.getInputStream(zipEntry);
+    			age = zipEntry.getTime();
+    			pathName = file.getName();
+    			relativeName = nameWithExt + ".cjclass";
+    			fullName = canonicalName;
+    			return true;    	  
+    		}
+    	}
+    	return false;
+    }
+	*/
+	
+	
 }
