@@ -13,10 +13,13 @@
 	</common-code-base>
 	-->
 	
-	<compile id="cjbytecode001" description="Return a CJ object (in binary), assign it to a CJ-type variable (in code). Adapted from dungeon.">
+	<compile id="cjbytecode001" description="Return a CJ object (in binary), assign it to a CJ-type field (in code). Adapted from dungeon.">
 		<code>
 			public cclass Test {
 				public SpriteSet playerSpriteSet = GraphicsRegistry.getSpriteSet();
+				public Test() {
+					SpriteSet x = GraphicsRegistry.getSpriteSet();
+				}
 			}
 		</code>
 		<binary>
@@ -34,6 +37,9 @@
 			public cclass Test {
 				public A a = new A();
 				public B b = a.b;
+				public Test() {
+					B x = a.b;
+				}
 			}
 		</code>
 		<binary>
@@ -48,6 +54,9 @@
 		<code>
 			public cclass Test {
 				public A a = A.instance;
+				public Test() {
+					A x = A.instance;
+				}
 			}
 		</code>
 		<binary>
@@ -57,11 +66,14 @@
 		</binary>
 	</compile>
 	
-	<compile id="cjbytecode004" description="Use an inherited static final field and assign it">
+	<compile id="cjbytecode004" description="Use an inherited static *final* field and assign it">
 		<!-- used in dungeon.graphicslib.SpriteSetFactory -->
 		<code>
 			public cclass Test {
 				public A a = A.instance;
+				public Test() {
+					A x = A.instance;
+				}
 			}
 		</code>
 		<binary>
@@ -77,6 +89,9 @@
 		<code>
 			public cclass Test extends A {
 				public B a = new InnerA().getB();
+				public Test() {
+					B x = new InnerA().getB();
+				}
 			}
 		</code>
 		<binary>
