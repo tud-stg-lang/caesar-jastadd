@@ -1,0 +1,377 @@
+<testsuite name="Test overriding and composition of methods in presence of dependent types" package="binary.typesys.overriding">
+	
+	<!-- 		Specification 			-->
+	
+	<!--  (#1)	Die Signatur einer Methode wird durch ihren Name und Parametertypen bestimmt.
+				Falls ein Parametertyp ein Dependent-Typ ist, wird nur das Top-Furtherbound der
+				Klasse des Typs in die Signatur genommen.
+				
+		  (#2)	Die Signaturen bestimmen, welche Methoden welche andere Methoden überschreiben.
+		   
+		  (#3)	Falls eine Klasse (deklarierte oder geerbte) Methoden mit gleichen Signaturen 
+		   		aber unterschiedlichen Parametertypen hat, soll dies als Fehler gemeldet werden.
+		   		
+		  (#4)	Die Methoden mit gleichen Signaturen müssen gleiche Rückgabetypen haben.
+		   
+		  (#5)	Für Typgleichheit muss man equals() für TypeDecl und ihre Subklassen entsprechend 
+		   		implementieren. Für die Gleichheit der Dependent-Types kann man die schon 
+		   		implementierte equals() verwenden.
+		   		
+		  (#6)	Falls eine virtuelle Klasse keinen eindeutigen Top-Furtherbound hat, muss dies 
+		   		auch als Fehler gemeldet werden. 
+	-->
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding001" description="Check virtual classes without common top furtherbound (#6)"
+    								error="AMBIGUOUS_TOP_FURTHERBOUND">
+        <code>
+           public cclass C extends A &amp; B {
+              public cclass X { }	// has no unique top furtherbound
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }               
+           }
+           public cclass B {
+              public cclass X { }              
+           }
+		</binary>
+    </compile-check-error>
+    
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding002" description="Check virtual classes without common top furtherbound (longer inheritance chain)  (#6)"
+    								error="AMBIGUOUS_TOP_FURTHERBOUND">
+        <code>
+           public cclass D extends A &amp; C {
+           	  public cclass X { }	// has no unique top furtherbound
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }               
+           }
+           public cclass B {
+              public cclass X { }              
+           }
+           public cclass C extends B {
+              public cclass X { }              
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="overriding003" description="Check virtual classes with common root">
+        <code>
+           public cclass D extends A &amp; B {
+              public cclass X { }              
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }
+           }
+           public cclass B extends A {
+              public cclass X { }              
+           }
+           public cclass C extends A {
+              public cclass X { }              
+           }
+		</binary>
+    </compile>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="overriding004" description="Check overriding of method with a vc as parameter">
+		<test>			
+		    final A a = new B();
+		    String result = a.foo(a.new X());
+		    assertEquals("B", result);
+		</test>
+        <code>
+           public cclass B extends A {
+              public cclass X { }
+              public String foo(X x) { return "B"; }
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }
+              public String foo(X x) { return "A"; } 
+           }
+		</binary>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding005" description="Check overriding of method with different declared dependent parameter types (#3)"
+    						error="DUPLICATE_DECL_DIFF_DEPTYPES">
+        <code>
+           public cclass B extends A {
+              public final A a = new A();
+              public String foo(a.X x) { return "B"; } // Signature: foo(A.X) due to (#1)
+           }
+    	</code>
+		<binary>
+           public cclass A {              
+              public cclass X { }
+              public String foo( X  x) { return "A"; } // Signature: foo(A.X)
+           }
+		</binary>
+	</compile-check-error>
+	
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding006" description="Check overloading of method with different dependent parameter types (but common top furtherbound) (#3)"
+    						error="DUPLICATE_DECL_DIFF_DEPTYPES">
+        <code>
+           public cclass B extends A {
+              public final A a = new A();
+              public cclass X { }
+              public String foo( X  x) { return "A"; } // Signature: foo(A.X)
+              public String foo(a.X x) { return "B"; } // Signature: foo(A.X) due to (#1)
+           }
+    	</code>
+		<binary>
+           public cclass A {              
+              public cclass X { }
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="overriding007" description="Check overriding of method with wildcard types">
+		<test>			
+		    final A a = new B();
+		    String result = a.foo(a.new X());
+		    assertEquals("B", result);
+		</test>
+        <code>
+           public cclass B extends A {
+              public cclass X { }
+              public String foo(A.X x) { return "B"; }
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }
+              public String foo(A.X x) { return "A"; } 
+           }
+		</binary>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="overriding008" description="Check overwriting of method with wildcard types with common top furtherbound (#1 does not apply to wildcards)">
+		<test>			
+		    final A a = new B();
+		    String result = a.foo(a.new X()); 		  	// 1.) dynamic dispatch on receiver -> B
+		    assertEquals("A", result);
+		</test>
+        <code>
+           public cclass B extends A {				  	// 2.) B does not declare a method with static param type A -> look up in supertypes -> A
+              public cclass X { }
+              public String foo(B.X x) { return "B"; }
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }
+              public String foo(A.X x) { return "A"; } 	// 3.) A.foo(A) is invoked.
+           }
+		</binary>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding009" description="Check overloading of method with wildcard types (#3)"
+    									error="DUPLICATE_DECL_DIFF_DEPTYPES">
+        <code>
+           public cclass B extends A {
+              public cclass X { }
+              public String foo(A.X x) { return "A"; } // Signature: foo(A.X)
+              public String foo( X  x) { return "B"; } // Signature: foo(A.X) due to (#1)
+           }
+    	</code>
+		<binary>
+           public cclass A {
+              public cclass X { }
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding010" description="Check changing a return type for a method with dependent parameter types (#4)"
+                         error="METHOD_RETURNS_DIFFERENT">
+        <code>
+           public cclass B extends A {
+              public cclass X { }
+              public int foo(X x) { return 3; }
+           }           
+    	</code>
+		<binary>
+           public cclass A {              
+              public cclass X { }              
+              public String foo(X x) { return "B"; }
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding011" description="Check changing a return type for a method with wildcard parameter types (#4)"
+                         error="METHOD_RETURNS_DIFFERENT">
+        <code>
+           public cclass B extends A {
+              public cclass X { }
+              public int foo(A.X x) { return 3; }
+           }           
+    	</code>
+		<binary>
+           public cclass A {              
+              public cclass X { }              
+              public String foo(A.X x) { return "B"; }
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="overriding012" description="Defining a method with dependent return type">
+    	<test>
+    		A a = new A();
+    		assertNotNull(a.foo());
+    	</test>       
+        <code>
+           public cclass A {
+              public final G g = new G();         
+              public g.N foo() { return g.new N(); }
+           }           
+    	</code>
+		<binary>
+           public cclass G {
+              public cclass N { }
+           }
+		</binary>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="overriding013" description="Overwriting methods with dependent return types">
+    	<test>
+    		A b = new B();
+    		assertNotNull(b.foo());
+    	</test>  
+        <code>
+           public cclass B extends A {
+              public G.g.N foo() { return G.g.new N(); }
+           }           
+    	</code>
+		<binary>
+           public cclass G {
+              public cclass N { }
+              public static final G g = new G();         
+           }
+           public cclass A {
+              public G.g.N foo() { return null; }
+           }
+		</binary>
+    </compile-run>
+    
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding014" description="Overwriting methods with dependent return types"
+    											error="METHOD_RETURNS_DIFFERENT">
+		<!-- 
+    	<test>
+    		A b = new B();
+    		assertNotNull(b.foo());
+    	</test>
+    	-->  
+        <code>
+           public cclass B extends A {
+              public final G g = new G();         
+              public g.N foo() { return g.new N(); }	// return type refers to type this.g.N, where "this" is different (#3 extended to return type).
+           }           
+    	</code>
+		<binary>
+           public cclass G {
+              public cclass N { }
+           }
+           public cclass A {
+              public final G g = new G();         
+              public g.N foo() { return null; }			// return type refers to type this.g.N
+           }
+		</binary>
+    </compile-check-error>
+    
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding015" description="Intention: Overloading methods with different dependent return types. Should not compile, because although the parameters are syntactically equal, they probably were intended to refer to different dependent types by the programmer (#3)."
+    											error="DUPLICATE_DECL_DIFF_DEPTYPES">
+        <code>
+           public cclass B extends A {
+              public final A a = new A();         
+              public cclass X { }         
+              public int foo(a.X x) { return 2; }	// Signature: foo(A.X) due to (#1)
+           }           
+    	</code>
+		<binary>
+           public cclass A {
+              public final A a = new A();
+              public cclass X { }         
+              public int foo(a.X x) { return 1; }	// Signature: foo(A.X)
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding016" description="Roughly same as overriding015, with error occuring in the second parameter (testing longer parameter lists)"
+    											error="DUPLICATE_DECL_DIFF_DEPTYPES">
+        <code>
+           public cclass B extends A {
+              public final A a = new A();         
+              public cclass X { }         
+              public int foo(B b, a.X x) { return 2; }	// Signature: foo(B, A.X) due to (#1)
+           }           
+    	</code>
+		<binary>
+           public cclass A {
+              public final A a = new A();
+              public cclass X { }         
+              public int foo(B b, a.X x) { return 1; }	// Signature: foo(B, A.X)
+           }
+		</binary>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="overriding017" description="Overriding method with the same dependent param types.">
+        <code>
+           public cclass B extends A {
+              public int foo(G.g.X x) { return 2; }	// Signature: foo(A.X), overrides A.foo
+           }
+    	</code>
+		<binary>
+        	public cclass G {
+        		public static final G g = new G();
+        		public cclass X { }
+        	}
+           public cclass A {
+              public int foo(G.g.X x) { return 1; }	// Signature: foo(A.X)
+           }
+		</binary>
+    </compile>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="overriding017" description="Overloading methods with same-signature dependent param types bound to different values (#3)."
+    											error="DUPLICATE_DECL_DIFF_DEPTYPES">
+    	<code>
+           public cclass B {
+              public final A a1 = new A();
+              public final A a2 = new A();
+              
+              public void foo(a1.X x) { }	// Signature: foo(A.X) due to (#1)
+              public void foo(a2.X x) { }	// Signature: foo(A.X) due to (#1)
+           }           
+    	</code>
+		<binary>
+			public cclass A {
+				public cclass X { }
+           }
+		</binary>
+    </compile-check-error>
+    
+    
+</testsuite>
