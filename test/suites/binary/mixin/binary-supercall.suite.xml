@@ -1,17 +1,17 @@
 <testsuite name="Test super keyword" package="binary.mixin.supercall">
 
-	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<!--
 	<compile-check-error id="stcsuper001ma" error="METHOD_NOT_FOUND"
 		                 description="called super method does not exist in class Object">
-		<code></code>
-		<binary>
+		<code>
 				public cclass AA { 
 					public void n() {
 						super.m();
 					}
-				}			
-		</binary>
+				}
+		</code>
     </compile-check-error>
+	-->
 	
 	<compile-check-error id="stcsuper001mb" error="METHOD_NOT_FOUND"
 		                 description="called super method does not exist in superclass">
