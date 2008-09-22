@@ -1,0 +1,72 @@
+CompilationUnit compilation_unit =
+    encl_cclass_declaration.p import_declarations.i type_declarations.t {: return new ExternCompUnit(p, i, t); :}
+  | encl_cclass_declaration.p                       type_declarations.t {: return new ExternCompUnit(p, new List(), t); :}
+  | encl_cclass_declaration.p import_declarations.i                     {: return new ExternCompUnit(p, i, new List()); :}
+  | encl_cclass_declaration.p                                           {: return new ExternCompUnit(p, new List(), new List()); :}
+  ;
+  
+Access encl_cclass_declaration =
+    CCLASS name.n SEMICOLON              {: return n; :}
+  ;  
+
+ClassDecl class_declaration =
+    cclass_declaration.c                      {: return c; :}
+  ;
+
+CjClassDecl cclass_declaration =
+    modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
+                                               {: return new CjContractClassDecl(m, id, s, i, new List(), b); :}
+  |             CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, new List(), b); :}
+  | modifiers.m CCLASS IDENTIFIER.id         interfaces.i class_body.b 
+                                               {: return new CjContractClassDecl(m, id, new List(), i, new List(), b); :}
+  |             CCLASS IDENTIFIER.id         interfaces.i class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, new List(), b); :}
+  | modifiers.m CCLASS IDENTIFIER.id mixin.s              class_body.b 
+                                               {: return new CjContractClassDecl(m, id, s, new List(), new List(), b); :}
+  |             CCLASS IDENTIFIER.id mixin.s              class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), new List(), b); :}
+  | modifiers.m CCLASS IDENTIFIER.id                      class_body.b 
+                                               {: return new CjContractClassDecl(m, id, new List(), new List(), new List(), b); :}
+  |             CCLASS IDENTIFIER.id                      class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), new List(), b); :}
+                                               
+                                               
+                                                                                          
+  | modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i requirements.r class_body.b
+  											   {: return new CjContractClassDecl(m, id, s, i, r, b) :}
+  |             CCLASS IDENTIFIER.id mixin.s interfaces.i requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, new List(), r, b); :}
+  | modifiers.m CCLASS IDENTIFIER.id         interfaces.i requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(m, id, new List(), i, new List(), r, b); :}
+  |             CCLASS IDENTIFIER.id         interfaces.i requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, new List(), r, b); :}
+  | modifiers.m CCLASS IDENTIFIER.id mixin.s              requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(m, id, s, new List(), new List(), r, b); :}
+  |             CCLASS IDENTIFIER.id mixin.s              requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), new List(), r, b); :}
+  | modifiers.m CCLASS IDENTIFIER.id                      requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(m, id, new List(), new List(), new List(), r, b); :}
+  |             CCLASS IDENTIFIER.id                      requirements.r class_body.b 
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), new List(), r, b); :}        
+  ;
+
+List mixin =
+    EXTENDS mixin_type_list.i                  {: return i; :} ;
+List mixin_type_list =
+    mixin_type.t                               {: return new List().add(t); :}
+  | mixin_type_list.l AND mixin_type.t         {: return l.add(t); :}
+  ;
+Access mixin_type =
+    name.n                                     {: return n; :}
+  ;
+
+List requirements =
+    REQUIRES requirements_type_list.i                  {: return i; :} ;
+List requirements_type_list =
+    requirements_type.t                               {: return new List().add(t); :}
+  | requirements_type_list.l AND requirements_type.t         {: return l.add(t); :}
+  ;
+Access requirements_type =
+    name.n                                     {: return n; :}
+  ;
