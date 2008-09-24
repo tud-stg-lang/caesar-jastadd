@@ -1,1 +1,1 @@
-CjContractClassDecl : CjVirtualClassDecl ::= SuperClasses:Access*;
+CjContractClassDecl : CjVirtualClassDecl ::= RequiredClasses:Access*;

@@ -15,40 +15,37 @@ ClassDecl class_declaration =
 
 CjClassDecl cclass_declaration =
     modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(m, id, s, i, new List(), b); :}
+                                               {: return new CjContractClassDecl(m, id, s, i, b, new List()); :}
   |             CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, new List(), b); :}
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, b, new List()); :}
   | modifiers.m CCLASS IDENTIFIER.id         interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), i, new List(), b); :}
+                                               {: return new CjContractClassDecl(m, id, new List(), i, b, new List()); :}
   |             CCLASS IDENTIFIER.id         interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, new List(), b); :}
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, b, new List()); :}
   | modifiers.m CCLASS IDENTIFIER.id mixin.s              class_body.b 
-                                               {: return new CjContractClassDecl(m, id, s, new List(), new List(), b); :}
+                                               {: return new CjContractClassDecl(m, id, s, new List(), b, new List()); :}
   |             CCLASS IDENTIFIER.id mixin.s              class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), new List(), b); :}
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), b, new List()); :}
   | modifiers.m CCLASS IDENTIFIER.id                      class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), new List(), new List(), b); :}
+                                               {: return new CjContractClassDecl(m, id, new List(), new List(), b, new List()); :}
   |             CCLASS IDENTIFIER.id                      class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), new List(), b); :}
-                                               
-                                               
-                                                                                          
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), b, new List()); :}                                                                
   | modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i requirements.r class_body.b
-  											   {: return new CjContractClassDecl(m, id, s, i, r, b) :}
+  											   {: return new CjContractClassDecl(m, id, s, i, b, r); :}
   |             CCLASS IDENTIFIER.id mixin.s interfaces.i requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, new List(), r, b); :}
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, b, r); :}
   | modifiers.m CCLASS IDENTIFIER.id         interfaces.i requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), i, new List(), r, b); :}
+                                               {: return new CjContractClassDecl(m, id, new List(), i, b, r); :}
   |             CCLASS IDENTIFIER.id         interfaces.i requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, new List(), r, b); :}
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, b, r); :}
   | modifiers.m CCLASS IDENTIFIER.id mixin.s              requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(m, id, s, new List(), new List(), r, b); :}
+                                               {: return new CjContractClassDecl(m, id, s, new List(), b, r); :}
   |             CCLASS IDENTIFIER.id mixin.s              requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), new List(), r, b); :}
+                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), b, r); :}
   | modifiers.m CCLASS IDENTIFIER.id                      requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), new List(), new List(), r, b); :}
+                                               {: return new CjContractClassDecl(m, id, new List(), new List(), b, r); :}
   |             CCLASS IDENTIFIER.id                      requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), new List(), r, b); :}        
+                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), b, r); :}        
   ;
 
 List mixin =

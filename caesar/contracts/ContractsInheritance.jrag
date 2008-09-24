@@ -1,0 +1,18 @@
+// Adds required classes as superclasses
+
+aspect ContractsInheritance {
+	// Inherited name type has to be set in parent node
+	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
+
+	// Overwrite attribute from CjClassDecl responsible for determining superclasses
+	eq CjContractClassDecl.getDeclaredParents() {
+		Collection parents = super.getDeclaredParents();
+		
+		// Add parents via requirements
+		for (int i1 = 0; i1 < getNumRequiredClasses(); i1++) {
+			Access a = getRequiredClasses(i1);
+			parents.add(a.type());
+		}
+	    return parents;
+	}
+}
