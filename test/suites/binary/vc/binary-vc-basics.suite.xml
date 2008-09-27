@@ -1,5 +1,19 @@
 <testsuite name="Basic functionality of virtual classes" package="binary.vc.basics">
 
+	<compile id="basics000" description="assigning null to a virtual-class-type variable">
+		<code>
+			public cclass Test{
+				OuterA.InnerA obj = null;
+			}
+		</code>
+        <binary>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+        </binary>
+    </compile>
+	
 	<compile id="basics001" description="accessing a virtual class">
 		<code>
 			public cclass OuterB extends OuterA {
@@ -10,6 +24,8 @@
         <binary>
         	public cclass OuterA {
 				public cclass InnerA {
+					private Object x;
+					private void doAction() { }
 				}
 			}
         </binary>
@@ -79,7 +95,7 @@
 				public cclass InnerA {
 					private void doAction() {
 						message = "Goodbye";
-					};
+					}
 				}
 			}
         </binary>
@@ -100,7 +116,7 @@
         <binary>
         	public cclass OuterA {
 				private String message;
-				private void doAction() { };
+				private void doAction() { }
 				public cclass InnerA {
 				}
 			}
