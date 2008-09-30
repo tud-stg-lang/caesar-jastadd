@@ -1,41 +1,40 @@
-<testsuite name="Test Contracts between Family Classes" package="contracts.basic">
+<testsuite name="Test Contracts between Family Classes"
+	package="contracts.basic">
 
-	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="contracts001" description="test requires relation">
-        <test>
-            UserA a = new CompleteA();
-            String result = a.n();
-            assertEquals("A", result);
-        </test>
-        <code>
-        	public abstract cclass IfcA {	
-			   abstract String m();
+	<compile id="contracts001"
+			 description="test successful compilation of a concrete but incomplete normal class">
+		<code>
+			// Define contracts
+
+			public abstract cclass ContractA {
+				public abstract String a();
 			}
-			public cclass ImplA extends IfcA {
-			   String m() { return "A"; } 
+
+			public abstract cclass ContractB {
+				public abstract String b();
 			}
-			public cclass UserA requires IfcA {
-			   String n() { return m(); }
-			}
-			public cclass CompleteA extends UserA &amp; ImplA {	}
-        </code>
-    </compile-run>
-	
-    <compile-check-error id="contracts002" error="VAR_UNKNOWN" 
-		                 description="test instantiation of incomplete class">		
-        <code>
-            public class Test {
-               void test() {
-                   UserA a = new UserA();
-               }
-            }            
-			public abstract cclass IfcA {	
-			   abstract String m();
-			}
-			public cclass UserA requires IfcA {
-			   String n() { return m(); }
+
+			// Provider contract as ContractA, Client contract as ContractB
+			// Concrete via requirements and thus should compile
+			public cclass ProvA extends ContractA requires ContractB {
+				public String a(){ return b(); }
 			}
         </code>
-    </compile-check-error>
-    
+	</compile>
+
+	<compile-check-error id="contracts002" 
+						 error="CLASS_MUST_IMPLEMENT"
+						 description="test compilation error for a class that breaks its contract">
+		<code>
+			// Define contracts
+			
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+			
+			
+			// ProvA breaks its contract
+			public cclass ProvA extends ContractA {}
+        </code>
+	</compile-check-error>
 </testsuite>
