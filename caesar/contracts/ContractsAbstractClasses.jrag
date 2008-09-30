@@ -1,0 +1,28 @@
+// Implements new semantic of being abstract, concrete, complete...
+
+aspect ContractsAbstractClasses {
+
+	 eq CjContractClassDecl.unimplementedMethods() {
+
+	 	Collection c = super.unimplementedMethods();
+	 	
+	 	for (int i1 = 0; i1 < getNumRequiredClasses(); i1++) {
+			ClassDecl cd = (ClassDecl)getRequiredClasses(i1).type();
+		 	
+		 	Collection r = new ArrayList();
+						
+			for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
+				MethodDecl m = (MethodDecl)unimpMethods.next();
+			
+				if(cd.memberMethods(m.name()).contains(m)){
+					// Keep required methods to remove later
+					r.add(m);
+				}
+			}
+			
+			c.removeAll(r);
+		}
+		
+		return c;
+	 }
+}
