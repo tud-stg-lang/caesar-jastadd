@@ -26,8 +26,7 @@
 						 error="CLASS_MUST_IMPLEMENT"
 						 description="test compilation error for a class that breaks its contract">
 		<code>
-			// Define contracts
-			
+			// Define contract
 			public abstract cclass ContractA {
 				public abstract String a();
 			}
@@ -37,4 +36,110 @@
 			public cclass ProvA extends ContractA {}
         </code>
 	</compile-check-error>
+	
+	<compile-check-error id="contracts003" 
+						 error="NEW_INCOMPLETE"
+						 description="Incomplete classes should not be instantiable">
+		<code>
+			// Define contract
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+			
+			// Incomplete class
+			public cclass ClientA requires ContractA {}
+
+			// Try to instantiate incomplete class
+			public class Test{
+				public void test(){
+					ClientA c = new ClientA();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="contracts003" 
+						 error="NEW_INCOMPLETE"
+						 description="Incomplete classes should not be instantiable">
+		<code>
+			// Define contract
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+			
+			// Incomplete class
+			public cclass ClientA requires ContractA {}
+
+			// Try to instantiate incomplete class
+			public class Test{
+				public void test(){
+					ClientA c = new ClientA();
+				}
+			}
+		</code>
+	</compile-check-error>
+
+	<compile-check-error id="contracts003" 
+						 error="VIRTUAL_WITH_REQ"
+						 description="Virtual classes cannot have requirements">
+		<code>
+			// Define contract
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+			
+			// Virtual class with requirement
+			public cclass family {
+				public cclass VirtualClientA requires ContractA {}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-run id="contracts004"
+				 description="Top level family can have requirements">
+		
+		<code>
+			// Declare contracts
+			public abstract cclass ContractFamilyA {
+				public cclass A {
+					public abstract String a();
+				}
+			}
+			
+			public abstract cclass ContractFamilyB {
+				public cclass B {
+					public abstract String b();
+				}
+			}
+			
+			// Providers and clients
+			public cclass ProvFamilyA extends ContractFamilyA requires ContractFamilyB {
+				public cclass A {
+					public String a() { return "a";}
+				}		
+			}	
+			
+			public cclass ProvFamilyB extends ContractFamilyB requires ContractFamilyA {
+				public cclass B {
+					public String b() { return "b";}
+				}		
+			}	
+			
+			// Complete family
+			public cclass CompleteFamilyAB extends ProvFamilyA &amp; ProvFamilyB {
+				public String ab(){
+					A featureA = new A();
+					B featureB = new B();
+					
+					return featureA.a() + featureB.b();
+				}
+			}					
+		</code>
+	
+		<test>
+			CompleteFamilyAB f = new CompleteFamilyAB();
+			
+			assertEquals("ab", f.ab());
+		</test>
+	</compile-run>
 </testsuite>

@@ -10,7 +10,7 @@ Access encl_cclass_declaration =
   ;  
 
 ClassDecl class_declaration =
-    cclass_declaration.c                      {: return c; :}
+    cclass_declaration.c                 {: return c; :}
   ;
 
 CjClassDecl cclass_declaration =
@@ -61,8 +61,8 @@ Access mixin_type =
 List requirements =
     REQUIRES requirements_type_list.i                  {: return i; :} ;
 List requirements_type_list =
-    requirements_type.t                               {: return new List().add(t); :}
-  | requirements_type_list.l AND requirements_type.t         {: return l.add(t); :}
+    requirements_type.t                                {: return new List().add(t); :}
+  | requirements_type_list.l AND requirements_type.t   {: return l.add(t); :}
   ;
 Access requirements_type =
     name.n                                     {: return n; :}

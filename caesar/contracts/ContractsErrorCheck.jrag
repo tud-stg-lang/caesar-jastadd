@@ -1,0 +1,25 @@
+// Implements error checking for contracts
+//
+// Following checks are implemented:
+// - Incomplete classes (classes with requirements) can not be instantiated
+// - Virtual classes can not have requirements
+
+aspect ContractsErrorCheck{
+	
+	// Classes with requirements should not be instantiable
+	public void CjClassInstanceExpr.accessControl() {
+    	super.accessControl();
+    	
+    	if(type() instanceof CjContractClassDecl && ((CjContractClassDecl)type()).hasRequirements())
+      		error("Can not instantiate a class with requirements: " + type().fullName());
+  	}
+  	
+  	// Only top level types can have requirements
+  	public void CjContractClassDecl.nameCheck() {
+  		super.nameCheck();
+  		
+  		if(!isTopLevelType() && hasRequirements()) 
+  			error(name() + " is a virtual class, " +  
+  				"but only top-level families or normal classes can have requirements.");
+  	}
+}
