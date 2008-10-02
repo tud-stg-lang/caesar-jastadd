@@ -13,6 +13,8 @@ ClassDecl class_declaration =
     cclass_declaration.c                 {: return c; :}
   ;
 
+// FIXME A stupid question maybe but I don't understand why the static type has to be CjClassDecl?
+// FIXME Why not directly CjContractClassDecl?
 CjClassDecl cclass_declaration =
     modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
                                                {: return new CjContractClassDecl(m, id, s, i, b, new List()); :}
