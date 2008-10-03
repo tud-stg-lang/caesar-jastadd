@@ -1,12 +1,10 @@
 // Ensures that concrete incomplete classes are still flagged as being abstract in byte-code
 aspect ConctractsByteCode {
-	syn lazy boolean CjContractClassDecl.hasRequirements() = getNumRequiredClasses() != 0;
-	
 	eq CjContractClassDecl.flags() {
 		int flags = super.flags();
 	
 		// Set abstract flag for concrete incomplete classes
-		if(!isAbstract() && hasRequirements()) flags |= Modifiers.ACC_ABSTRACT;
+		if(!isComplete()) flags |= Modifiers.ACC_ABSTRACT;
 	
 		return flags;  
 	}

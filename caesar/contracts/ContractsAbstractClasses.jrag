@@ -8,8 +8,8 @@ aspect ContractsAbstractClasses {
 	 	Collection c = super.unimplementedMethods();
 	 	
 	 	// Go through all required classes and remove found required methods
-	 	for (int i1 = 0; i1 < getNumRequiredClasses() && !c.isEmpty(); i1++) {
-			ClassDecl cd = (ClassDecl)getRequiredClasses(i1).type();
+	 	for (Iterator reqs = getAllRequiredClasses().iterator(); reqs.hasNext(); ) {
+			ClassDecl cd = (ClassDecl)reqs.next();
 		 	
 		 	Collection r = new ArrayList();
 			for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
@@ -27,4 +27,35 @@ aspect ContractsAbstractClasses {
 		// Return altered list, required methods have now been removed
 		return c;
 	 }
+	 
+	// A class has requirements when its provider contract doesn't include all requirements 
+	syn boolean CjContractClassDecl.hasRequirements() {
+	
+		// Get client contract
+		Collection required = getAllRequiredClasses();
+		
+		/* for(Iterator iter = required.iterator(); iter.hasNext(); ){
+			System.out.println("requires: " + ((ClassDecl)iter.next()).name());
+		}
+		*/
+		
+		// Get provider contract
+		Collection provided = getAllExtendedClasses();
+		
+		/* for(Iterator iter = provided.iterator(); iter.hasNext(); ){
+			System.out.println("provides: " + ((ClassDecl)iter.next()).name());
+		}
+		*/
+		
+		if(required.isEmpty())
+			return false;
+		else if(provided.isEmpty())
+			return true; 
+		
+		return !provided.containsAll(required);
+	}
+	
+	// A class is complete when it is concrete (not abstract) and has no requirements 
+	syn boolean CjContractClassDecl.isComplete() = !isAbstract() && !hasRequirements();
+
 }

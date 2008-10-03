@@ -10,9 +10,6 @@ aspect ContractsErrorCheck{
 	public void CjClassInstanceExpr.accessControl() {
     	super.accessControl();
     	
-    	// FIXME I don't understand why type() doesn't always return CjContractClassDecl
-    	// FIXME I thought the parser doesn't produce anything else!
-    	// I had to add the instanceof check to prevent a ClassCastException but it doesn't feel right :)
     	if(type() instanceof CjContractClassDecl && ((CjContractClassDecl)type()).hasRequirements())
       		error("Can not instantiate a class with requirements: " + type().fullName());
   	}

@@ -1,0 +1,45 @@
+<testsuite name="Test propagation of contracts"
+	package="contracts.propagation">
+
+	<compile id="propagation001"
+			 description="test successful compilation of an indirect concrete but incomplete normal class">
+		<code>
+			// Define contracts
+
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+
+			// Direct requirement
+			public cclass ClientA requires ContractA {}
+			
+			// Indirect requirement - should compile too!
+			public cclass IndClientA extends ClientA {} 	
+        </code>
+	</compile>
+	
+	<compile-check-error id="propagation002" 
+						 error="NEW_INCOMPLETE"
+						 description="Indirect incomplete classes should not be instantiable">
+		<code>
+			// Define contracts
+
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+
+			// Direct requirement
+			public cclass ClientA requires ContractA {}
+			
+			// Indirect requirement - should compile too!
+			public cclass IndClientA extends ClientA {} 	
+
+			// Try to instantiate incomplete class
+			public class Test{
+				public void test(){
+					IndClientA c = new IndClientA();
+				}
+			}
+		</code>
+	</compile-check-error>
+</testsuite>

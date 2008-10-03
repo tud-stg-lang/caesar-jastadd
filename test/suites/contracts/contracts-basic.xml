@@ -57,29 +57,8 @@
 			}
 		</code>
 	</compile-check-error>
-	
-	<compile-check-error id="contracts003" 
-						 error="NEW_INCOMPLETE"
-						 description="Incomplete classes should not be instantiable">
-		<code>
-			// Define contract
-			public abstract cclass ContractA {
-				public abstract String a();
-			}
-			
-			// Incomplete class
-			public cclass ClientA requires ContractA {}
 
-			// Try to instantiate incomplete class
-			public class Test{
-				public void test(){
-					ClientA c = new ClientA();
-				}
-			}
-		</code>
-	</compile-check-error>
-
-	<compile-check-error id="contracts003" 
+	<compile-check-error id="contracts004" 
 						 error="VIRTUAL_WITH_REQ"
 						 description="Virtual classes cannot have requirements">
 		<code>
@@ -95,7 +74,7 @@
 		</code>
 	</compile-check-error>
 	
-	<compile-run id="contracts004"
+	<compile-run id="contracts005"
 				 description="Top level family can have requirements">
 		
 		<code>
