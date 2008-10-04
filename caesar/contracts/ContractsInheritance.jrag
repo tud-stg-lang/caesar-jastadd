@@ -1,9 +1,10 @@
-// Adds required classes as superclasses
+// Adds required classes as superclasses, determines complete provider and client contracts
+// by propagating requirements appropriately.
 
 aspect ContractsInheritance {
 
 	// Determine all extended classes, direct and indirect
-	private Collection CjContractClassDecl.allExtendedClasses = new ArrayList();
+	private Collection CjContractClassDecl.allExtendedClasses = new HashSet();
 
 	syn Collection CjContractClassDecl.getAllExtendedClasses() {
 		// Add direct extended classes
@@ -52,29 +53,17 @@ aspect ContractsInheritance {
 	}
 	
 	// Determine all required classes, direct and indirect
-	private Collection CjContractClassDecl.allRequiredClasses = new ArrayList();
+	private Collection CjContractClassDecl.allRequiredClasses = new HashSet();
 	
 	syn Collection CjContractClassDecl.getAllRequiredClasses() {
 		// Add direct requirements
-		for(Iterator iter = getDirectRequirements().iterator(); iter.hasNext(); ){
-			CjContractClassDecl cd = (CjContractClassDecl)iter.next();
-			
-			if(!allRequiredClasses.contains(cd)){
-				allRequiredClasses.add(cd);
-			}
-		}
+		allRequiredClasses.addAll(getDirectRequirements());
 		
 		// Add indirect requirements
 		for(Iterator iter = getAllExtendedClasses().iterator(); iter.hasNext(); ){
 			CjContractClassDecl cd = (CjContractClassDecl)iter.next();
 								
-			for(Iterator reqs = cd.getDirectRequirements().iterator(); reqs.hasNext(); ){
-				CjContractClassDecl cdr = (CjContractClassDecl)reqs.next();
-			
-				if(!allRequiredClasses.contains(cdr)){
-					allRequiredClasses.add(cdr);
-				}
-			}
+			allRequiredClasses.addAll(cd.getDirectRequirements());
 		}
 		
 		return allRequiredClasses;

@@ -3,8 +3,11 @@
 aspect ContractsAbstractClasses {
 
 	// Removes required methods from list of unimplemented methods
+	// This allows concrete but incomplete classes, 
+	// i.e. classes not declared abstract, but containing abstract methods via requirements
 	 eq CjContractClassDecl.unimplementedMethods() {
 
+		// Get complete list of abstract methods
 	 	Collection c = super.unimplementedMethods();
 	 	
 	 	// Go through all required classes and remove found required methods
@@ -28,25 +31,18 @@ aspect ContractsAbstractClasses {
 		return c;
 	 }
 	 
-	// A class has requirements when its provider contract doesn't include all requirements 
+	// A class has requirements when its provider contract doesn't include its client contract 
+	// The provider contract consists of all extended classes
+	// The client contract consists of all required classes
 	syn boolean CjContractClassDecl.hasRequirements() {
 	
 		// Get client contract
 		Collection required = getAllRequiredClasses();
 		
-		/* for(Iterator iter = required.iterator(); iter.hasNext(); ){
-			System.out.println("requires: " + ((ClassDecl)iter.next()).name());
-		}
-		*/
-		
 		// Get provider contract
 		Collection provided = getAllExtendedClasses();
 		
-		/* for(Iterator iter = provided.iterator(); iter.hasNext(); ){
-			System.out.println("provides: " + ((ClassDecl)iter.next()).name());
-		}
-		*/
-		
+		// Check if all requirements are met
 		if(required.isEmpty())
 			return false;
 		else if(provided.isEmpty())

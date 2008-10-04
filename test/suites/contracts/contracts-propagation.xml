@@ -42,4 +42,23 @@
 			}
 		</code>
 	</compile-check-error>
+	
+	<compile id="propagation003"
+			 description="test successful compilation of an indirect concrete but incomplete normal class">
+		<code>
+			// Define contracts
+
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+
+			public abstract cclass ContractB requires ContractA {
+				public abstract String b();
+			}
+
+			// Provider contract as ContractA, Client contract as ContractB
+			// Concrete via requirements and thus should compile
+			public cclass ClientA requires ContractB {}
+        </code>
+	</compile>
 </testsuite>

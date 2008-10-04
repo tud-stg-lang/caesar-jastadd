@@ -10,8 +10,19 @@ aspect ContractsErrorCheck{
 	public void CjClassInstanceExpr.accessControl() {
     	super.accessControl();
     	
-    	if(type() instanceof CjContractClassDecl && ((CjContractClassDecl)type()).hasRequirements())
-      		error("Can not instantiate a class with requirements: " + type().fullName());
+    	if(type() instanceof CjContractClassDecl) {
+    		CjContractClassDecl cd = (CjContractClassDecl)type();
+    		 
+    		if(cd.hasRequirements()) { 
+      			String requirements = "";
+      			for(Iterator iter = cd.getAllRequiredClasses().iterator(); iter.hasNext(); ){
+      				requirements += ", " + ((ClassDecl)iter.next()).name();
+      			}
+      			
+      			error("Can not instantiate a class with requirements: " + type().fullName()
+      				+ " requires" + requirements);
+      		}
+      	}
   	}
   	
   	// Only top level types can have requirements
