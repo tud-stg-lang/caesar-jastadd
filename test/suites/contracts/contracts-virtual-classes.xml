@@ -1,0 +1,39 @@
+<testsuite name="Test contracts with virtual classes"
+	package="contracts.vc">
+
+	<compile-check-error id="vc001" 
+						 error="VIRTUAL_WITH_REQ"
+						 description="Virtual classes cannot have requirements">
+		<code>
+			// Define contract
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+			
+			// Virtual class with requirement
+			public cclass family {
+				public cclass VirtualClientA requires ContractA {}
+			}
+		</code>
+	</compile-check-error>
+
+	<compile-run id="vc002"
+			 	 description="abstract virtual classes don't belong to contract">
+		<code>
+
+			public abstract cclass ContractFamilyA {
+				public abstract cclass VirtualClass1 {
+					public abstract String a();
+				}	
+			}
+
+			public cclass ProvA extends ContractFamilyA {}
+
+        </code>
+        
+        <test>
+        	ContractFamilyA ca = new ProvA();	
+        </test>
+        
+	</compile-run>
+</testsuite>

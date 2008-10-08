@@ -1,0 +1,67 @@
+<testsuite name="Test pathological cases when using contracts"
+	package="contracts.extra">
+
+	<compile-check-error id="extras001"
+						 error="CLASS_CIRCULARITY"
+			 			 description="test class requires itself directly">
+		<code>
+
+			public cclass ContractA requires ContractA {
+				public abstract String a();
+			}
+
+        </code>
+	</compile-check-error>
+
+	<compile-check-error id="extras002"
+			 			 error="CLASS_CIRCULARITY"
+			 			 description="test class requires itself indirectly">
+		<code>
+
+			public abstract cclass ContractA requires ContractB {
+				public abstract String a();
+			}
+			
+			public abstract cclass ContractB requires ContractA {
+				public abstract String b();
+			}
+
+        </code>
+	</compile-check-error>
+
+	<compile-run id="extras003"
+			 description="Complete class with redundant requirements that are fulfilled">
+		<code>
+			public abstract cclass ContractA {
+				public abstract String a();
+			}	
+		
+			public cclass CompleteA extends ContractA requires ContractA {
+				public String a(){ return "a"; }
+			}
+		</code>
+		
+		<test>
+			CompleteA c = new CompleteA();
+			
+			assertEquals("a", c.a());
+		</test>		 
+			 
+	</compile-run>
+	
+	<compile-check-error id="extras004"
+			 			 error="asdf"
+			 			 description="Breaking contract with redundant requirements">
+		<code>
+
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+			
+			public cclass CompleteA extends ContractA requires ContractA {}
+
+        </code>
+	</compile-check-error>
+	
+	
+</testsuite>

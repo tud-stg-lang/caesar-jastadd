@@ -1,0 +1,31 @@
+<testsuite name="Test contracts with java classes and interfaces"
+	package="contracts.java">
+
+	<compile-check-error id="java001"
+						 error="WRONG_INHERITANCE_RELATIONSHIP"
+			 			 description="java class not allowed as contract">
+		<code>
+
+			public abstract class ContractJavaA {
+				public abstract String a();
+			}
+
+			public cclass ClientA requires ContractJavaA {}
+
+        </code>
+	</compile-check-error>
+	
+	<compile id="java002"
+			 description="java interface allowed as contract">
+		<code>
+
+			public interface ContractJavaA {
+				public String a();
+			}
+
+			public cclass ClientA requires ContractJavaA {}
+
+        </code>
+	</compile>
+	
+</testsuite>

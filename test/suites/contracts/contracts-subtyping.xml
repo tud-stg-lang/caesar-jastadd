@@ -1,0 +1,28 @@
+<testsuite name="Test contracts with subtyping"
+	package="contracts.subtyping">
+
+	<compile-run id="subtyping001"
+			 	 description="subtyping via requirements">
+		<code>
+
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+
+			public cclass ClientA requires ContractA {}
+
+			public cclass ProvA extends ContractA {
+				public String a() { return "a"; }
+			}
+
+        </code>
+        
+        <test>
+        	ContractA ca = new ProvA();
+        	
+        	assertEquals("a", ca.a());	
+        </test>
+        
+	</compile-run>
+
+</testsuite>
