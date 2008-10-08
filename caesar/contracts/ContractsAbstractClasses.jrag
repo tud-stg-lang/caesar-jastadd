@@ -12,13 +12,13 @@ aspect ContractsAbstractClasses {
 	 	
 	 	// Go through all required classes and remove found required methods
 	 	for (Iterator reqs = getAllRequiredClasses().iterator(); reqs.hasNext(); ) {
-			ClassDecl cd = (ClassDecl)reqs.next();
+			TypeDecl td = (TypeDecl)reqs.next();
 		 	
 		 	Collection r = new ArrayList();
 			for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
 				MethodDecl m = (MethodDecl)unimpMethods.next();
 			
-				if(cd.memberMethods(m.name()).contains(m)){
+				if(td.memberMethods(m.name()).contains(m)){
 					// Add required method to list of methods to be removed
 					r.add(m);
 				}
