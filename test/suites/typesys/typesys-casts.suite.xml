@@ -151,22 +151,6 @@
 			}
 		</code>
     </compile-check-error>			
-	
-	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="casts008" description="Check direct cast to different-name, same-value, same-top-furtherbound dependent type">
-		<test>
-			try {	
-			    final G g = new G();			
-				final G gCopy = g;
-		    	g.N n = (g.N) gCopy.new N();
-			}
-			catch(ClassCastException cce) {
-				return;
-			}
-			fail("The cast was successful but should not be possible.");
-		</test>
-        <code></code>
-    </compile-run>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-run id="casts009" description="Check direct cast to different-value, same-top-furtherbound dependent type">
