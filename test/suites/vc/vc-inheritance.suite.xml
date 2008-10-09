@@ -240,7 +240,6 @@
      -->
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <!--  <compile id="vcinheritance011" description="Inherit inner from outer"> -->
     <compile-check-error id="vcinheritance011" error="WRONG_INHERITANCE_RELATIONSHIP"
     						description="Inherit inner from outer">
         <code>
@@ -256,7 +255,6 @@
 				}
 			}
 		</code>		
-    <!-- </compile> -->
     </compile-check-error>
     
     
@@ -291,29 +289,5 @@
 			}
 		</code>
     </compile-check-error>
-    
-    
-    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error id="vcinheritance014" error="WRONG_INHERITANCE_RELATIONSHIP"
-    						description="Inherit outer from inner (longer chain, first furtherbound inheritance)">
-    <!-- CaesarJ (inh.gener.6) -->
-        <code>
-			public cclass G {
-				public cclass N {
-					public int n() { return 42; }
-				}
-			}
-			public cclass H extends G {
-				public cclass P extends N {}
-			}
-			public cclass X extends H {
-				public cclass P {
-					public int p() { return n(); }
-				}
-			}
-		</code>
-    </compile-check-error>
-    
-    
-	    
+      
 </testsuite>

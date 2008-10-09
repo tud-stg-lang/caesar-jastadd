@@ -29,7 +29,7 @@
 	    <code>
         	public class Test {
 				public void test() {
-					OuterA.InnerA a = new OuterA.InnerA();
+					Object a = new OuterA.InnerA();
 				}
 			}
 			public cclass OuterA {

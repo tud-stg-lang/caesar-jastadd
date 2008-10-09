@@ -2243,7 +2243,9 @@
 		</code>
 	</compile-run>
 	
-	<compile id="vcallfromcc018b" description="Test simple cclass multiple inheritance">
+	<compile-check-error id="vcallfromcc018b"
+						 error="AMBIGUOUS_TOP_FURTHERBOUND" 
+					     description="Test simple cclass multiple inheritance">
 		<code>
 			public cclass Test {
 				public static void main(String args[]){
@@ -2261,7 +2263,7 @@
 			
 			public cclass Z extends X &amp; Y {} 
 		</code>
-	</compile>
+	</compile-check-error>
 	
 	<compile-run id="vcallfromcc019" description="Test simple cclass multiple inheritance">
 		<test>
