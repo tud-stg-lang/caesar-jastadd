@@ -9,16 +9,24 @@
 				public abstract String a();
 			}
 
-			public cclass ClientA requires ContractA {}
+			public abstract cclass ContractB {
+				public abstract String b();
+			}
 
-			public cclass ProvA extends ContractA {
+			public cclass ProvB extends ContractB requires ContractA {
+				public String b() { return "b"; }
+			}
+
+			public cclass ProvA extends ContractA  requires ContractB {
 				public String a() { return "a"; }
 			}
+
+			public cclass CompleteAB extends ProvA &amp; ProvB {}
 
         </code>
         
         <test>
-        	ContractA ca = new ProvA();
+        	ContractA ca = new CompleteAB();
         	
         	assertEquals("a", ca.a());	
         </test>

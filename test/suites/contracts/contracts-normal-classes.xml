@@ -50,7 +50,7 @@
 			public cclass ClientA requires ContractA {}
 
 			// Try to instantiate incomplete class
-			public class Test{
+			public class Test {
 				public void test(){
 					ClientA c = new ClientA();
 				}
