@@ -1,0 +1,180 @@
+// Implements new semantic of concrete, abstract and complete classes 
+
+aspect ContractsCompleteness {
+
+	/****** Determine all provided ******/
+	
+	// Determine explicitly extended
+	syn Collection CjContractClassDecl.getExplicitExtends() {
+		Collection c = new HashSet();
+		
+		for(int i1 = 0; i1 < getNumSuperClasses(); i1++){
+			c.add(getSuperClasses(i1).type());
+		}
+		
+		return c;
+	}
+	
+	// Determine explicitly provided
+	syn Collection CjContractClassDecl.getExplicitProvided() {
+		if(isAbstract()){
+			// An abstract class doesn't have to provide anything
+			return Collections.EMPTY_LIST;
+		} else {
+			// For a concrete class, every contract via extends has to be fulfilled
+			return getExplicitExtends();
+		}
+	}
+	
+	// Determine direct and indirect provided
+	syn Collection CjContractClassDecl.getProvided() {
+		// Avoid endless recursion
+		if(isCircular())
+			return Collections.EMPTY_LIST;
+			
+		Collection c = new HashSet();
+		
+		// Add explicit provided
+		c.addAll(getExplicitProvided());
+		
+		// Call recursively (recursion anchor = no extends relationships)
+		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getProvided());
+			}
+		}
+		
+		return c;
+	}
+	
+	
+	/****** Determine all requirements ******/
+	
+	// Inherited name type has to be set in parent node
+	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
+
+	// Determine explicit (declared) requirements
+	syn Collection CjContractClassDecl.getExplicitRequirements() {
+		Collection c = new HashSet();
+		
+		// Add explicit (declared) requirements
+		for (int i1 = 0; i1 < getNumRequiredClasses(); i1++) {
+			c.add(getRequiredClasses(i1).type());
+		}
+		
+		return c;
+	}
+	
+	// Determine direct and indirect requirements
+	syn Collection CjContractClassDecl.getRequirements() {
+		// Avoid endless recursion
+		if(isCircular())
+			return Collections.EMPTY_LIST;
+		
+		Collection c = new HashSet();
+		
+		// Add explicit requirements
+		c.addAll(getExplicitRequirements());
+		
+		// Add recursively all parents (via extends AND requires) of direct requirements
+		for(Iterator iter = getExplicitRequirements().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getSortedParents());
+			}
+		}			
+		
+		// Add recursively only requirements of extended parents
+		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getRequirements());
+			}
+		}			
+		
+		return c;
+	}
+
+	/****** 
+	 * Removes required methods from list of unimplemented methods
+	 * This allows concrete but incomplete classes, 
+	 * i.e. classes not declared abstract, but containing abstract methods via requirements
+	 ******/
+	 
+	 // Determine all enclosed methods in a cclass
+	 syn Collection CjContractClassDecl.enclosedMethods(String nameOfMethod){
+	 	// Prevent endless recursion
+	 	if(isCircular()) { return Collections.EMPTY_LIST; }
+	 	
+	 	Collection c = new HashSet();
+	 	
+	 	// Add member methods
+	 	c.addAll(memberMethods(nameOfMethod));
+				
+		// Add enclosed methods of virtual classes
+		for(Iterator iter = getAllVirtualClasses().iterator(); iter.hasNext(); ){
+			CjContractClassDecl cd = (CjContractClassDecl)iter.next();
+			
+			c.addAll(cd.enclosedMethods(nameOfMethod));
+		}
+		
+		return c;
+	 }
+	 
+	 // Determine the enclosing top-level class
+	 syn CjContractClassDecl CjContractClassDecl.getEnclosingTopLevel(){
+	 	CjContractClassDecl cd = this;
+	 	
+	 	while(!cd.isTopLevelType()){
+	 		cd = (CjContractClassDecl)cd.enclosingType();
+	 	}
+	 	
+	 	return cd;
+	 }
+	 
+	 // Remove required methods
+	 eq CjContractClassDecl.unimplementedMethods() {
+
+		// Get complete list of abstract methods
+	 	Collection c = super.unimplementedMethods();
+	 	
+	 	// Go through all required classes of top-level class and remove found enclosed required methods
+	 	CjContractClassDecl topLevel = (CjContractClassDecl)getEnclosingTopLevel();
+	 	for (Iterator reqs = topLevel.getRequirements().iterator(); reqs.hasNext(); ) {
+	 		TypeDecl td = (TypeDecl)reqs.next();
+	 		
+	 		if(td instanceof CjContractClassDecl){
+				CjContractClassDecl cd = (CjContractClassDecl)td;
+		 	
+		 		Collection r = new HashSet();
+				for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
+					MethodDecl m = (MethodDecl)unimpMethods.next();
+			
+					// Remove methods of top-level class and all enclosed virtual classes
+					if(cd.enclosedMethods(m.name()).contains(m)){
+						// Add required method to list of methods to be removed
+						r.add(m);
+					}
+				}
+				
+				c.removeAll(r);
+			}
+			
+		}
+		
+		// Return altered list, required methods have now been removed
+		return c;
+	 }
+	 
+	
+	/******
+	 * Define completeness...
+	 * A class is complete when it is concrete (not abstract) and all requirements are fulfilled 
+	 ******/
+	syn boolean CjContractClassDecl.isComplete() 
+						= !isAbstract() && getProvided().containsAll(getRequirements());
+}

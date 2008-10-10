@@ -1,86 +1,41 @@
-// Adds required classes as superclasses, determines complete provider and client contracts
-// by propagating requirements appropriately.
+// Implements correct inheritance relationships with contracts
 
 aspect ContractsInheritance {
 
-	// Determine all extended classes, direct and indirect
-	private Collection CjContractClassDecl.allExtendedClasses = new HashSet();
-
-	syn Collection CjContractClassDecl.getAllExtendedClasses() {
-		// Add direct extended classes
-		Collection next = new ArrayList();
-		for (int i1 = 0; i1 < getNumSuperClasses(); i1++) {
-			TypeDecl td = (TypeDecl)getSuperClasses(i1).type();
-			
-			// If superclass is not of right type don't bother checking
-			if(td instanceof CjContractClassDecl) {
-				CjContractClassDecl cd = (CjContractClassDecl)td;
-				
-				if(!allExtendedClasses.contains(cd)) {
-					allExtendedClasses.add(cd);
-					
-					// Add new classes for recursive call
-					next.add(cd);
-				}
-			}
-		}
-		
-		// Add indirect extended classes
-		for(Iterator supers = next.iterator(); supers.hasNext(); ){
-			TypeDecl td = (TypeDecl)supers.next();
-			
-			// If superclass is not of right type don't bother checking
-			if(td instanceof CjContractClassDecl) {
-				CjContractClassDecl cd = (CjContractClassDecl)td;
-				
-				allExtendedClasses.addAll(cd.getAllExtendedClasses());
-			}
-		}
-		
-		return allExtendedClasses;
-	}
-
-	// Determine direct requirements
-	syn Collection CjContractClassDecl.getDirectRequirements() {
-		Collection c = new ArrayList();
-		
-		// Add direct requirements
-		for (int i1 = 0; i1 < getNumRequiredClasses(); i1++) {
-			c.add(getRequiredClasses(i1).type());
-		}
-		
-		return c;
-	}
-	
-	// Determine all required classes, direct and indirect
-	private Collection CjContractClassDecl.allRequiredClasses = new HashSet();
-	
-	syn Collection CjContractClassDecl.getAllRequiredClasses() {
-		// Add direct requirements
-		allRequiredClasses.addAll(getDirectRequirements());
-		
-		// Add indirect requirements
-		for(Iterator iter = getAllExtendedClasses().iterator(); iter.hasNext(); ){
-			CjContractClassDecl cd = (CjContractClassDecl)iter.next();
-								
-			allRequiredClasses.addAll(cd.getDirectRequirements());
-		}
-		
-		return allRequiredClasses;
-	}
-
-	// Inherited name type has to be set in parent node
-	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
-
-	// Overwrite attribute from CjClassDecl responsible for determining superclasses
+	/****** 
+	 * Overwrite attribute from CjClassDecl responsible for determining superclasses
+	 * This allows for subtyping via requirements
+	 ******/									  
 	eq CjContractClassDecl.getDeclaredParents() {
-		Collection parents = new ArrayList();
+		Collection parents = new HashSet();
 		
 		parents.addAll(super.getDeclaredParents());
 		
-		// Add parents via requirements
-		parents.addAll(getDirectRequirements());
+		// Add parents via direct requirements
+		parents.addAll(getExplicitRequirements());
 		
 	    return parents;
+	}
+
+	/* Override method in CjVirtualClassDecl to instantiate implicit virtual classes of right type */
+	
+	syn lazy List CjContractClassDecl.getImplicitClassList() {
+		if (isCircular()) { return new List(); }
+		List newMembers = new List();
+		Iterator i = missingInheritedVirtualClasses().iterator();
+		while(i.hasNext()) {
+			String name = i.next().toString();
+			CjVirtualClassDecl decl = new CjContractClassDecl(
+						(Modifiers)getModifiers().fullCopy(),
+						name,
+						new List(), 
+						new List(), 
+						new List(),
+						new List());
+			decl.isImplicit = true;
+			newMembers.add(new MemberClassDecl(decl));			
+			System.out.println("added "+name+" for "+fullName());
+		}		
+		return newMembers;	
 	}
 }

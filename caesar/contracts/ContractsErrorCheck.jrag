@@ -1,25 +1,27 @@
 // Implements error checking for contracts
 //
 // Following checks are implemented:
-// - Incomplete classes (classes with requirements) can not be instantiated
+// - Incomplete classes (classes with unfulfilled requirements) can not be instantiated
 // - Virtual classes can not have requirements
 
 aspect ContractsErrorCheck{
 	
-	// Classes with requirements should not be instantiable
+	// Incomplete classes are not instantiable
 	public void CjClassInstanceExpr.accessControl() {
+		// Super call takes care of abstract classes
     	super.accessControl();
     	
+    	// Check now for incomplete classes due to requirements
     	if(type() instanceof CjContractClassDecl) {
     		CjContractClassDecl cd = (CjContractClassDecl)type();
     		 
-    		if(cd.hasRequirements()) { 
-      			String requirements = "";
-      			for(Iterator iter = cd.getAllRequiredClasses().iterator(); iter.hasNext(); ){
-      				requirements += ", " + ((ClassDecl)iter.next()).name();
+    		if(!cd.isComplete()) { 
+      			String requirements = ":";
+      			for(Iterator iter = cd.getRequirements().iterator(); iter.hasNext(); ){
+      				requirements += " " + ((ClassDecl)iter.next()).name();
       			}
       			
-      			error("Can not instantiate a class with requirements: " + type().fullName()
+      			error("Can not instantiate an incomplete class: " + type().fullName()
       				+ " requires" + requirements);
       		}
       	}
@@ -29,8 +31,14 @@ aspect ContractsErrorCheck{
   	public void CjContractClassDecl.nameCheck() {
   		super.nameCheck();
   		
-  		if(!isTopLevelType() && hasRequirements()) 
-  			error(name() + " is a virtual class, " +  
-  				"but only top-level families or normal classes can have requirements.");
+  		if(!isTopLevelType() && !getRequirements().isEmpty()){ 
+  			String requirements = ":";
+      		for(Iterator iter = getRequirements().iterator(); iter.hasNext(); ){
+      			requirements += " " + ((ClassDecl)iter.next()).name();
+      		}
+      		
+  			error(name() + " is a (nested) virtual class and requires" + requirements +   
+  				" - Only top-level families or normal classes can have requirements.");
+  		}
   	}
 }
