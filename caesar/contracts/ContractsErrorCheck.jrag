@@ -3,10 +3,12 @@
 // Following checks are implemented:
 // - Incomplete classes (classes with unfulfilled requirements) can not be instantiated
 // - Virtual classes can not have requirements
+// - prohibit direct implementation of required methods
 
 aspect ContractsErrorCheck{
 	
-	// Incomplete classes are not instantiable
+	/* Incomplete classes are not instantiable */
+	
 	public void CjClassInstanceExpr.accessControl() {
 		// Super call takes care of abstract classes
     	super.accessControl();
@@ -27,18 +29,59 @@ aspect ContractsErrorCheck{
       	}
   	}
   	
-  	// Only top level types can have requirements
+  	/* Only top level types can have requirements */
+
+	/* Direct implementation of required methods is not allowed */
+  	
   	public void CjContractClassDecl.nameCheck() {
   		super.nameCheck();
   		
   		if(!isTopLevelType() && !getRequirements().isEmpty()){ 
   			String requirements = ":";
       		for(Iterator iter = getRequirements().iterator(); iter.hasNext(); ){
-      			requirements += " " + ((ClassDecl)iter.next()).name();
+      			requirements += " " + ((TypeDecl)iter.next()).name();
       		}
       		
   			error(name() + " is a (nested) virtual class and requires" + requirements +   
   				" - Only top-level families or normal classes can have requirements.");
   		}
+  		
+  		// Disallow direct implementation of required methods
+  		if(getRequirements().isEmpty()) { return; }
+  		
+  		if(!(getEnclosingTopLevel() instanceof CjContractClassDecl)){ return; }
+  		
+		CjContractClassDecl topLevel = (CjContractClassDecl)getEnclosingTopLevel();
+		
+		Collection unfulfilledReqs = new HashSet(); 
+			
+		unfulfilledReqs.addAll(topLevel.getRequirements());
+		unfulfilledReqs.removeAll(topLevel.getProvided());
+			
+
+		for(int i = 0; i < getNumBodyDecl(); i++) {
+			if(getBodyDecl(i) instanceof MethodDecl) {
+				MethodDecl md = (MethodDecl)getBodyDecl(i);
+				
+				if(md.hasBlock()) {
+					for(Iterator iter = unfulfilledReqs.iterator(); iter.hasNext(); ) {
+						TypeDecl td = (TypeDecl)iter.next();
+					
+						if(td instanceof CjContractClassDecl){
+							CjContractClassDecl cd = (CjContractClassDecl)td;
+				
+							if(!cd.enclosedMethods(md.name()).isEmpty()) {
+								error("Implementing a required method directly is forbidden: " 
+								+ md.name() + " in " + fullName() + " implements required method " 
+								+ md.name() + " in " + cd.name());
+							}
+						}
+						
+					}
+				}
+			}
+			
+		} 
   	}
+  	
 }

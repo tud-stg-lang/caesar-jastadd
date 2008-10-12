@@ -50,7 +50,7 @@
 	</compile-run>
 	
 	<compile-check-error id="extras004"
-			 			 error="asdf"
+			 			 error="CLASS_MUST_IMPLEMENT"
 			 			 description="Breaking contract with redundant requirements">
 		<code>
 

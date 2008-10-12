@@ -117,20 +117,24 @@ aspect ContractsCompleteness {
 				
 		// Add enclosed methods of virtual classes
 		for(Iterator iter = getAllVirtualClasses().iterator(); iter.hasNext(); ){
-			CjContractClassDecl cd = (CjContractClassDecl)iter.next();
+			TypeDecl td = (TypeDecl)iter.next();
 			
-			c.addAll(cd.enclosedMethods(nameOfMethod));
+			if(td instanceof CjContractClassDecl){
+				CjContractClassDecl cd = (CjContractClassDecl)td;
+			
+				c.addAll(cd.enclosedMethods(nameOfMethod));
+			}
 		}
 		
 		return c;
 	 }
 	 
-	 // Determine the enclosing top-level class
-	 syn CjContractClassDecl CjContractClassDecl.getEnclosingTopLevel(){
-	 	CjContractClassDecl cd = this;
+	 // Determine the enclosing top-level type
+	 syn TypeDecl CjContractClassDecl.getEnclosingTopLevel(){
+	 	TypeDecl cd = this;
 	 	
 	 	while(!cd.isTopLevelType()){
-	 		cd = (CjContractClassDecl)cd.enclosingType();
+	 		cd = cd.enclosingType();
 	 	}
 	 	
 	 	return cd;
@@ -143,11 +147,17 @@ aspect ContractsCompleteness {
 	 	Collection c = super.unimplementedMethods();
 	 	
 	 	// Go through all required classes of top-level class and remove found enclosed required methods
+	 	if(!(getEnclosingTopLevel() instanceof CjContractClassDecl)){ return c; }
+			
 	 	CjContractClassDecl topLevel = (CjContractClassDecl)getEnclosingTopLevel();
 	 	for (Iterator reqs = topLevel.getRequirements().iterator(); reqs.hasNext(); ) {
 	 		TypeDecl td = (TypeDecl)reqs.next();
 	 		
-	 		if(td instanceof CjContractClassDecl){
+	 		if(topLevel.getProvided().contains(td)){
+	 			// If requirement is part of contract to be provided (redundant requirement)
+	 			// do not remove methods from set of unimplemented methods
+	 		}
+	 		else if(td instanceof CjContractClassDecl){
 				CjContractClassDecl cd = (CjContractClassDecl)td;
 		 	
 		 		Collection r = new HashSet();

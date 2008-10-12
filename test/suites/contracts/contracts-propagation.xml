@@ -62,8 +62,9 @@
         </code>
 	</compile>
 	
-	<compile-run id="propagation004"
-			 	 description="fulfilling a contract indirectly">
+	<compile-check-error id="propagation004"
+						 error="IMPL_REQUIRED_METHOD"
+			 			 description="Super call doesn't work for requirements and so direct implementation of requirements are prohibited">
 		<code>
 
 			public abstract cclass ContractA {
@@ -75,14 +76,8 @@
 			public cclass ProvA extends ClientA {
 				public String a() { return "a"; }
 			}
-
+			
         </code>
-        
-        <test>
-        	ContractA ca = new ProvA();
-        	
-        	assertEquals("a", ca.a());	
-        </test>
-        
-	</compile-run>
+         
+	</compile-check-error>
 </testsuite>

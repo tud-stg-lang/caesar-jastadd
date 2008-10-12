@@ -9,6 +9,7 @@ aspect ContractsInheritance {
 	eq CjContractClassDecl.getDeclaredParents() {
 		Collection parents = new HashSet();
 		
+		// Add parents via direct extends
 		parents.addAll(super.getDeclaredParents());
 		
 		// Add parents via direct requirements
@@ -20,11 +21,14 @@ aspect ContractsInheritance {
 	/* Override method in CjVirtualClassDecl to instantiate implicit virtual classes of right type */
 	
 	syn lazy List CjContractClassDecl.getImplicitClassList() {
+	
 		if (isCircular()) { return new List(); }
+	
 		List newMembers = new List();
 		Iterator i = missingInheritedVirtualClasses().iterator();
 		while(i.hasNext()) {
 			String name = i.next().toString();
+	
 			CjVirtualClassDecl decl = new CjContractClassDecl(
 						(Modifiers)getModifiers().fullCopy(),
 						name,
@@ -32,10 +36,12 @@ aspect ContractsInheritance {
 						new List(), 
 						new List(),
 						new List());
+	
 			decl.isImplicit = true;
-			newMembers.add(new MemberClassDecl(decl));			
-			System.out.println("added "+name+" for "+fullName());
+	
+			newMembers.add(new MemberClassDecl(decl));
 		}		
+		
 		return newMembers;	
 	}
 }
