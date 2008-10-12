@@ -33,4 +33,49 @@
         
 	</compile-run>
 
+	<compile-run id="subtyping002"
+			 	 description="subtyping via requirement as interface">
+		<code>
+
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+
+			public interface ContractB {
+				public String b();
+			}
+
+			public cclass ProvB implements ContractB requires ContractA {
+				public String b() { return "b"; }
+				
+				public String ba() { return b() + a(); }
+			}
+
+			public cclass ProvA extends ContractA requires ContractB {
+				public String a() { return "a"; }
+				
+				public String ab() { return a() + b(); }
+			}
+
+			public cclass CompleteAB extends ProvB &amp; ProvA {
+				public String abba() { return ab() + ba(); }
+			}
+
+        </code>
+        
+        <test>
+        	ContractB cb = new CompleteAB();
+        	
+        	assertEquals("b", cb.b());
+        	
+        	ProvA ca = new CompleteAB();
+        	
+        	assertEquals("ab", ca.ab());	
+        	
+        	CompleteAB c = new CompleteAB();
+        	
+        	assertEquals("abba", c.abba());
+        </test>
+        
+	</compile-run>
 </testsuite>

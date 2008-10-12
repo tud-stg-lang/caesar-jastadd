@@ -28,4 +28,31 @@
         </code>
 	</compile>
 	
+	<compile-run id="java003"
+			 description="Provides via implements">
+		<code>
+
+			public interface ContractJavaA {
+				public String a();
+			}
+
+			public cclass ProvA implements ContractJavaA {
+				public String a() { return "a"; }
+			}
+			
+			public cclass ClientA requires ContractJavaA {
+				public String b() { return "b"; }
+			}
+			
+			public cclass CompleteA extends ClientA &amp; ProvA {}
+		
+        </code>
+        
+        <test>
+        	CompleteA ca = new CompleteA();
+        	
+        	assertEquals("ab", ca.a() + ca.b());
+        </test>
+	</compile-run>
+	
 </testsuite>
