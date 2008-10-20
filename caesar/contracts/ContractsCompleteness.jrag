@@ -1,10 +1,11 @@
 // Implements new semantic of concrete, abstract and complete classes 
+// Based on definition of completeness in doc/caesarj_spec.pdf/Contracts
 
 aspect ContractsCompleteness {
 
-	/****** Determine all provided ******/
-	
-	// Determine explicitly extended
+	/******
+	 * 1.) <extends> := getExplicitExtends() for classes
+	 ******/
 	syn Collection CjContractClassDecl.getExplicitExtends() {
 		Collection c = new HashSet();
 		
@@ -15,7 +16,69 @@ aspect ContractsCompleteness {
 		return c;
 	}
 	
-	// Determine explicitly implemented
+	/******
+	 * 2.) <extends> := getExplicitExtends() for interfaces
+	 ******/
+	syn Collection InterfaceDecl.getExplicitExtends() {
+		Collection c = new ArrayList();
+		
+		for(int i = 0; i < getNumSuperInterfaceId(); i++){
+			c.add(getSuperInterfaceId(i).type());
+		}
+		
+		return c;
+	}
+	
+	/******
+	 * 3,4.) [extends] := getAllExtends() for classes
+	 ******/
+	syn Collection CjContractClassDecl.getAllExtends() {
+		// Avoid endless recursion
+		if(isCircular())
+			return Collections.EMPTY_LIST;
+		
+		Collection c = new HashSet();
+	
+		c.addAll(getExplicitExtends());
+		
+		// Call recursively (recursion anchor = no extends relationships)
+		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getAllExtends());
+			}
+		}
+		
+		return c;
+	}
+	
+	/******
+	 * 3,4.) [extends] := getAllExtends() for interfaces
+	 ******/
+	syn Collection InterfaceDecl.getAllExtends() {
+		// Prevent endless recursion
+	 	if(isCircular()) { return Collections.EMPTY_LIST; }
+	
+		Collection c = new ArrayList();
+		
+		c.addAll(getExplicitExtends());
+		
+		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			// Ignore super classes like Object or wrong syntax (an error in the code)
+			if(td instanceof InterfaceDecl)
+				c.addAll(((InterfaceDecl)td).getAllExtends());
+		}
+		
+		return c;
+	}
+	
+	
+	/******
+	 * 5.) <implements> := getExplicitImplements()
+	 ******/
 	syn Collection CjContractClassDecl.getExplicitImplements() {
 		Collection imps = new ArrayList();
 		
@@ -26,12 +89,17 @@ aspect ContractsCompleteness {
 		
 		// but remove required interfaces that might have been
 		// added to provide access to methods via requires
+		// In other words: required interfaces are added to the list of
+		// implemented interfaces for pragmatic reasons but are not to be
+		// considered as being implemented!
 		imps.removeAll(getExplicitRequirements());
 		
 		return imps;
 	}
 	
-	// Determine explicitly provided
+	/******
+	 * 6,7.) [provides] := getExplicitProvided()
+	 ******/
 	syn Collection CjContractClassDecl.getExplicitProvided() {
 		Collection provided = new HashSet();
 	
@@ -47,7 +115,9 @@ aspect ContractsCompleteness {
 		return provided;
 	}
 	
-	// Determine direct and indirect provided
+	/******
+	 * 8,9.) [provides] := getProvided()
+	 ******/
 	syn Collection CjContractClassDecl.getProvided() {
 		// Avoid endless recursion
 		if(isCircular())
@@ -68,11 +138,13 @@ aspect ContractsCompleteness {
 		}
 		
 		// Call recursively (recursion anchor = no implements relationships)
-		for(Iterator iter = getExplicitImplements().iterator(); iter.hasNext(); ){
-			TypeDecl td = (TypeDecl)iter.next();
+		if(!isAbstract()){
+			for(Iterator iter = getExplicitImplements().iterator(); iter.hasNext(); ){
+				TypeDecl td = (TypeDecl)iter.next();
 			
-			if(td instanceof InterfaceDecl){
-				c.addAll(((InterfaceDecl)td).getProvided());
+				if(td instanceof InterfaceDecl){
+					c.addAll(((InterfaceDecl)td).getAllExtends());
+				}
 			}
 		}
 		
@@ -80,12 +152,14 @@ aspect ContractsCompleteness {
 	}
 	
 	
-	/****** Determine all requirements ******/
 	
+	/******
+	 * 10.) <requires> := getExplicitRequirements()
+	 ******/
+
 	// Inherited name type has to be set in parent node
 	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
 
-	// Determine explicit (declared) requirements
 	syn Collection CjContractClassDecl.getExplicitRequirements() {
 		Collection c = new HashSet();
 		
@@ -97,7 +171,57 @@ aspect ContractsCompleteness {
 		return c;
 	}
 	
-	// Determine direct and indirect requirements
+	
+	/******
+	 * 11 - 16.) [subtypeof] := getSubtypesOf() for classes
+	 ******/
+	syn Collection CjContractClassDecl.getSubtypesOf() {
+		// Avoid endless recursion
+		if(isCircular())
+			return Collections.EMPTY_LIST;
+		
+		Collection c = new HashSet();
+		
+		// Add explicit extends
+		c.addAll(getExplicitExtends());
+		
+		// Add explicit requirements
+		c.addAll(getExplicitRequirements());
+		
+		// Add explicit implements
+		c.addAll(getExplicitImplements());
+		
+		// Call recursively
+		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+			}
+		}			
+		
+		for(Iterator iter = getExplicitRequirements().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+			}
+		}			
+		
+		for(Iterator iter = getExplicitImplements().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof CjContractClassDecl){
+				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+			}
+		}			
+					
+		return c;
+	}
+
+	/******
+	 * 17 - 19.) [requires] := getRequirements()
+	 ******/
 	syn Collection CjContractClassDecl.getRequirements() {
 		// Avoid endless recursion
 		if(isCircular())
@@ -108,12 +232,15 @@ aspect ContractsCompleteness {
 		// Add explicit requirements
 		c.addAll(getExplicitRequirements());
 		
-		// Add recursively all parents (via extends AND requires) of direct requirements
+		// Add recursively all subtypes of direct requirements
 		for(Iterator iter = getExplicitRequirements().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
-				c.addAll(((CjContractClassDecl)td).getSortedParents());
+				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+			} else if(td instanceof InterfaceDecl){
+				// For interfaces, getSubtypesOf simplifies to getAllExtends
+				c.addAll(((InterfaceDecl)td).getAllExtends());
 			}
 		}			
 		
@@ -129,127 +256,11 @@ aspect ContractsCompleteness {
 		return c;
 	}
 
-	/****** 
-	 * Removes required methods from list of unimplemented methods
-	 * This allows concrete but incomplete classes, 
-	 * i.e. classes not declared abstract, but containing abstract methods via requirements
-	 ******/
-	 
-	 // Determine all enclosed methods in a cclass
-	 syn Collection CjContractClassDecl.enclosedMethods(String nameOfMethod){
-	 	// Prevent endless recursion
-	 	if(isCircular()) { return Collections.EMPTY_LIST; }
-	 	
-	 	Collection c = new HashSet();
-	 	
-	 	// Add member methods
-	 	c.addAll(memberMethods(nameOfMethod));
-				
-		// Add enclosed methods of virtual classes
-		for(Iterator iter = getAllVirtualClasses().iterator(); iter.hasNext(); ){
-			TypeDecl td = (TypeDecl)iter.next();
-			
-			if(td instanceof CjContractClassDecl){
-				CjContractClassDecl cd = (CjContractClassDecl)td;
-			
-				c.addAll(cd.enclosedMethods(nameOfMethod));
-			}
-		}
-		
-		return c;
-	 }
-	 
-	 // Determine the enclosing top-level type
-	 syn TypeDecl CjContractClassDecl.getEnclosingTopLevel(){
-	 	TypeDecl cd = this;
-	 	
-	 	while(!cd.isTopLevelType()){
-	 		cd = cd.enclosingType();
-	 	}
-	 	
-	 	return cd;
-	 }
-	 
-	 // Remove required methods
-	 eq CjContractClassDecl.unimplementedMethods() {
 
-		// Get complete list of abstract methods
-	 	Collection c = super.unimplementedMethods();
-	 	
-	 	// Go through all required classes of top-level class and remove found enclosed required methods
-	 	if(!(getEnclosingTopLevel() instanceof CjContractClassDecl)){ return c; }
-			
-	 	CjContractClassDecl topLevel = (CjContractClassDecl)getEnclosingTopLevel();
-	 	for (Iterator reqs = topLevel.getRequirements().iterator(); reqs.hasNext(); ) {
-	 		TypeDecl td = (TypeDecl)reqs.next();
-	 		
-	 		if(topLevel.getProvided().contains(td)){
-	 			// If requirement is part of contract to be provided (redundant requirement)
-	 			// do not remove methods from set of unimplemented methods
-	 		}
-	 		else if(td instanceof CjContractClassDecl){
-				CjContractClassDecl cd = (CjContractClassDecl)td;
-		 	
-		 		Collection r = new HashSet();
-				for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
-					MethodDecl m = (MethodDecl)unimpMethods.next();
-			
-					// Remove methods of top-level class and all enclosed virtual classes
-					if(cd.enclosedMethods(m.name()).contains(m)){
-						// Add required method to list of methods to be removed
-						r.add(m);
-					}
-				}
-				
-				c.removeAll(r);
-			} else if(td instanceof InterfaceDecl){
-				InterfaceDecl id = (InterfaceDecl)td;
-				
-				Collection r = new HashSet();
-				
-				for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
-					MethodDecl m = (MethodDecl)unimpMethods.next();
-			
-					// Remove methods declared in interface
-					if(id.memberMethods(m.name()).contains(m)){
-						// Add required method to list of methods to be removed
-						r.add(m);
-					}
-				}
-				
-				c.removeAll(r);
-			}
-			
-		}
-		
-		// Return altered list, required methods have now been removed
-		return c;
-	 }
-	 
-	// Provided for interfaces
-	syn Collection InterfaceDecl.getProvided() {
-		// Prevent endless recursion
-	 	if(isCircular()) { return Collections.EMPTY_LIST; }
-	
-		Collection c = new ArrayList();
-		
-		for(int i = 0; i < getNumSuperInterfaceId(); i++){
-			c.add(getSuperInterfaceId(i).type());
-		}
-		
-		for(int i = 0; i < getNumSuperInterfaceId(); i++){
-			// Ignore super classes like Object or wrong syntax (an error in the code)
-			if(getSuperInterfaceId(i).type() instanceof InterfaceDecl)
-				c.addAll(((InterfaceDecl)getSuperInterfaceId(i).type()).getProvided());
-		}
-		
-		return c;
-	}
-	
 	/******
-	 * Define completeness...
-	 * A class is complete when it is concrete (not abstract) and all requirements are fulfilled 
+	 * 20.) complete := isComplete()
 	 ******/
 	syn boolean CjContractClassDecl.isComplete() 
 						= !isAbstract() && getProvided().containsAll(getRequirements());
+						
 }

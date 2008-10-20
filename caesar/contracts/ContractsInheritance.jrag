@@ -3,8 +3,9 @@
 aspect ContractsInheritance {
 
 	/****** 
-	 * Overwrite attribute from CjClassDecl responsible for determining superclasses
-	 * This allows for subtyping via requirements
+	 * Overwrites attribute from CjClassDecl responsible for determining superclasses
+	 * Adds required interfaces to list of implemented interfaces
+	 * This allows for subtyping and method access via requirements
 	 ******/									  
 	eq CjContractClassDecl.getDeclaredParents() {
 		Collection parents = new HashSet();
@@ -15,21 +16,20 @@ aspect ContractsInheritance {
 		// Add parents via direct requirements
 		parents.addAll(getExplicitRequirements());
 		
-		// But remove interfaces
+		// Remove requirements that are interfaces since
+		// these are not to be regarded as superclasses
 		parents.removeAll(getReqInterfaces());
 		
-		// Add required interfaces as implements to enable access to 
-		// methods and subtyping via required interfaces
+		// Add required interfaces instead to list of implemented interfaces
   		Collection c = new ArrayList();
 		for(int i = 0; i < getNumImplements(); i++){
      		c.add(getImplements(i));
-     	} 
+     	}
 	
-        // add required interfaces to allow access to methods 
-        // and subtyping via requires
      	for(int i = 0; i < getNumRequiredClasses(); i++){
      		TypeDecl td = (TypeDecl)(getRequiredClasses(i).type());
-     		
+     	
+     		// If requirement is an interface and it hasn't been added already	
      		if((td instanceof InterfaceDecl) && !c.contains(getRequiredClasses(i))){
      			addImplements(getRequiredClasses(i));	
      		}
@@ -38,8 +38,10 @@ aspect ContractsInheritance {
 	    return parents;
 	}
 
-	/* Override method in CjVirtualClassDecl to instantiate implicit virtual classes of right type */
-	
+
+	/******
+	 * Override method in CjVirtualClassDecl to instantiate implicit virtual classes of right type
+	 ******/
 	syn lazy List CjContractClassDecl.getImplicitClassList() {
 	
 		if (isCircular()) { return new List(); }
@@ -65,7 +67,9 @@ aspect ContractsInheritance {
 		return newMembers;	
 	}
 	
-	/* Determine requirements that are interfaces */
+	/******
+	 * Determine requirements that are interfaces
+	 ******/
 	syn Collection CjContractClassDecl.getReqInterfaces() {
 		ArrayList reqs = new ArrayList();
 	

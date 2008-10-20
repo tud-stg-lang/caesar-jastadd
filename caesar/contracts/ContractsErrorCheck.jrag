@@ -7,8 +7,9 @@
 
 aspect ContractsErrorCheck{
 	
-	/* Incomplete classes are not instantiable */
-	
+	/******
+	 * Incomplete classes are not instantiable
+	 ******/
 	public void CjClassInstanceExpr.accessControl() {
 		// Super call takes care of abstract classes
     	super.accessControl();
@@ -19,7 +20,8 @@ aspect ContractsErrorCheck{
     		 
     		if(!cd.isComplete()) { 
       			String requirements = ": ";
-      			
+      		
+      			// Determine unfulfilled requirements and issue error	
       			Collection unfulfilled = new ArrayList();
       			unfulfilled.addAll(cd.getRequirements());
       			unfulfilled.removeAll(cd.getProvided()); 
@@ -36,10 +38,9 @@ aspect ContractsErrorCheck{
       	}
   	}
   	
-  	/* Only top level types can have requirements */
-
-	/* Direct implementation of required methods is not allowed */
-  	
+  	/******
+  	 * Only top level types can have requirements
+	 ******/
   	public void CjContractClassDecl.nameCheck() {
   		super.nameCheck();
   		
@@ -55,11 +56,21 @@ aspect ContractsErrorCheck{
   				" - Only top-level families or normal classes can have requirements.");
   		}
   		
-  		// Disallow direct implementation of required methods
-  		if(getRequirements().isEmpty()) { return; }
+  		disallowReqImp();
+  	}
+
+
+	/******
+	 * Direct implementation of required methods is not allowed 	 
+	 ******/
+	 public void CjContractClassDecl.disallowReqImp() {
+	 	// Trivial case: no requirements...
+		if(getRequirements().isEmpty()) { return; }
   		
+  		// Trivial case: an error to be reported elsewhere
   		if(!(getEnclosingTopLevel() instanceof CjContractClassDecl)){ return; }
   		
+  		// Go through unfulfilled reqs and check that no imp exists
 		CjContractClassDecl topLevel = (CjContractClassDecl)getEnclosingTopLevel();
 		
 		Collection unfulfilledReqs = new HashSet(); 
@@ -67,11 +78,11 @@ aspect ContractsErrorCheck{
 		unfulfilledReqs.addAll(topLevel.getRequirements());
 		unfulfilledReqs.removeAll(topLevel.getProvided());
 			
-
 		for(int i = 0; i < getNumBodyDecl(); i++) {
 			if(getBodyDecl(i) instanceof MethodDecl) {
 				MethodDecl md = (MethodDecl)getBodyDecl(i);
 				
+				// Check each method that is implemented
 				if(md.hasBlock()) {
 					for(Iterator iter = unfulfilledReqs.iterator(); iter.hasNext(); ) {
 						TypeDecl td = (TypeDecl)iter.next();
@@ -92,5 +103,4 @@ aspect ContractsErrorCheck{
 			
 		} 
   	}
-  	
 }
