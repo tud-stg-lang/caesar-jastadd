@@ -15,6 +15,26 @@ aspect ContractsInheritance {
 		// Add parents via direct requirements
 		parents.addAll(getExplicitRequirements());
 		
+		// But remove interfaces
+		parents.removeAll(getReqInterfaces());
+		
+		// Add required interfaces as implements to enable access to 
+		// methods and subtyping via required interfaces
+  		Collection c = new ArrayList();
+		for(int i = 0; i < getNumImplements(); i++){
+     		c.add(getImplements(i));
+     	} 
+	
+        // add required interfaces to allow access to methods 
+        // and subtyping via requires
+     	for(int i = 0; i < getNumRequiredClasses(); i++){
+     		TypeDecl td = (TypeDecl)(getRequiredClasses(i).type());
+     		
+     		if((td instanceof InterfaceDecl) && !c.contains(getRequiredClasses(i))){
+     			addImplements(getRequiredClasses(i));	
+     		}
+     	}  
+     	
 	    return parents;
 	}
 
@@ -43,5 +63,19 @@ aspect ContractsInheritance {
 		}		
 		
 		return newMembers;	
+	}
+	
+	/* Determine requirements that are interfaces */
+	syn Collection CjContractClassDecl.getReqInterfaces() {
+		ArrayList reqs = new ArrayList();
+	
+		for(int i = 0; i < getNumRequiredClasses(); i++){
+			TypeDecl td = (TypeDecl)(getRequiredClasses(i).type());
+			
+			// Requirements via interfaces 
+			if(td instanceof InterfaceDecl){ reqs.add(td); }
+		}
+		
+		return reqs;
 	}
 }

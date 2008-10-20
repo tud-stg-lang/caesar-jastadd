@@ -57,6 +57,7 @@ mixin.check.inhmethods.stcinhmethods016
 mixin.transform.supercall.mitsuper005
 
 mixin.transform.inhmethods.mitinhmethods005
+mixin.transform.inhmethods.mitinhmethods006
 
 vc.allfromcc.vcallfromcc014b
 vc.allfromcc.vcallfromcc018

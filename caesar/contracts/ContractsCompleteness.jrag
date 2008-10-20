@@ -15,15 +15,36 @@ aspect ContractsCompleteness {
 		return c;
 	}
 	
+	// Determine explicitly implemented
+	syn Collection CjContractClassDecl.getExplicitImplements() {
+		Collection imps = new ArrayList();
+		
+		// add all implemented
+		for(int i = 0; i < getNumImplements(); i++){
+			imps.add(getImplements(i).type());
+		}
+		
+		// but remove required interfaces that might have been
+		// added to provide access to methods via requires
+		imps.removeAll(getExplicitRequirements());
+		
+		return imps;
+	}
+	
 	// Determine explicitly provided
 	syn Collection CjContractClassDecl.getExplicitProvided() {
-		if(isAbstract()){
-			// An abstract class doesn't have to provide anything
-			return Collections.EMPTY_LIST;
-		} else {
+		Collection provided = new HashSet();
+	
+		// An abstract class doesn't have to provide anything
+		if(!isAbstract()){
 			// For a concrete class, every contract via extends has to be fulfilled
-			return getExplicitExtends();
+			provided.addAll(getExplicitExtends());
+			
+			// Implemented interfaces are part of fulfilled contract
+			provided.addAll(getExplicitImplements());
 		}
+		
+		return provided;
 	}
 	
 	// Determine direct and indirect provided
@@ -43,6 +64,15 @@ aspect ContractsCompleteness {
 			
 			if(td instanceof CjContractClassDecl){
 				c.addAll(((CjContractClassDecl)td).getProvided());
+			}
+		}
+		
+		// Call recursively (recursion anchor = no implements relationships)
+		for(Iterator iter = getExplicitImplements().iterator(); iter.hasNext(); ){
+			TypeDecl td = (TypeDecl)iter.next();
+			
+			if(td instanceof InterfaceDecl){
+				c.addAll(((InterfaceDecl)td).getProvided());
 			}
 		}
 		
@@ -172,6 +202,22 @@ aspect ContractsCompleteness {
 				}
 				
 				c.removeAll(r);
+			} else if(td instanceof InterfaceDecl){
+				InterfaceDecl id = (InterfaceDecl)td;
+				
+				Collection r = new HashSet();
+				
+				for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
+					MethodDecl m = (MethodDecl)unimpMethods.next();
+			
+					// Remove methods declared in interface
+					if(id.memberMethods(m.name()).contains(m)){
+						// Add required method to list of methods to be removed
+						r.add(m);
+					}
+				}
+				
+				c.removeAll(r);
 			}
 			
 		}
@@ -180,6 +226,24 @@ aspect ContractsCompleteness {
 		return c;
 	 }
 	 
+	// Provided for interfaces
+	syn Collection InterfaceDecl.getProvided() {
+		// Prevent endless recursion
+	 	if(isCircular()) { return Collections.EMPTY_LIST; }
+	
+		Collection c = new ArrayList();
+		
+		for(int i = 0; i < getNumSuperInterfaceId(); i++){
+			c.add(getSuperInterfaceId(i).type());
+		}
+		
+		for(int i = 0; i < getNumSuperInterfaceId(); i++){
+			if(getSuperInterfaceId(i).type() instanceof InterfaceDecl)
+				c.addAll(((InterfaceDecl)getSuperInterfaceId(i).type()).getProvided());
+		}
+		
+		return c;
+	}
 	
 	/******
 	 * Define completeness...

@@ -41,7 +41,7 @@
 			}
 			
 			public cclass ClientA requires ContractJavaA {
-				public String b() { return "b"; }
+				public String ab() { return a() + "b"; }
 			}
 			
 			public cclass CompleteA extends ClientA &amp; ProvA {}
@@ -51,7 +51,7 @@
         <test>
         	CompleteA ca = new CompleteA();
         	
-        	assertEquals("ab", ca.a() + ca.b());
+        	assertEquals("ab", ca.ab());
         </test>
 	</compile-run>
 	

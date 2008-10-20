@@ -18,13 +18,20 @@ aspect ContractsErrorCheck{
     		CjContractClassDecl cd = (CjContractClassDecl)type();
     		 
     		if(!cd.isComplete()) { 
-      			String requirements = ":";
-      			for(Iterator iter = cd.getRequirements().iterator(); iter.hasNext(); ){
-      				requirements += " " + ((ClassDecl)iter.next()).name();
+      			String requirements = ": ";
+      			
+      			Collection unfulfilled = new ArrayList();
+      			unfulfilled.addAll(cd.getRequirements());
+      			unfulfilled.removeAll(cd.getProvided()); 
+      			
+      			for(Iterator iter = unfulfilled.iterator(); iter.hasNext(); ){
+      				requirements += ((TypeDecl)iter.next()).name();
+      				
+      				if(iter.hasNext()){ requirements += ", "; }
       			}
       			
       			error("Can not instantiate an incomplete class: " + type().fullName()
-      				+ " requires" + requirements);
+      				+ " has unfulfilled requirements" + requirements);
       		}
       	}
   	}
@@ -37,9 +44,11 @@ aspect ContractsErrorCheck{
   		super.nameCheck();
   		
   		if(!isTopLevelType() && !getRequirements().isEmpty()){ 
-  			String requirements = ":";
+  			String requirements = ": ";
       		for(Iterator iter = getRequirements().iterator(); iter.hasNext(); ){
-      			requirements += " " + ((TypeDecl)iter.next()).name();
+      			requirements += ((TypeDecl)iter.next()).name();
+      			
+      			if(iter.hasNext()){ requirements += ", "; }
       		}
       		
   			error(name() + " is a (nested) virtual class and requires" + requirements +   
