@@ -90,6 +90,7 @@ aspect ErrorCheck {
     collection.addAll(errors);
   }
   
+  // deprecated; use errorCheck(Collection collection) instead.
   public boolean Program.errorCheck() {
     Collection collection = new LinkedList();
     errorCheck(collection);

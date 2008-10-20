@@ -23,11 +23,17 @@ aspect MCByteCode {
 	
 	// special attributes for cclasses
 	eq CjClassDecl.attributes() {
-		Collection c = super.attributes();
+  		// YANG Baustelle (changed order of attributes)
+		Collection c = new Vector();
 		if (getDirectParents().size() > 1)
 			c.add(new MixerConfigAttribute(this));
+		
+		// The mechanism for parsing a CjVirtualClassDecl as such (and not as a ClassDecl) relies on
+		// the IsCjClassAttribute being set before the generic attributes from TypeDecl.attributes().
 		c.add(new IsCjClassAttribute(constantPool()));
-		c.add(new CjSuperclassesAttribute((CjClassDecl)this));				
+		c.add(new CjSuperclassesAttribute((CjClassDecl)this));
+		c.addAll(super.attributes());
+		
 		return c;
 	}
 

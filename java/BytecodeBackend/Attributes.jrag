@@ -58,20 +58,35 @@ aspect Attributes {
   public int DoubleType.addConstant(ConstantPool p, Constant c)   { return p.addConstant(c.doubleValue()); }
     
   class InnerClassesAttribute extends Attribute {
-    public InnerClassesAttribute(TypeDecl typeDecl) {
-      super(typeDecl.constantPool(), "InnerClasses");
-      ConstantPool c = typeDecl.constantPool();
-      Collection list = typeDecl.innerClassesAttributeEntries();
-      u2(list.size());
-      for(Iterator iter = list.iterator(); iter.hasNext(); ) {
-        TypeDecl type = (TypeDecl)iter.next();
-        u2(c.addClass(type.constantPoolName())); // inner_class_info_index
-        u2(type.isMemberType() ? 0 : c.addClass(type.enclosingType().constantPoolName())); // outer_class_info_index
-        u2(type.isAnonymous() ? 0 : c.addUtf8(type.name())); // inner_name_index
-        u2(type.isInterfaceDecl() ? (type.flags() | Modifiers.ACC_INTERFACE) : type.flags()); // inner_class_access_flags
-      }
-    }
+	public InnerClassesAttribute(TypeDecl typeDecl) {
+		super(typeDecl.constantPool(), "InnerClasses");
+		ConstantPool c = typeDecl.constantPool();
+		Collection list = typeDecl.innerClassesAttributeEntries();
+		u2(list.size());
+		for(Iterator iter = list.iterator(); iter.hasNext(); ) {
+			TypeDecl type = (TypeDecl)iter.next();
+			u2(c.addClass(type.constantPoolName())); // inner_class_info_index
+
+			// YANG Baustelle
+			/* Status:
+			 * If we use OLD, of 182 tests in binary.* (2008-10-20), 54 fail (0 errors). Using NEW, several tests 
+			 * run through (notably some of the vc.basics.*), yielding only 42 failures, but 8 errors (NullPointerExceptions)!
+			 * 
+			 * "If C is not a member, the value of the outer_class_info_index item must be zero. Otherwise, 
+			 * the value of the outer_class_info_index item must be a valid index into the constant_pool table, 
+			 * and the entry at that index must be a CONSTANT_Class_info (¤4.4.1) structure representing the 
+			 * class or interface of which C is a member."
+			 * ( http://java.sun.com/docs/books/jvms/second_edition/html/ClassFile.doc.html#79996 )
+			 */
+//			u2(type.isMemberType() ? 0 : c.addClass(type.enclosingType().constantPoolName())); 	// outer_class_info_index // "OLD"
+			u2(type.isMemberType() ? c.addClass(type.enclosingType().constantPoolName()) : 0); 	// outer_class_info_index // "NEW" (proposed)
+
+			u2(type.isAnonymous() ? 0 : c.addUtf8(type.name())); // inner_name_index
+			u2(type.isInterfaceDecl() ? (type.flags() | Modifiers.ACC_INTERFACE) : type.flags()); // inner_class_access_flags
+		}
+	}
   }
+  
   syn lazy Collection TypeDecl.innerClassesAttributeEntries() {
     HashSet list = new HashSet();
     if(isNestedType())
@@ -196,6 +211,8 @@ aspect Attributes {
     }
     return c;
   }
+  // CjClassDecl.attributes() is defined in MCByteCode.jrag
+  
   syn lazy Collection BodyDecl.attributes() = new ArrayList();
   eq FieldDeclaration.attributes() {
     ArrayList l = new ArrayList();

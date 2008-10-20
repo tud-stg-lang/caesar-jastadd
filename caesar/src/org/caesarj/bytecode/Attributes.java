@@ -2,6 +2,7 @@ package org.caesarj.bytecode;
 
 import java.io.FileNotFoundException;
 
+import org.caesarj.ast.CjVirtualClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.InterfaceDecl;
 import org.caesarj.ast.List;
@@ -19,12 +20,18 @@ class Attributes {
 	private CONSTANT_Info constantValue;
 	private List superclassesList;
 	private boolean isCjClass;
+	
+	/** "Trickle-up": This field is used for passing the outer <code>TypeDecl</code>, to which a 
+	 *  <code>MemberClassDecl</code> (corresponding to the inner class) was added, along the cascade 
+	 *  of <code title="org.caesarj.bytecode.Attributes">Attributes</code> and 
+	 *  <code title="org.caesarj.bytecode.Parser">Parser</code> instances. */
+	private TypeDecl outerTypeDecl = null;
 
 	public Attributes(Parser parser) {
 		this(parser, null, null, null);
 	}
 	
-	public Attributes(Parser parser, TypeDecl typeDecl, TypeDecl outerTypeDecl, Program classPath) {
+	public Attributes(Parser parser, TypeDecl typeDecl, TypeDecl outerTypeDeclParam, Program classPath) {
 		p = parser;
 		exceptionList = new List();
 		isSynthetic = false;
@@ -37,25 +44,35 @@ class Attributes {
 			int attribute_length = p.u4();
 			String attribute_name = p.getCONSTANT_Utf8_Info(attribute_name_index).string();
 			if(Parser.VERBOSE)
-				p.println("    Attribute: " + attribute_name + ", length: "
-						+ attribute_length);
-			if (attribute_name.equals("Exceptions")) {
-				exceptions();
-			} else if(attribute_name.equals("ConstantValue") && attribute_length == 2) {
-				constantValues();
-			} else if (attribute_name.equals("InnerClasses")) {
-				innerClasses(typeDecl, outerTypeDecl, classPath);
-			} else if (attribute_name.equals("Synthetic")) {
-				isSynthetic = true;
-			} else if (attribute_name.equals("de.tud.caesarj.Superclasses")) {
+				p.println("    Attribute: " + attribute_name + ", length: " + attribute_length);
+			
+			// Parse the appropriate attribute and then directly skip to the next iteration of the loop:
+			if (attribute_name.equals("de.tud.caesarj.Superclasses")) {
 				superclasses();
+				continue;
 			} else if (attribute_name.equals("de.tud.caesarj.IsCjClass")) {
 				isCjClass = true;
+				continue;
+			} else if (attribute_name.equals("InnerClasses")) {
+				if (isCjClass)
+					typeDecl = p.transformBodyAndSuperclasses(typeDecl, superclassesList());
+				innerClasses(typeDecl, outerTypeDeclParam, classPath);
+				continue;
+			} else if (attribute_name.equals("Exceptions")) {
+				exceptions();
+				continue;
+			} else if(attribute_name.equals("ConstantValue") && attribute_length == 2) {
+				constantValues();
+				continue;
+			} else if (attribute_name.equals("Synthetic")) {
+				isSynthetic = true;
+				continue;
 			} else {
 				this.p.skip(attribute_length);
+				continue;
 			}
+			// Do NOT add anything here without appropriate refactoring (remove all continue statements above).
 		}
-
 	}
 
 	private void superclasses() {
@@ -73,7 +90,7 @@ class Attributes {
 	}
 
 	
-	public void innerClasses(TypeDecl typeDecl, TypeDecl outerTypeDecl, Program classPath) {
+	public void innerClasses(TypeDecl typeDecl, TypeDecl outerTypeDeclParam, Program classPath) {
 		int number_of_classes = this.p.u2();
 		printIfVerbose("    Number of classes: " + number_of_classes);
 		for (int i = 0; i < number_of_classes; i++) {
@@ -110,12 +127,15 @@ class Attributes {
 				typeDecl.setModifiers(Parser.modifiers(inner_class_access_flags & 0x041f));
 				if (this.p.outerClassInfo != null && this.p.outerClassInfo.name().equals(outer_class_info.name())) {
 					MemberTypeDecl m = null;
-					if (typeDecl instanceof ClassDecl) {
+					if (typeDecl instanceof CjVirtualClassDecl) {
+						m = new MemberClassDecl((CjVirtualClassDecl)typeDecl);
+						outerTypeDeclParam.addBodyDecl(m);
+					} else if (typeDecl instanceof ClassDecl) {
 						m = new MemberClassDecl((ClassDecl)typeDecl);
-						outerTypeDecl.addBodyDecl(m);
+						outerTypeDeclParam.addBodyDecl(m);
 					} else if (typeDecl instanceof InterfaceDecl) {
 						m = new MemberInterfaceDecl((InterfaceDecl)typeDecl);
-						outerTypeDecl.addBodyDecl(m);
+						outerTypeDeclParam.addBodyDecl(m);
 					}
 				}
 			}
@@ -127,6 +147,7 @@ class Attributes {
 					if(is != null) {
 						Parser p = new Parser(is, inner_class_name /*this.p.name*/);
 						p.parse(typeDecl, outer_class_info, classPath);
+						this.outerTypeDecl = p.getOuterTypeDecl();
 						is.close();
 					}
 					else {
@@ -176,8 +197,14 @@ class Attributes {
 		return isCjClass;
 	}
 	
+	TypeDecl getOuterTypeDecl() {
+		return outerTypeDecl;
+	}
+	
+
 	private void printIfVerbose(String message) {
 	      if(Parser.VERBOSE)
 	          p.println(message);
 	}
+
 }

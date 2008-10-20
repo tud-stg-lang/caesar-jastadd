@@ -28,116 +28,124 @@ import org.caesarj.ast.TypeDecl;
 
 
 public class Parser {
-  public static final boolean VERBOSE = false;
+	public static final boolean VERBOSE = true;
 
 	private DataInputStream is;
 	public CONSTANT_Class_Info classInfo;
 	public CONSTANT_Class_Info outerClassInfo;
-  public String name;
+	public String name;
 
-  public Parser(byte[] buffer, int size, String name) {
-    //this.is = new DataInputStream(new DummyInputStream(buffer, size));
-    this.is = new DataInputStream(new ByteArrayInputStream(buffer, 0, size));
-    this.name = name;
-  }
-  public Parser(InputStream in, String name) {
-    //this.is = new DataInputStream(new DummyInputStream(buffer, size));
-    this.is = new DataInputStream(new DummyInputStream(in));
-    this.name = name;
-  }
-  
+	public CONSTANT_Info[] constantPool = null;
+
+	/** "Trickle-up": This field is used for passing the outer <code>TypeDecl</code>, to which a 
+	 *  <code>MemberClassDecl</code> (corresponding to the inner class) was added, along the cascade 
+	 *  of <code title="org.caesarj.bytecode.Attributes">Attributes</code> and 
+	 *  <code title="org.caesarj.bytecode.Parser">Parser</code> instances. */
+	private TypeDecl outerTypeDecl;
+
+	public Parser(byte[] buffer, int size, String name) {
+		//this.is = new DataInputStream(new DummyInputStream(buffer, size));
+		this.is = new DataInputStream(new ByteArrayInputStream(buffer, 0, size));
+		this.name = name;
+	}
+	public Parser(InputStream in, String name) {
+		//this.is = new DataInputStream(new DummyInputStream(buffer, size));
+		this.is = new DataInputStream(new DummyInputStream(in));
+		this.name = name;
+	}
+
 	public Parser(String name) throws FileNotFoundException {
 		if (!name.endsWith(".class") && !name.endsWith(".cjclass") ) {
 			//name = name.replaceAll("\\.", "/") + ".class";
 			name = name.replace('.', '/') + ".class";
 		}
-    this.name = name;
-    this.is = new DataInputStream(new FileInputStream(name));
+		this.name = name;
+		this.is = new DataInputStream(new FileInputStream(name));
 	}
 
-  private static class DummyInputStream extends InputStream {
-    byte[] bytes;
-    int pos;
-    int size;
-    public DummyInputStream(byte[] buffer, int size) {
-      bytes = buffer;
-      this.size = size;
-    }
-    public DummyInputStream(InputStream is) {
-      bytes = new byte[1024];
-      int index = 0;
-      size = 1024;
-      try {
-        int status;
-        do {
-          status = is.read(bytes, index, size - index);
-          if(status != -1) {
-            index += status;
-            if(index == size) {
-              byte[] newBytes = new byte[size*2];
-              System.arraycopy(bytes, 0, newBytes, 0, size);
-              bytes = newBytes;
-              size *= 2;
-            }
-          }
-        } while (status != -1);
-      } catch (IOException e) {
-        System.err.println("Something went wrong trying to read " + is);
-        //System.exit(1);
-      }
-      size = index;
-      pos = 0;
-    }
+	private static class DummyInputStream extends InputStream {
+		byte[] bytes;
+		int pos;
+		int size;
+		public DummyInputStream(byte[] buffer, int size) {
+			bytes = buffer;
+			this.size = size;
+		}
+		public DummyInputStream(InputStream is) {
+			bytes = new byte[1024];
+			int index = 0;
+			size = 1024;
+			try {
+				int status;
+				do {
+					status = is.read(bytes, index, size - index);
+					if(status != -1) {
+						index += status;
+						if(index == size) {
+							byte[] newBytes = new byte[size*2];
+							System.arraycopy(bytes, 0, newBytes, 0, size);
+							bytes = newBytes;
+							size *= 2;
+						}
+					}
+				} while (status != -1);
+			} catch (IOException e) {
+				System.err.println("Something went wrong trying to read " + is);
+				//System.exit(1);
+			}
+			size = index;
+			pos = 0;
+		}
 
-    public int available() {
-      return size - pos;
-    }
+		public int available() {
+			return size - pos;
+		}
 
-    public void close() {
-    }
+		public void close() {
+		}
 
-    public void mark(int readlimit) {
-    }
+		public void mark(int readlimit) {
+		}
 
-    public boolean markSupported() {
-      return false;
-    }
+		public boolean markSupported() {
+			return false;
+		}
 
-    public int read(byte[] b) {
-      int actualLength = Math.min(b.length, size-pos);
-      System.arraycopy(bytes, pos, b, 0, actualLength);
-      pos += actualLength;
-      return actualLength;
-    }
+		public int read(byte[] b) {
+			int actualLength = Math.min(b.length, size-pos);
+			System.arraycopy(bytes, pos, b, 0, actualLength);
+			pos += actualLength;
+			return actualLength;
+		}
 
-    public int read(byte[] b, int offset, int length) {
-      int actualLength = Math.min(length, size-pos);
-      System.arraycopy(bytes, pos, b, offset, actualLength);
-      pos += actualLength;
-      return actualLength;
-    }
+		public int read(byte[] b, int offset, int length) {
+			int actualLength = Math.min(length, size-pos);
+			System.arraycopy(bytes, pos, b, offset, actualLength);
+			pos += actualLength;
+			return actualLength;
+		}
 
-    public void reset() {
-    }
+		public void reset() {
+		}
 
-    public long skip(long n) {
-      if(size == pos)
-        return -1;
-      long skipSize = Math.min(n, size-pos);
-      pos += skipSize;
-      return skipSize;
-    }
+		public long skip(long n) {
+			if(size == pos)
+				return -1;
+			long skipSize = Math.min(n, size-pos);
+			pos += skipSize;
+			return skipSize;
+		}
 
-    public int read() throws IOException {
-      if(pos < size) {
-        int i = bytes[pos++];
-        if(i < 0)
-          i = 256 + i;
-        return i;
-      }
-      return -1;
-    }
-  }
+		public int read() throws IOException {
+			if(pos < size) {
+				int i = bytes[pos++];
+				if(i < 0)
+					i = 256 + i;
+				return i;
+			}
+			return -1;
+		}
+	}
 
 	public int next() {
 		try {
@@ -244,13 +252,13 @@ public class Parser {
 		print("\n");
 	}
 
-	public CompilationUnit parse(TypeDecl outerTypeDecl, CONSTANT_Class_Info outerClassInfo, Program classPath) 
-					throws FileNotFoundException, IOException {
+	public CompilationUnit parse(TypeDecl outerTypeDeclParam, CONSTANT_Class_Info outerClassInfo, Program classPath) 
+	throws FileNotFoundException, IOException {
 		if(Parser.VERBOSE) 
 			println("Parsing byte codes in " + name);
 
 		this.outerClassInfo = outerClassInfo;
-		
+
 		// Read blocks of Java class file format:
 		parseMagic();
 		parseMinor();
@@ -259,45 +267,62 @@ public class Parser {
 		TypeDecl typeDecl = parseTypeDecl();
 		parseFields(typeDecl);
 		parseMethods(typeDecl);
-		Attributes attrs = new Attributes(this, typeDecl, outerTypeDecl, classPath);
-		
-		// If the type is a Caesar class, make it a CjClassDecls and add inherited members:
-		if(attrs.superclassesList() != null || attrs.isCjClass()) {
-			List body = typeDecl.getBodyDeclListNoTransform();
-			List newbody = new List();
-			for(int i = 0; i < body.getNumChild(); ++i) {
-				BodyDecl decl = (BodyDecl)body.getChildNoTransform(i);
-				if(decl instanceof MemberInterfaceDecl) {
-					// Ignore implicit interface
-					if(((MemberInterfaceDecl)decl).getInterfaceDeclNoTransform().getID().endsWith("_ccIfc")) // equals?
-						continue;
-				}
-				newbody.add(decl);
-			}
-			
-			List superclassesList = (attrs.superclassesList() != null ? attrs.superclassesList() : new List()); //ignore typeDecl.getSuperClassAccess()
+		Attributes attrs = new Attributes(this, typeDecl, outerTypeDeclParam, classPath);
 
-			// Make a CjClassDecl, including its superclasses and its inherited members:
-			typeDecl = new CjVirtualClassDecl(
-					typeDecl.getModifiersNoTransform(),
-					typeDecl.getID(),
-					superclassesList,
-					typeDecl.getDynamicTypeListNoTransform(),
-					newbody);
+		// If we have reached the top-most Parser of the Parser/Attributes cascade, then use the 
+		// modified type declaration. Otherwise save it in the outerTypeDecl field so that it can
+		// be "trickled up" further along the cascade:
+		if (outerTypeDeclParam == null && attrs.getOuterTypeDecl() != null) {
+			typeDecl = attrs.getOuterTypeDecl();
+		} else {
+			this.outerTypeDecl = outerTypeDeclParam;
 		}
-		
+
+		// If the type is a CaesarJ class in a ClassDecl hull, make it a CjVirtualClassDecl and add inherited members:
+		List superclassesList = attrs.superclassesList();
+		if(attrs.isCjClass() || superclassesList != null) {
+			typeDecl = transformBodyAndSuperclasses(typeDecl, superclassesList);
+		}
+		int j = 1;
 		CompilationUnit cu = new CompilationUnit();
 		cu.setPackageDecl(classInfo.packageDecl());
-		
+
 		// check if not already added as a inner class of another class
 		if (typeDecl.getParent() == null) {
 			cu.addTypeDecl(typeDecl);
 		}
-		
+
 		is.close();
 		is = null;
-		
+
 		return cu;
+	}
+
+	/** Transforms a TypeDecl into a CjVirtualClassDecl */
+	CjVirtualClassDecl transformBodyAndSuperclasses(TypeDecl typeDecl, List superclassesList) {
+		List body = typeDecl.getBodyDeclListNoTransform();
+		List newbody = new List();
+		for(int i = 0; i < body.getNumChild(); ++i) {
+			BodyDecl decl = (BodyDecl)body.getChildNoTransform(i);
+			if(decl instanceof MemberInterfaceDecl) {
+				// Ignore implicit interface
+				if(((MemberInterfaceDecl)decl).getInterfaceDeclNoTransform().getID().equals("ccIfc"))
+					continue;
+			}
+			newbody.add(decl);
+		}
+
+		if (superclassesList == null)
+			superclassesList = new List(); //ignore typeDecl.getSuperClassAccess()
+
+		// Make a CjClassDecl, including its superclasses and its inherited members:
+		CjVirtualClassDecl transformedTypeDecl = new CjVirtualClassDecl(
+				typeDecl.getModifiersNoTransform(),
+				typeDecl.getID(),
+				superclassesList,
+				typeDecl.getDynamicTypeListNoTransform(),
+				newbody);
+		return transformedTypeDecl;
 	}
 
 	public void parseMagic() {
@@ -308,18 +333,18 @@ public class Parser {
 	public void parseMinor() {
 		int low = u1();
 		int high = u1();
-    if(Parser.VERBOSE) 
-		  println("Minor: " + high + "." + low);
+		if(Parser.VERBOSE) 
+			println("Minor: " + high + "." + low);
 	}
 
 	public void parseMajor() {
 		int low = u1();
 		int high = u1();
-    if(Parser.VERBOSE) 
-		  println("Major: " + high + "." + low);
+		if(Parser.VERBOSE) 
+			println("Major: " + high + "." + low);
 	}
 
-  public static boolean isInnerClass = false;
+	public static boolean isInnerClass = false;
 
 	public TypeDecl parseTypeDecl() {
 		isInnerClass = false;
@@ -327,16 +352,16 @@ public class Parser {
 		int flags = u2();
 		Modifiers modifiers = modifiers(flags & 0xfddf);
 		if ((flags & 0x0200) == 0) {
-			
+
 			ClassDecl decl = new ClassDecl();
 			decl.setModifiers(modifiers);
 			decl.setID(parseThisClass());
 			Access superClass = parseSuperClass();
 			decl.setSuperClassAccessOpt(superClass == null ? new Opt()
-					: new Opt(superClass));
+			: new Opt(superClass));
 			decl.setImplementsList(parseInterfaces(new List()));
-			
-			
+
+
 			if ((flags & 0x0008) == 0 && outerClassInfo != null)
 				isInnerClass = true;
 			return decl;
@@ -346,7 +371,7 @@ public class Parser {
 			decl.setID(parseThisClass());
 			Access superClass = parseSuperClass();
 			decl.setSuperInterfaceIdList(parseInterfaces(superClass == null ? new List()
-							: new List().add(superClass)));
+			: new List().add(superClass)));
 			return decl;
 		}
 	}
@@ -381,22 +406,22 @@ public class Parser {
 		//s = s.replaceAll("\\$", "/");
 		s = s.replace('$', '/');
 
-    int index = -1;
-    int pos = 0;
-    Access result = null;
-    do {
-      pos = s.indexOf('/', index+1);
-      if(pos == -1)
-        pos = s.length();
-      String name = s.substring(index+1, pos);
-      if(index == -1) {
-		    result = new ParseName(name);
-      }
-      else {
-			  result = new Dot(result, new ParseName(name));
-      }
-      index = pos;
-    } while(pos != s.length());
+		int index = -1;
+		int pos = 0;
+		Access result = null;
+		do {
+			pos = s.indexOf('/', index+1);
+			if(pos == -1)
+				pos = s.length();
+			String name = s.substring(index+1, pos);
+			if(index == -1) {
+				result = new ParseName(name);
+			}
+			else {
+				result = new Dot(result, new ParseName(name));
+			}
+			index = pos;
+		} while(pos != s.length());
 		return result;
 
 	}
@@ -430,68 +455,66 @@ public class Parser {
 
 	public void parseFields(TypeDecl typeDecl) {
 		int count = u2();
-    if(Parser.VERBOSE) 
-		  println("Fields (" + count + "):");
+		if(Parser.VERBOSE) 
+			println("Fields (" + count + "):");
 		for (int i = 0; i < count; i++) {
-      if(Parser.VERBOSE) 
-        print(" Field nbr " + i + " ");
+			if(Parser.VERBOSE) 
+				print(" Field nbr " + i + " ");
 			FieldInfo fieldInfo = new FieldInfo(this);
 			if(!fieldInfo.isSynthetic())
 				typeDecl.addBodyDecl(fieldInfo.bodyDecl());
 		}
 	}
 
-	
+
 	public void parseMethods(TypeDecl typeDecl) {
 		int count = u2();
-    if(Parser.VERBOSE) 
-		  println("Methods (" + count + "):");
+		if(Parser.VERBOSE) 
+			println("Methods (" + count + "):");
 		for (int i = 0; i < count; i++) {
-      if(Parser.VERBOSE) 
-        print("  Method nbr " + i + " ");
+			if(Parser.VERBOSE) 
+				print("  Method nbr " + i + " ");
 			MethodInfo info = new MethodInfo(this);
 			if(!info.isSynthetic() && !info.name.equals("<clinit>")) {
 				typeDecl.addBodyDecl(info.bodyDecl());
 			}
 		}
 	}
-	
 
-	public CONSTANT_Info[] constantPool = null;
 
-  private void checkLengthAndNull(int index) {
-    if(index >= constantPool.length) {
-      throw new Error("Trying to access element " + index  + " in constant pool of length " + constantPool.length);
-    }
-    if(constantPool[index] == null)
-      throw new Error("Unexpected null element in constant pool at index " + index);
-  }
-  public boolean validConstantPoolIndex(int index) {
-    return index < constantPool.length && constantPool[index] != null;
-  }
-  public CONSTANT_Info getCONSTANT_Info(int index) {
-    checkLengthAndNull(index);
-    return constantPool[index];
-  }
-  public CONSTANT_Utf8_Info getCONSTANT_Utf8_Info(int index) {
-    checkLengthAndNull(index);
-    CONSTANT_Info info = constantPool[index];
-    if(!(info instanceof CONSTANT_Utf8_Info))
-      throw new Error("Expected CONSTANT_Utf8_info at " + index + " in constant pool but found " + info.getClass().getName());
-    return (CONSTANT_Utf8_Info)info;
-  }
-  public CONSTANT_Class_Info getCONSTANT_Class_Info(int index) {
-    checkLengthAndNull(index);
-    CONSTANT_Info info = constantPool[index];
-    if(!(info instanceof CONSTANT_Class_Info))
-      throw new Error("Expected CONSTANT_Class_info at " + index + " in constant pool but found " + info.getClass().getName());
-    return (CONSTANT_Class_Info)info;
-  }
+	private void checkLengthAndNull(int index) {
+		if(index >= constantPool.length) {
+			throw new Error("Trying to access element " + index  + " in constant pool of length " + constantPool.length);
+		}
+		if(constantPool[index] == null)
+			throw new Error("Unexpected null element in constant pool at index " + index);
+	}
+	public boolean validConstantPoolIndex(int index) {
+		return index < constantPool.length && constantPool[index] != null;
+	}
+	public CONSTANT_Info getCONSTANT_Info(int index) {
+		checkLengthAndNull(index);
+		return constantPool[index];
+	}
+	public CONSTANT_Utf8_Info getCONSTANT_Utf8_Info(int index) {
+		checkLengthAndNull(index);
+		CONSTANT_Info info = constantPool[index];
+		if(!(info instanceof CONSTANT_Utf8_Info))
+			throw new Error("Expected CONSTANT_Utf8_info at " + index + " in constant pool but found " + info.getClass().getName());
+		return (CONSTANT_Utf8_Info)info;
+	}
+	public CONSTANT_Class_Info getCONSTANT_Class_Info(int index) {
+		checkLengthAndNull(index);
+		CONSTANT_Info info = constantPool[index];
+		if(!(info instanceof CONSTANT_Class_Info))
+			throw new Error("Expected CONSTANT_Class_info at " + index + " in constant pool but found " + info.getClass().getName());
+		return (CONSTANT_Class_Info)info;
+	}
 
 	public void parseConstantPool() {
 		int count = u2();
-    if(Parser.VERBOSE) 
-		  println("constant_pool_count: " + count);
+		if(Parser.VERBOSE) 
+			println("constant_pool_count: " + count);
 		constantPool = new CONSTANT_Info[count + 1];
 		for (int i = 1; i < count; i++) {
 			parseEntry(i);
@@ -506,7 +529,7 @@ public class Parser {
 		//}
 
 	}
-	
+
 	private static final int CONSTANT_Class = 7;
 	private static final int CONSTANT_FieldRef = 9;
 	private static final int CONSTANT_MethodRef = 10;
@@ -558,6 +581,10 @@ public class Parser {
 		default:
 			println("Unknown entry: " + tag);
 		}
+	}
+
+	public TypeDecl getOuterTypeDecl() {
+		return this.outerTypeDecl;
 	}
 
 }
