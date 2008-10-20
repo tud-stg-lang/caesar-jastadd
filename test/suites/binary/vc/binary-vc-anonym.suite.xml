@@ -213,12 +213,7 @@
         				public void foo() {
        					System.out.println(new Xxx().x());
       				}
-      			};
-        			a.foo();
-//					new Xxx().x();
-        		}
-        		
-        		
+      			}
         		public cclass Xxx { 
         			public String x() {
 	        			return "X";
