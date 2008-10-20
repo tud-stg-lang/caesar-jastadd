@@ -31,22 +31,17 @@
 		</test>
         <code>
         	public cclass AAA {
-        	
-        		public cclass Inner{
-        		}
+        		public cclass Inner{ }
         	
         		public void m() {
         			IfcA a = new IfcA() {
-        				public void foo() {        					
-        				}
+        				public void foo() { }
         			};
         			a.foo();
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
     
@@ -90,10 +85,8 @@
         			a.foo();
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
     
@@ -115,10 +108,8 @@
         			a.foo();
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
     
@@ -141,10 +132,8 @@
         			a.foo();
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
     
@@ -167,10 +156,8 @@
         			return "X";
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
     	    
@@ -190,10 +177,8 @@
         			a.foo();
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
      
@@ -221,10 +206,9 @@
 	        		}
         		}
 			}
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
     </compile-run>
+	
 </testsuite>
