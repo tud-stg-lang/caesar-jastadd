@@ -238,6 +238,7 @@ aspect ContractsCompleteness {
 		}
 		
 		for(int i = 0; i < getNumSuperInterfaceId(); i++){
+			// Ignore super classes like Object or wrong syntax (an error in the code)
 			if(getSuperInterfaceId(i).type() instanceof InterfaceDecl)
 				c.addAll(((InterfaceDecl)getSuperInterfaceId(i).type()).getProvided());
 		}
