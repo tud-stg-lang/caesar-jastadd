@@ -30,16 +30,12 @@
 			new CCC().m();
 		</test>
         <code>
-        	public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+        	public cclass BBB {}
+        	public cclass CCC extends AAA &amp; BBB {}
         </code>
 		<binary>
 			public cclass AAA {
-        	
-        		public cclass Inner{
-        		}
+        		public cclass Inner{ }
         	
         		public void m() {
         			IfcA a = new IfcA() {
@@ -107,10 +103,8 @@
 			new CCC().m(42);
 		</test>
         <code>
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
 		<binary>
         	public cclass AAA {
@@ -134,10 +128,8 @@
 			new CCC().m();
 		</test>
         <code>
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
 		<binary>
         	public cclass AAA {
@@ -162,10 +154,8 @@
 			new CCC().m();
 		</test>
         <code>
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
 		<binary>
         	public cclass AAA {
@@ -190,10 +180,8 @@
 			new CCC().m();
 		</test>
         <code>
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
 		<binary>
         	public cclass AAA {
@@ -215,10 +203,8 @@
 			new CCC().m();
 		</test>
         <code>
-			public cclass BBB {
-        	}
-        	public cclass CCC extends AAA &amp; BBB {
-        	}
+			public cclass BBB { }
+        	public cclass CCC extends AAA &amp; BBB { }
         </code>
 		<binary>
         	public cclass AAA {

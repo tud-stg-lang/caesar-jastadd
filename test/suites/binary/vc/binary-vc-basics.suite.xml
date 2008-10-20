@@ -1,41 +1,58 @@
 <testsuite name="Basic functionality of virtual classes" package="binary.vc.basics">
-
+	
+	<!-- ~~~~~~~~~ 00x: Referencing virtual classes without going deeper ~~~~~~~~~ -->
+	
 	<compile id="basics000" description="assigning null to a virtual-class-type variable">
 		<code>
 			public cclass Test{
-				OuterA.InnerA obj = null;
+				public OuterA.InnerA obj = null;
 			}
 		</code>
         <binary>
         	public cclass OuterA {
-				public cclass InnerA {
-				}
+				public cclass InnerA { }
 			}
         </binary>
     </compile>
 	
-	<compile id="basics001" description="accessing a virtual class">
+	<compile id="basics001" description="assigning null to a virtual-class-type variable, multiple virtual classes">
+		<code>
+			public cclass Test{
+				public OuterA.InnerA obj = null;
+			}
+		</code>
+        <binary>
+        	public cclass OuterA {
+				public cclass InnerA { }
+				public cclass InnrA { }
+			}
+        </binary>
+    </compile>
+	
+	
+	<!-- ~~~~~~~~~ 01x: Basic inheritance, referencing virtual classes explicitly ~~~~~~~~~ -->
+	
+	<!--
+	<compile id="basics010" description="accessing a virtual class">
 		<code>
 			public cclass OuterB extends OuterA {
-				public cclass InnerB extends OuterA.InnerA {
+				public cclass InnerB extends OuterA.InnerA {   // should this be allowed?
 				} 
 			}
 		</code>
         <binary>
-        	public cclass OuterA {
+			public cclass OuterA {
 				public cclass InnerA {
-					private Object x;
-					private void doAction() { }
 				}
 			}
         </binary>
     </compile>
 	
-	<compile id="basics002" description="accessing a virtual class, longer nesting chain">
+	<compile id="basics011" description="accessing a virtual class, longer nesting chain">
 		<code>
 			public cclass OuterB extends OuterA {
 				public cclass InnerB {
-					public cclass DeepB extends OuterA.InnerA.DeepA {
+					public cclass DeepB extends OuterA.InnerA.DeepA {   // should this be allowed?
 					}
 				} 
 			}
@@ -49,25 +66,42 @@
 			}
         </binary>
     </compile>
+	-->
 	
-	<compile id="basics003" description="instantiating a virtual class with default constructor">
+	
+	<!-- ~~~~~~~~~ 02x: Instantiating virtual classes ~~~~~~~~~ -->
+	
+	<compile id="basics020" description="instantiating a virtual class with default constructor, using wildcard reference">
 		<code>
 			public cclass Test {
-				Object innerA = OuterA.new InnerA();
+				private Object innerA = OuterA.new InnerA();
 			}
 		</code>
         <binary>
         	public cclass OuterA {
-				public cclass InnerA {
-				}
+				public cclass InnerA { }
 			}
         </binary>
     </compile>
 	
-	<compile id="basics004" description="instantiating a virtual class with custom constructor">
+	<compile id="basics021" description="instantiating a virtual class with default constructor, using dependent-type reference">
 		<code>
 			public cclass Test {
-				Object innerA = OuterA.new InnerA("Hello!");
+				private final OuterA outerA = new OuterA();
+				private Object innerA = outerA.new InnerA();
+			}
+		</code>
+        <binary>
+        	public cclass OuterA {
+				public cclass InnerA { }
+			}
+        </binary>
+    </compile>
+	
+	<compile id="basics022" description="instantiating a virtual class with custom constructor, using wildcard reference">
+		<code>
+			public cclass Test {
+				private Object innerA = OuterA.new InnerA("Hello!");
 			}
 		</code>
         <binary>
@@ -82,45 +116,42 @@
         </binary>
     </compile>
 	
-	<compile id="basics005" description="accessing private members of encapsulating type">
+	<compile id="basics023" description="instantiating a virtual class with custom constructor, using dependent-type reference">
 		<code>
 			public cclass Test {
-				OuterA.InnerA innerA = OuterA.new InnerA();
-				innerA.doAction(); 
+				private final OuterA outerA = new OuterA();
+				private Object innerA = outerA.new InnerA("Hello!");
 			}
 		</code>
         <binary>
         	public cclass OuterA {
-				private String message;
 				public cclass InnerA {
-					private void doAction() {
-						message = "Goodbye";
-					}
-				}
-			}
-        </binary>
-    </compile>
-    	    
-	
-	<compile id="basics006" description="accessing private members of encapsulating type (should this be allowed?)">
-		<code>
-			public cclass OuterB extends OuterA {
-				public cclass InnerB extends OuterA.InnerA {
-					public InnerB(String msg) {
+					private String message;
+					public InnerA(String msg) {
 						message = msg;
-						doAction();
 					}
-				} 
-			}
-		</code>
-        <binary>
-        	public cclass OuterA {
-				private String message;
-				private void doAction() { }
-				public cclass InnerA {
 				}
 			}
         </binary>
     </compile>
-    	    
+	
+	
+	<!-- ~~~~~~~~~ 03x: Miscellaneous basic functionality ~~~~~~~~~ -->
+	
+	<compile id="basics030" description="Defining a field inside a virtual class">
+		<code>
+			public cclass Test{
+				public OuterA.InnerA obj = null;
+			}
+		</code>
+        <binary>
+			public cclass OuterA {
+				public cclass InnerA {
+					private String xyz;
+				}
+			}
+        </binary>
+    </compile>
+	
+
 </testsuite>
