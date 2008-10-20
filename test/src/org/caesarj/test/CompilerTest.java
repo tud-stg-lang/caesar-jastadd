@@ -23,6 +23,8 @@ import parser.JavaParser.SourceError;
 
 public abstract class CompilerTest extends TestCase {
 	
+	private boolean isBinary = false; // for making conditional breakpoints (debugging)
+	
 	// choose test output level 
 	protected boolean compilerVerbose = TestProperties.instance().getCompilerVerbose();
 	protected boolean compilerVerboseBinaries = TestProperties.instance().getCompilerVerboseBinaries();
@@ -71,16 +73,12 @@ public abstract class CompilerTest extends TestCase {
 		       + sourceName;
 	}
 
-	// Liest den Quelltext ein und baut den AST. Das muss immer funktionieren.
+	// Reads in source code and builds AST. Always works.
 	protected void parseSource() throws IOException {
 		try {
 			final String outdir = genSrcDir() + File.separator + pkgname.replace('.', File.separatorChar);
 			clean(new File(outdir));
 			
-			/*
-			 * TODO: Unicode und StringReader passen irgendwie nicht zusammen.
-			 * Scheinbar wird EOF nicht richtig erkannt.
-			 */
 			for (Source code : sources) {
 				
 				// create source files
@@ -100,10 +98,9 @@ public abstract class CompilerTest extends TestCase {
 			for (Iterator iter = prog.compilationUnitIterator(); iter.hasNext(); ) {
 		        CompilationUnit unit = (CompilationUnit)iter.next();
 			}
+			int i=0; // debugging only
 			
 		} catch (SourceError e) {
-			// TODO: SourceError ist von Error abgeleitet.
-			// Warum nicht von Exception?
 			throw new AssertionFailedError("Compilation failed: " + e);
 		}
 	}
@@ -139,27 +136,28 @@ public abstract class CompilerTest extends TestCase {
 	}
 	
 	protected void prepareBinaries() throws Exception{
-		if (binaries.size() > 0) {
-			if (testcaseVerbose) System.out.println("Processing binary code block ...");
-			Vector<Source> nonBinarySources = (Vector<Source>) sources.clone(); // clone?
-			sources = new Vector<Source>();
-			int i = 0;
-			for (Object o : binaries) {
-				String codeblock = o.toString();
-				String blockname = "binary"+i+".java";
-				addSource(blockname, codeblock);
-				i++;
-			}
-			prog = new Program();
-			if (compilerVerboseBinaries) prog.setOption("-verbose");
-			clean(new File(binDir() + pkgname.replace(".", File.separator)));
-			parseSource();
-			errorCheck();
-			generateClassfiles();
-			sources = nonBinarySources;
-			prog = new Program(); // reset program state (AST tree)
-			if (testcaseVerbose) System.out.println("Processing binary code block done.");
+		if (binaries.size() <= 0) return;
+		
+		if (testcaseVerbose) System.out.println("Processing binary code block ...");
+		Vector<Source> nonBinarySources = (Vector<Source>) sources.clone(); // clone?
+		sources = new Vector<Source>();
+		int i = 0;
+		for (Object o : binaries) {
+			String codeblock = o.toString();
+			String blockname = "binary"+i+".java";
+			addSource(blockname, codeblock);
+			i++;
 		}
+		prog = new Program();
+		if (compilerVerboseBinaries) prog.setOption("-verbose");
+		clean(new File(binDir() + pkgname.replace(".", File.separator)));
+		parseSource();
+		
+		errorCheck();
+		generateClassfiles();
+		sources = nonBinarySources;
+		prog = new Program(); // reset program state (AST tree)
+		if (testcaseVerbose) System.out.println("Processing binary code block done.");
 	}
 
 	protected void setUp() throws Exception {
@@ -174,8 +172,10 @@ public abstract class CompilerTest extends TestCase {
 	}
 
 	protected void runTest() throws Throwable {
+		isBinary = true;
 		prepareBinaries();
 		if (testcaseVerbose) System.out.println("\nFinished preparing binaries.\n");
+		isBinary = false;
 		parseSource();
 	}
 }
