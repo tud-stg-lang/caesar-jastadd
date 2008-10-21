@@ -6,7 +6,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 1.) <extends> := getExplicitExtends() for classes
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitExtends() {
+	syn lazy Collection CjContractClassDecl.getExplicitExtends() {
 		Collection c = new HashSet();
 		
 		for(int i1 = 0; i1 < getNumSuperClasses(); i1++){
@@ -19,7 +19,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 2.) <extends> := getExplicitExtends() for interfaces
 	 ******/
-	syn Collection InterfaceDecl.getExplicitExtends() {
+	syn lazy Collection InterfaceDecl.getExplicitExtends() {
 		Collection c = new ArrayList();
 		
 		for(int i = 0; i < getNumSuperInterfaceId(); i++){
@@ -32,7 +32,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 3,4.) [extends] := getAllExtends() for classes
 	 ******/
-	syn Collection CjContractClassDecl.getAllExtends() {
+	syn lazy Collection CjContractClassDecl.getAllExtends() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -56,7 +56,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 3,4.) [extends] := getAllExtends() for interfaces
 	 ******/
-	syn Collection InterfaceDecl.getAllExtends() {
+	syn lazy Collection InterfaceDecl.getAllExtends() {
 		// Prevent endless recursion
 	 	if(isCircular()) { return Collections.EMPTY_LIST; }
 	
@@ -79,7 +79,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 5.) <implements> := getExplicitImplements()
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitImplements() {
+	syn lazy Collection CjContractClassDecl.getExplicitImplements() {
 		Collection imps = new ArrayList();
 		
 		// add all implemented
@@ -100,7 +100,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 6,7.) [provides] := getExplicitProvided()
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitProvided() {
+	syn lazy Collection CjContractClassDecl.getExplicitProvided() {
 		Collection provided = new HashSet();
 	
 		// An abstract class doesn't have to provide anything
@@ -118,7 +118,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 8,9.) [provides] := getProvided()
 	 ******/
-	syn Collection CjContractClassDecl.getProvided() {
+	syn lazy Collection CjContractClassDecl.getProvided() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -160,7 +160,7 @@ aspect ContractsCompleteness {
 	// Inherited name type has to be set in parent node
 	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
 
-	syn Collection CjContractClassDecl.getExplicitRequirements() {
+	syn lazy Collection CjContractClassDecl.getExplicitRequirements() {
 		Collection c = new HashSet();
 		
 		// Add explicit (declared) requirements
@@ -175,7 +175,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 11 - 16.) [subtypeof] := getSubtypesOf() for classes
 	 ******/
-	syn Collection CjContractClassDecl.getSubtypesOf() {
+	syn lazy Collection CjContractClassDecl.getSubtypesOf() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -222,7 +222,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 17 - 19.) [requires] := getRequirements()
 	 ******/
-	syn Collection CjContractClassDecl.getRequirements() {
+	syn lazy Collection CjContractClassDecl.getRequirements() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;

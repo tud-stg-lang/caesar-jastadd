@@ -7,7 +7,7 @@ aspect ContractsMethods {
 	 /******
 	  * Determine all enclosed methods in a cclass
 	  ******/
-	 syn Collection CjContractClassDecl.enclosedMethods(String nameOfMethod){
+	 syn lazy Collection CjContractClassDecl.enclosedMethods(String nameOfMethod){
 	 	// Prevent endless recursion
 	 	if(isCircular()) { return Collections.EMPTY_LIST; }
 	 	
@@ -33,7 +33,7 @@ aspect ContractsMethods {
 	 /******
 	  * Determine the enclosing top-level type
 	  ******/
-	 syn TypeDecl CjContractClassDecl.getEnclosingTopLevel(){
+	 syn lazy TypeDecl CjContractClassDecl.getEnclosingTopLevel(){
 	 	TypeDecl cd = this;
 	 	
 	 	while(!cd.isTopLevelType()){

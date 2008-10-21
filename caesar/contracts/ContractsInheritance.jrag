@@ -70,7 +70,7 @@ aspect ContractsInheritance {
 	/******
 	 * Determine requirements that are interfaces
 	 ******/
-	syn Collection CjContractClassDecl.getReqInterfaces() {
+	syn lazy Collection CjContractClassDecl.getReqInterfaces() {
 		ArrayList reqs = new ArrayList();
 	
 		for(int i = 0; i < getNumRequiredClasses(); i++){
