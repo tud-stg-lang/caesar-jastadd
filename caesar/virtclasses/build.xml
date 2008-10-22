@@ -9,12 +9,16 @@
 
 <!-- "target.dir" is the directory where generated files will be stored -->
 <property name="target.dir" value="gen"/>
+<!-- "testoutput.dir" is the directory where the output of test suites is stored -->
+<property name="testoutput.dir" value="test/out"/>
+<!-- "dist.dir" is the directory where generated file for distribution are stored -->
+<property name="dist.dir" value="dist"/>
 <!-- "package" is the package name which jastadd gives to ast files -->
 <property name="package" value="org.caesarj.ast"/>
 
 <!-- "tools" is the directory where generators and libraries are located. -->
 <property name="tools" value="tools"/>
-	
+
 <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
 <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${tools}/JFlex.jar"/>
 <!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
@@ -25,47 +29,59 @@
 <!-- generate compiler source files and compile sources -->
 <target name="gen">
 	<mkdir dir="${target.dir}"/>
+	<mkdir dir="${testoutput.dir}"/>
+	<mkdir dir="${testoutput.dir}/src"/>
+	<mkdir dir="${testoutput.dir}/bin"/>
 	<!-- create AST node types and weave aspect modules -->
 	<jastadd package="${package}" rewrite="true" beaver="true" novisitcheck="true"
 		   outdir="${target.dir}" lazyMaps="true" noInhEqCheck="true">
-		<fileset dir="Java1.4Frontend">
-			<include name="**/*.ast"/>
-			<include name="**/*.jrag"/>
-			<include name="**/*.jadd"/>      
-		</fileset>
-		<fileset dir="BytecodeBackend">
+		<fileset dir="java/Java1.4Frontend">
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		<fileset dir="Java1.5Frontend">
+		<fileset dir="java/BytecodeBackend">
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		<fileset dir="MixinComposition">
+		<fileset dir="java/Java1.5Frontend">
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		<fileset dir="VirtualClasses">
+		<fileset dir="caesar/mixincomp">
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
+		<fileset dir="caesar/virtclasses">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
+		<fileset dir="caesar/deptypes">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>		
 	</jastadd>
 	<!-- generate the scanner -->
-	<jflex file="MixinComposition/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/>
+	
+	<jflex file="caesar/mixincomp/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/>
+	
+	<!-- <jflex file="caesar/mixincomp/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/> -->
+	
 	<!-- generate the parser phase 1, create a full .lalr specification from fragments-->
 	<concat destfile="${target.dir}/parser/JavaParser.all" binary="true" force="no">
-		<fileset dir="MixinComposition">
+		<fileset dir="caesar/mixincomp">
 			<include name="java14.parser"/>
 		</fileset>
-		<fileset dir="Java1.5Frontend">
+		<fileset dir="java/Java1.5Frontend">
 			<include name="*.parser"/>
 			<exclude name="java14.parser"/>
 		</fileset>
-		<fileset dir="VirtualClasses">
+		<fileset dir="caesar/virtclasses">
 			<include name="virtclass.parser"/>
 		</fileset>
 	</concat>
@@ -80,7 +96,7 @@
 	<!--copy todir="gen/beaver">
 		<fileset dir="Java1.4Frontend/beaver"/>
 	</copy-->
-	<copy todir="${target.dir}/parser" file="Java1.4Frontend/parser/Unicode.java"/>
+	<copy todir="${target.dir}/parser" file="java/Java1.4Frontend/parser/Unicode.java"/>
 </target>
 
 <target name="cleanGen">
@@ -97,8 +113,8 @@
         <include name="**/*.class"/>
     </patternset>
   </unjar>
-  <jar destfile="cjc.jar" basedir="./bin" includes="**/*.class" 
-	excludes="org/caesarj/runtime/mixer/*.class,test**/**">
+  <jar destfile="${dist.dir}/caesar-compiler.jar" basedir="./bin" includes="**/*.class"
+	excludes="org/caesarj/runtime/**/*.class,test**/**">
     <manifest>
       <attribute name="Main-Class" value="org.caesarj.compiler.CaesarCompiler"/>
     </manifest>
@@ -117,8 +133,8 @@
         <include name="**/*.class"/>
     </patternset>
   </unjar>
-  <jar destfile="cj.jar" basedir="./bin" 
-	includes="org/caesarj/runtime/mixer/*.class,org/objectweb/asm/**">
+  <jar destfile="${dist.dir}/caesar-runtime.jar" basedir="./bin"
+	includes="org/caesarj/runtime/**/*.class,org/objectweb/asm/**">
     <manifest>
       <attribute name="Main-Class" value="org.caesarj.runtime.mixer.MixinLoader"/>
     </manifest>
