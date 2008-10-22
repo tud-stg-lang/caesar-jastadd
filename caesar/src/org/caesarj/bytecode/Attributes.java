@@ -54,8 +54,6 @@ class Attributes {
 				isCjClass = true;
 				continue;
 			} else if (attribute_name.equals("InnerClasses")) {
-				if (isCjClass)
-					typeDecl = p.transformBodyAndSuperclasses(typeDecl, superclassesList());
 				innerClasses(typeDecl, outerTypeDeclParam, classPath);
 				continue;
 			} else if (attribute_name.equals("Exceptions")) {
@@ -127,10 +125,7 @@ class Attributes {
 				typeDecl.setModifiers(Parser.modifiers(inner_class_access_flags & 0x041f));
 				if (this.p.outerClassInfo != null && this.p.outerClassInfo.name().equals(outer_class_info.name())) {
 					MemberTypeDecl m = null;
-					if (typeDecl instanceof CjVirtualClassDecl) {
-						m = new MemberClassDecl((CjVirtualClassDecl)typeDecl);
-						outerTypeDeclParam.addBodyDecl(m);
-					} else if (typeDecl instanceof ClassDecl) {
+					if (typeDecl instanceof ClassDecl) {
 						m = new MemberClassDecl((ClassDecl)typeDecl);
 						outerTypeDeclParam.addBodyDecl(m);
 					} else if (typeDecl instanceof InterfaceDecl) {
@@ -139,15 +134,17 @@ class Attributes {
 					}
 				}
 			}
-			if (outer_class_info.name().equals(this.p.classInfo.name())) {
+			else if (outer_class_info.name().equals(this.p.classInfo.name())) {
 				printIfVerbose("      Class " + this.p.classInfo.name() + " has inner class: " + inner_class_name);
 				printIfVerbose("Begin processing: " + inner_class_name);
 				try {
 					java.io.InputStream is = classPath.getInputStream(inner_class_name);
 					if(is != null) {
 						Parser p = new Parser(is, inner_class_name /*this.p.name*/);
+						// Ignore the created compilation unit.
+						// It is intended that the parser will include the inner class 
+						// into the given outer class. 
 						p.parse(typeDecl, outer_class_info, classPath);
-						this.outerTypeDecl = p.getOuterTypeDecl();
 						is.close();
 					}
 					else {

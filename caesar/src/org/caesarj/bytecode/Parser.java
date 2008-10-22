@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.caesarj.ast.ASTNode;
 import org.caesarj.ast.Access;
 import org.caesarj.ast.BodyDecl;
 import org.caesarj.ast.CjVirtualClassDecl;
@@ -15,6 +16,7 @@ import org.caesarj.ast.CompilationUnit;
 import org.caesarj.ast.Dot;
 import org.caesarj.ast.InterfaceDecl;
 import org.caesarj.ast.List;
+import org.caesarj.ast.MemberClassDecl;
 import org.caesarj.ast.MemberInterfaceDecl;
 import org.caesarj.ast.Modifier;
 import org.caesarj.ast.Modifiers;
@@ -269,15 +271,6 @@ public class Parser {
 		parseMethods(typeDecl);
 		Attributes attrs = new Attributes(this, typeDecl, outerTypeDeclParam, classPath);
 
-		// If we have reached the top-most Parser of the Parser/Attributes cascade, then use the 
-		// modified type declaration. Otherwise save it in the outerTypeDecl field so that it can
-		// be "trickled up" further along the cascade:
-		if (outerTypeDeclParam == null && attrs.getOuterTypeDecl() != null) {
-			typeDecl = attrs.getOuterTypeDecl();
-		} else {
-			this.outerTypeDecl = outerTypeDeclParam;
-		}
-
 		// If the type is a CaesarJ class in a ClassDecl hull, make it a CjVirtualClassDecl and add inherited members:
 		List superclassesList = attrs.superclassesList();
 		if(attrs.isCjClass() || superclassesList != null) {
@@ -322,6 +315,15 @@ public class Parser {
 				superclassesList,
 				typeDecl.getDynamicTypeListNoTransform(),
 				newbody);
+		
+		// For virtual classes replace them in the parent
+		ASTNode parent = typeDecl.getParent();
+		if (parent != null) {
+			if (parent instanceof MemberClassDecl) {
+				((MemberClassDecl)parent).setClassDecl(transformedTypeDecl);			
+			}
+		}
+		
 		return transformedTypeDecl;
 	}
 
