@@ -1,0 +1,12 @@
+<testsuite name="The pure basics of bytecode parsing" package="binary.basics">
+	
+    <compile-check-error error="DUPLICATE_TYPE_NAME"  id="basics001" description="cclass and class with the same names">
+        <code>
+			public class ClassA { }
+	    </code>
+		<binary>
+        	public cclass ClassA { }
+		</binary>
+    </compile-check-error>
+    	    
+</testsuite>

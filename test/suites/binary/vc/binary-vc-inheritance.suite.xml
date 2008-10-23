@@ -90,16 +90,6 @@
 		</binary>
     </compile-check-error>
 	
-	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile id="vcinheritance005xxx" description="mixing outer with inner">
-        <code>
-        	public cclass OuterA {
-				public cclass InnerA {
-				}
-			}
-        </code>
-    </compile>
-    
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-check-error error="WRONG_INHERITANCE_RELATIONSHIP"  id="vcinheritance006" description="mixing interfaces">
         <code>

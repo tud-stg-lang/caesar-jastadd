@@ -2,7 +2,7 @@
 	
 	<!-- ~~~~~~~~~ 00x: Referencing virtual classes without going deeper ~~~~~~~~~ -->
 	
-	<compile id="basics000" description="assigning null to a virtual-class-type variable">
+	<compile id="vcbasics000" description="assigning null to a virtual-class-type variable">
 		<code>
 			public cclass Test{
 				public OuterA.InnerA obj = null;
@@ -15,7 +15,8 @@
         </binary>
     </compile>
 	
-	<compile id="basics000_java" description="assigning null to a virtual-class-type variable">
+	<!--	
+	<compile id="vcbasics000_java" description="assigning null to a virtual-class-type variable">
 		<code>
 			public class Test{
 				public OuterA.InnerA obj = null;
@@ -27,8 +28,9 @@
 			}
         </binary>
     </compile>
+	-->
 	
-	<compile id="basics001" description="assigning null to a virtual-class-type variable, multiple virtual classes">
+	<compile id="vcbasics001" description="assigning null to a virtual-class-type variable, multiple virtual classes">
 		<code>
 			public cclass Test{
 				public OuterA.InnerA obj = null;
@@ -46,7 +48,7 @@
 	<!-- ~~~~~~~~~ 01x: Basic inheritance, referencing virtual classes explicitly ~~~~~~~~~ -->
 	
 	<!--
-	<compile id="basics010" description="accessing a virtual class">
+	<compile id="vcbasics010" description="accessing a virtual class">
 		<code>
 			public cclass OuterB extends OuterA {
 				public cclass InnerB extends OuterA.InnerA {   // should this be allowed?
@@ -61,7 +63,7 @@
         </binary>
     </compile>
 	
-	<compile id="basics011" description="accessing a virtual class, longer nesting chain">
+	<compile id="vcbasics011" description="accessing a virtual class, longer nesting chain">
 		<code>
 			public cclass OuterB extends OuterA {
 				public cclass InnerB {
@@ -84,7 +86,7 @@
 	
 	<!-- ~~~~~~~~~ 02x: Instantiating virtual classes ~~~~~~~~~ -->
 	
-	<compile id="basics020" description="instantiating a virtual class with default constructor, using wildcard reference">
+	<compile id="vcbasics020" description="instantiating a virtual class with default constructor, using wildcard reference">
 		<code>
 			public cclass Test {
 				private Object innerA = OuterA.new InnerA();
@@ -97,7 +99,19 @@
         </binary>
     </compile>
 	
-	<compile id="basics020_java" description="instantiating a virtual class with default constructor, using wildcard reference">
+	<!--
+	<compile id="vcbasics020_notbinary" description="instantiating a virtual class with default constructor, using wildcard reference">
+		<code>
+			public cclass Test {
+				private Object innerA = OuterA.new InnerA();
+			}
+        	public cclass OuterA {
+				public cclass InnerA { }
+			}
+		</code>
+    </compile>
+	
+	<compile id="vcbasics020_java" description="instantiating a virtual class with default constructor, using wildcard reference">
 		<code>
 			public class Test {
 //				private Object innerA = new OuterA.InnerA();
@@ -110,8 +124,9 @@
 			}
         </binary>
     </compile>
+	-->
 	
-	<compile id="basics021" description="instantiating a virtual class with default constructor, using dependent-type reference">
+	<compile id="vcbasics021" description="instantiating a virtual class with default constructor, using dependent-type reference">
 		<code>
 			public cclass Test {
 				private final OuterA outerA = new OuterA();
@@ -125,7 +140,7 @@
         </binary>
     </compile>
 	
-	<compile id="basics022" description="instantiating a virtual class with custom constructor, using wildcard reference">
+	<compile id="vcbasics022" description="instantiating a virtual class with custom constructor, using wildcard reference">
 		<code>
 			public cclass Test {
 				private Object innerA = OuterA.new InnerA("Hello!");
@@ -143,8 +158,8 @@
         </binary>
     </compile>
 	
-	
-	<compile id="basics022_java" description="instantiating a virtual class with custom constructor, using wildcard reference">
+	<!--
+	<compile id="vcbasics022_java" description="instantiating a virtual class with custom constructor, using wildcard reference">
 		<code>
 			public class Test {
 				private Object innerA = OuterA.new InnerA("Hello!");
@@ -161,13 +176,12 @@
 			}
         </binary>
     </compile>
+	-->
 	
-	
-	<compile id="basics023" description="instantiating a virtual class with custom constructor, using dependent-type reference">
+	<compile id="vcbasics023" description="instantiating a virtual class with custom constructor, using dependent-type reference">
 		<code>
 			public cclass Test {
-				private final OuterA outerA = new OuterA();
-				private Object innerA = outerA.new InnerA("Hello!");
+				private Object innerA = new OuterA().new InnerA("Hello!");
 			}
 		</code>
         <binary>
@@ -182,12 +196,11 @@
         </binary>
     </compile>
 
-	
-	<compile id="basics023_java" description="instantiating a virtual class with custom constructor, using dependent-type reference">
+	<!--
+	<compile id="vcbasics023_java" description="instantiating a virtual class with custom constructor, using dependent-type reference">
 		<code>
 			public class Test {
-				private final OuterA outerA = new OuterA();
-				private Object innerA = outerA.new InnerA("Hello!");
+				private Object innerA = new OuterA().new InnerA("Hello!");
 			}
 		</code>
         <binary>
@@ -201,11 +214,11 @@
 			}
         </binary>
     </compile>
-	
+	-->
 	
 	<!-- ~~~~~~~~~ 03x: Miscellaneous basic functionality ~~~~~~~~~ -->
 	
-	<compile id="basics030" description="Defining a field inside a virtual class">
+	<compile id="vcbasics030" description="Defining a field inside a virtual class">
 		<code>
 			public cclass Test{
 				public OuterA.InnerA obj = null;
@@ -220,8 +233,8 @@
         </binary>
     </compile>
 	
-	
-	<compile id="basics030_java" description="Defining a field inside a virtual class">
+	<!--
+	<compile id="vcbasics030_java" description="Defining a field inside a virtual class">
 		<code>
 			public class Test{
 				public OuterA.InnerA obj = null;
@@ -235,7 +248,7 @@
 			}
         </binary>
     </compile>
-	
+	-->
 	
 
 </testsuite>

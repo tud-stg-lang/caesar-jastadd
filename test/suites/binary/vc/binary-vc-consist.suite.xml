@@ -160,17 +160,5 @@
 			}
 		</binary>
     </compile-check-error>
-    
-    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="DUPLICATE_TYPE_NAME"  id="vcconsist010" description="cclass and class with the same names">
-        <code>
-			public class ClassA {
-			}
-	    </code>
-		<binary>
-        	public cclass ClassA {
-			}
-		</binary>
-    </compile-check-error>
     	    
 </testsuite>
