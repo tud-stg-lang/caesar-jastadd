@@ -3,27 +3,19 @@ package org.caesarj.test;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Set;
 import java.util.Vector;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
-import org.caesarj.ast.CompilationUnit;
-import org.caesarj.ast.Program;
+import org.caesarj.compiler.CaesarCompiler;
 
-import parser.JavaParser;
-import parser.JavaScanner;
 import parser.JavaParser.SourceError;
 
 public abstract class CompilerTest extends TestCase {
-	
-	private boolean isBinary = false; // for making conditional breakpoints (debugging)
 	
 	// choose test output level 
 	protected boolean compilerVerbose = TestProperties.instance().getCompilerVerbose();
@@ -42,8 +34,6 @@ public abstract class CompilerTest extends TestCase {
 
 	protected Vector<Source> sources = new Vector<Source>();
 	protected Set binaries = new HashSet();
-
-	protected Program prog;
 
 	protected final String pkgname;
 	
@@ -73,8 +63,8 @@ public abstract class CompilerTest extends TestCase {
 		       + sourceName;
 	}
 
-	// Reads in source code and builds AST. Always works.
-	protected void parseSource() throws IOException {
+	// Creates source files and adds them to compiler.
+	protected void addSourceFiles(Collection<Source> sources) throws IOException {
 		try {
 			final String outdir = genSrcDir() + File.separator + pkgname.replace('.', File.separatorChar);
 			clean(new File(outdir));
@@ -91,34 +81,25 @@ public abstract class CompilerTest extends TestCase {
 		        fos.close();
 				
 				// necessary for resolving package names in the program
-	        	prog.addSourceFile(f.getAbsolutePath());
+	        	CaesarCompiler.addSourceFile(f.getAbsolutePath());
 			}
-			
-			// force creation of compilation units
-			for (Iterator iter = prog.compilationUnitIterator(); iter.hasNext(); ) {
-		        CompilationUnit unit = (CompilationUnit)iter.next();
-			}
-			int i=0; // debugging only
-			
-		} catch (SourceError e) {
+		} 
+		catch (SourceError e) {
 			throw new AssertionFailedError("Compilation failed: " + e);
 		}
 	}
 	
-	protected void errorCheck() {
-		if (printCode) System.out.println("Compiled code : \n"+prog.toString());
+	protected void typeCheck() {
+		if (printCode) System.out.println("Parsed code : \n"+CaesarCompiler.getParsedCode());
 		if (testcaseVerbose) System.out.println("Checking for errors ... ");
-		Collection<String> errors = new LinkedList<String>();
-		prog.errorCheck(errors);
-		assertTrue(errors.toString(), errors.isEmpty());
+		CaesarCompiler.typeCheck();
 		if (testcaseVerbose) System.out.println("Error check done.");
 	}
 	
 	protected void generateClassfiles() {
 		if (testcaseVerbose) System.out.println("Generating class files ...");
-		prog.setValueForOption(binDir(), "-d");
-		prog.java2Transformation();
-		prog.generateClassfile();
+		CaesarCompiler.setValueForOption(binDir(), "-d");
+		CaesarCompiler.generateBytecode();		
 	}
 	
 	protected void clean(File outdir) {
@@ -135,47 +116,52 @@ public abstract class CompilerTest extends TestCase {
 		}
 	}
 	
-	protected void prepareBinaries() throws Exception{
-		if (binaries.size() <= 0) return;
+	protected void compileBinaries() throws Exception{
+		if (binaries.size() <= 0) 
+			return;
 		
-		if (testcaseVerbose) System.out.println("Processing binary code block ...");
-		Vector<Source> nonBinarySources = (Vector<Source>) sources.clone(); // clone?
-		sources = new Vector<Source>();
+		if (testcaseVerbose) {
+			System.out.println("Processing binary code block ...");
+		}
+				
+		CaesarCompiler.initialize();
+		
+		if (compilerVerboseBinaries) {
+			CaesarCompiler.setOption("-verbose");
+		}
+		
+		/* Extract source files for binaries */
+		Vector<Source> binarySources = new Vector<Source>();
 		int i = 0;
 		for (Object o : binaries) {
 			String codeblock = o.toString();
 			String blockname = "binary"+i+".java";
-			addSource(blockname, codeblock);
+			binarySources.add(new Source(blockname, codeblock));
 			i++;
 		}
-		prog = new Program();
-		if (compilerVerboseBinaries) prog.setOption("-verbose");
-		clean(new File(binDir() + pkgname.replace(".", File.separator)));
-		parseSource();
-		
-		errorCheck();
-		generateClassfiles();
-		sources = nonBinarySources;
-		prog = new Program(); // reset program state (AST tree)
-		if (testcaseVerbose) System.out.println("Processing binary code block done.");
-	}
 
-	protected void setUp() throws Exception {
-		super.setUp();
-		prog = new Program();
-		if (compilerVerbose) prog.setOption("-verbose");
+		/* Compilation process */
+		addSourceFiles(binarySources);
+		typeCheck();
+		generateClassfiles();
+		
+		/* Check if compilation succeeded */
+		assertTrue(CaesarCompiler.getErrors().toString(), CaesarCompiler.getErrors().isEmpty());
+		
+		CaesarCompiler.cleanUp();
+
+		if (testcaseVerbose) {
+			System.out.println("Processing binary code block done.");
+		}
 	}
 
 	protected void tearDown() throws Exception {
-		prog = null;
 		super.tearDown();
+		CaesarCompiler.cleanUp();
 	}
 
 	protected void runTest() throws Throwable {
-		isBinary = true;
-		prepareBinaries();
-		if (testcaseVerbose) System.out.println("\nFinished preparing binaries.\n");
-		isBinary = false;
-		parseSource();
+		clean(new File(binDir() + pkgname.replace(".", File.separator)));		
+		compileBinaries();
 	}
 }

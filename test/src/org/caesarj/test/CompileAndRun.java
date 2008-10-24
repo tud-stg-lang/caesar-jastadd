@@ -13,8 +13,8 @@ public class CompileAndRun extends CompileOnly {
 	public CompileAndRun(String pkgname) {
 		super(pkgname);
 		// Do not reuse class files
-		 final String outdir = binDir() + File.separator + pkgname.replace(".", File.separator);
-		 clean(new File(outdir));
+		final String outdir = binDir() + File.separator + pkgname.replace(".", File.separator);
+		clean(new File(outdir));
 		loader.setTrace(TestProperties.instance().getTraceLoader());
 	}
 
@@ -43,9 +43,6 @@ public class CompileAndRun extends CompileOnly {
 		// Compile code
 		super.runTest();
 		
-		// Generate class files
-		generateClassfiles();
-
 		// Execute
 		if (testcaseVerbose) System.out.println("Executing test ...");
 		try {

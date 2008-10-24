@@ -6,77 +6,77 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.caesarj.ast.CompilationUnit;
 import org.caesarj.ast.Program;
 
 import parser.JavaParser;
 
 public class CaesarCompiler {
-
-	public static void main(String args[]) {
-		if (!compile(args))
-			System.exit(1);
-	}
-
-	public static boolean compile(String args[]) {
-		Program program = new Program();
-		program.initOptions();
-		program.addKeyValueOption("-classpath");
-		program.addKeyValueOption("-sourcepath");
-		program.addKeyValueOption("-bootclasspath");
-		program.addKeyValueOption("-extdirs");
-		program.addKeyValueOption("-d");
-		program.addKeyOption("-verbose");
-		program.addKeyOption("-logcompiler");
-		program.addKeyOption("-version");
-		program.addKeyOption("-help");
-		program.addKeyOption("-g");
-		program.addKeyOption("-checkonly");
-
-		program.addOptions(args);
-		
-		if (program.hasOption("-version")) {
-			printVersion();
-			return false;
-		}
-		if (program.hasOption("-help")) {
-			printUsage();
-			return false;
-		}
-		
-		if (!collectSourceFiles(program)) {
-			return false;
-		}
-		
-		try {
-			program.insertExternalizedVC();
-			
-			if (Program.verbose()) {
-				System.out.println("Parsed source code:");
-				System.out.println(program.toString());
-			}
-
-			if (containsErrors(program)) return false;
-
-			if (!program.hasOption("-checkonly")) {
-				System.out.println("Generating class files ...");
-				program.java2Transformation();
-				program.generateClassfile();
-			}
-
-			System.out.println("Done.");
-		} catch (JavaParser.SourceError e) {
-			System.err.println(e.getMessage());
-			return false;
-		} /* catch (Exception e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			return false;
-		} */
-		return true;
+	static protected Program program = null;
+	static protected Collection<String> errors = null;
+	
+	public static void initialize() {
+		program = new Program();
+		errors = new LinkedList<String>();
+		Program.initOptions();
+		Program.addKeyValueOption("-classpath");
+		Program.addKeyValueOption("-sourcepath");
+		Program.addKeyValueOption("-bootclasspath");
+		Program.addKeyValueOption("-extdirs");
+		Program.addKeyValueOption("-d");
+		Program.addKeyOption("-verbose");
+		Program.addKeyOption("-logcompiler");
+		Program.addKeyOption("-version");
+		Program.addKeyOption("-help");
+		Program.addKeyOption("-g");
+		Program.addKeyOption("-checkonly");
 	}
 	
-	public static boolean collectSourceFiles(Program program) {
+	public static void cleanUp() {
+		program = null;
+		errors = null;
+	}
+	
+	public static void setOption(String name) {
+		Program.setOption(name);
+	}
+	
+	public static void setValueForOption(String value, String option) {
+		Program.setValueForOption(value, option);
+	}
+	
+	/**
+	 * Add a new source file
+	 */
+	public static void addSourceFile(String filename) {
+		program.addSourceFile(filename);
+	}
+	
+	/**
+	 * Get compiler errors
+	 */
+	public static Collection<String> getErrors() {
+		return errors;
+	}
+	
+	/**
+	 * Pretty printing of parsed AST
+	 */
+	public static String getParsedCode() {
+		try {
+			return program.toString();			
+		} 
+		catch (JavaParser.SourceError e) {
+			errors.add(e.getMessage());
+			return e.getMessage();
+		}	
+	}
+	
+	/**
+	 * Collects source files according to the compiler options
+	 * (An alternative to manually adding source files)
+	 */
+	
+	public static boolean collectSourceFiles() {
 		Collection files = program.files();
 		
 		if (files.isEmpty()) {
@@ -122,13 +122,40 @@ public class CaesarCompiler {
 		
 		return true;
 	}
+	
+	public static boolean typeCheck() {
+		try {
+			program.insertExternalizedVC();
+			
+			if (Program.verbose()) {
+				System.out.println("Parsed source code:");
+				System.out.println(program.toString());
+			}
+			
+			program.errorCheck(errors);
+			
+			if (!errors.isEmpty()) {
+				return false;
+			}
+		} 
+		catch (JavaParser.SourceError e) {
+			errors.add(e.getMessage());
+			return false;
+		} 
+		return true;
+	}
+	
+	public static void generateBytecode() {
+		program.java2Transformation();
+		program.generateClassfile();
+	}
 
 	// Ignore directories named "test"
-	private static boolean isValidDirectory(File spathFile) {
+	protected static boolean isValidDirectory(File spathFile) {
 		return spathFile.isDirectory() && !spathFile.getName().equals("test");
 	}
 
-	private static void scanDirectory (Program program, Collection files, String spath,
+	protected static void scanDirectory (Program program, Collection files, String spath,
 			File spathFile) throws IOException {
 		String[] filelist = spathFile.list();
 		for (String filename: filelist) {
@@ -146,20 +173,6 @@ public class CaesarCompiler {
 				scanDirectory(program, files, f.getPath()+File.separator, f);
 			}
 		}
-	}
-
-	private static boolean containsErrors(Program program) {
-		System.out.println("Checking for errors ...");
-		Collection errors = new LinkedList();
-		program.errorCheck(errors);
-		if (!errors.isEmpty()) {
-			System.out.println("Errors:");
-			for (Iterator err = errors.iterator(); err.hasNext();) {
-				System.out.println((String) err.next());
-			}
-			return true;
-		}
-		return false;
 	}
 
 	protected static void printUsage() {
@@ -181,5 +194,52 @@ public class CaesarCompiler {
 		System.out.println("Java1.4Frontend + Backend + Java5 extensions (http://jastadd.cs.lth.se) Version R20060915");
 		System.out.println("CaesarJ: Multiple Inheritance extension Version R20080204");
 	}
+	
+	
+	public static void main(String args[]) {
+		if (!compile(args))
+			System.exit(1);
+	}
 
+	public static boolean compile(String args[]) {
+		initialize();
+		
+		try {
+			program.addOptions(args);
+			
+			if (program.hasOption("-version")) {
+				printVersion();
+				return false;
+			}
+			if (program.hasOption("-help")) {
+				printUsage();
+				return false;
+			}
+			
+			if (!collectSourceFiles()) {
+				return false;
+			}
+			
+			System.out.println("Checking for errors ...");
+			
+			if (!typeCheck()) {
+				System.out.println("Errors:");
+				for (Iterator err = errors.iterator(); err.hasNext();) {
+					System.out.println((String) err.next());
+				}
+				return false;
+			}
+			
+			if (!program.hasOption("-checkonly")) {
+				System.out.println("Generating class files...");
+				generateBytecode();
+				program.java2Transformation();
+				program.generateClassfile();
+			}
+		}
+		finally {
+			cleanUp();
+		}
+		return true;
+	}	
 }

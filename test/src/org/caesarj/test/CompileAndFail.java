@@ -1,17 +1,16 @@
 package org.caesarj.test;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
+
+import org.caesarj.compiler.CaesarCompiler;
 
 public class CompileAndFail extends CompilerTest {
 	private static final String ANY_ERROR = "UNDEF_MESSAGE";
 
 	private String expectedError;
-	private boolean binariesHaveErrors = false;
-
+	
 	public CompileAndFail(String pkgname, String expectedError) {
 		super(pkgname);
 		this.expectedError = expectedError;
@@ -20,12 +19,22 @@ public class CompileAndFail extends CompilerTest {
 	public void runTest() throws Throwable {
 		super.runTest();
 		
-		Collection<String> errors = new LinkedList<String>();
-		prog.errorCheck(errors);
-		if (!binariesHaveErrors) {
-			assertFalse("Should not compile", errors.isEmpty());
-			verifyErrorMessage(expectedError, errors);
+		CaesarCompiler.initialize();
+		
+		if (compilerVerbose) {
+			CaesarCompiler.setOption("-verbose");
 		}
+		
+		/* Compile */
+		addSourceFiles(sources);
+		typeCheck();
+		
+		CaesarCompiler.getErrors();
+		
+		assertFalse("Should not compile", CaesarCompiler.getErrors().isEmpty());
+		verifyErrorMessage(expectedError, CaesarCompiler.getErrors());
+				
+		CaesarCompiler.cleanUp();
 	}
 	
 	public void verifyErrorMessage(String expected, Collection<String> actual) {
