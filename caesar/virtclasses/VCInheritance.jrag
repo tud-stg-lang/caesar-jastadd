@@ -239,22 +239,20 @@ aspect VCInheritance {
 	syn boolean TypeDecl.isImplicitType() = false;
 	eq CjVirtualClassDecl.isImplicitType() = isImplicit;
 			
+	public CjVirtualClassDecl CjVirtualClassDecl.createImplicitClass(Modifiers modifiers, String name) {
+		return new CjVirtualClassDecl(modifiers, name, new List(), new List(), new List());
+	}
+			
 	// create implicitly inherited virtual classes
 	syn lazy List CjVirtualClassDecl.getImplicitClassList() {
 		if (isCircular()) { return new List(); }
 		List newMembers = new List();
 		Iterator i = missingInheritedVirtualClasses().iterator();
 		while(i.hasNext()) {
-			String name = i.next().toString();
-			CjVirtualClassDecl decl = new CjVirtualClassDecl(
-						(Modifiers)getModifiers().fullCopy(),
-						name,
-						new List(), 
-						new List(), 
-						new List());
+			CjVirtualClassDecl decl = 
+				createImplicitClass((Modifiers)getModifiers().fullCopy(), i.next().toString());
 			decl.isImplicit = true;
-			newMembers.add(new MemberClassDecl(decl));			
-			System.out.println("added "+name+" for "+fullName());
+			newMembers.add(new MemberClassDecl(decl));
 		}		
 		return newMembers;	
 	}

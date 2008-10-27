@@ -42,29 +42,8 @@ aspect ContractsInheritance {
 	/******
 	 * Override method in CjVirtualClassDecl to instantiate implicit virtual classes of right type
 	 ******/
-	syn lazy List CjContractClassDecl.getImplicitClassList() {
-	
-		if (isCircular()) { return new List(); }
-	
-		List newMembers = new List();
-		Iterator i = missingInheritedVirtualClasses().iterator();
-		while(i.hasNext()) {
-			String name = i.next().toString();
-	
-			CjVirtualClassDecl decl = new CjContractClassDecl(
-						(Modifiers)getModifiers().fullCopy(),
-						name,
-						new List(), 
-						new List(), 
-						new List(),
-						new List());
-	
-			decl.isImplicit = true;
-	
-			newMembers.add(new MemberClassDecl(decl));
-		}		
-		
-		return newMembers;	
+	public CjVirtualClassDecl CjContractClassDecl.createImplicitClass(Modifiers modifiers, String name) {
+		return new CjContractClassDecl(modifiers, name, new List(), new List(), new List(), new List());
 	}
 	
 	/******
