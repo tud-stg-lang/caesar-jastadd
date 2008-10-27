@@ -1,5 +1,5 @@
 <testsuite name="Tests direct contracts between normal classes"
-	package="contracts.normal">
+	package="contracts.normalClasses">
 
 	<compile id="normal001"
 			 description="test successful compilation of a concrete but incomplete normal class">

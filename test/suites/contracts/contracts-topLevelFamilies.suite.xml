@@ -1,5 +1,5 @@
 <testsuite name="Test direct contracts between top-level families"
-	package="contracts.toplevel">
+	package="contracts.topLevelFamilies">
 
 	<compile id="toplevel001"
 			 description="test successful compilation of a concrete but incomplete top-level family">
