@@ -1,7 +1,7 @@
 aspect VCByteCode {
 	
 	public void CjVirtualClassDecl.generateClassfile() {
-//    	addFactoryMethods(); // YANG Baustelle: For all tests in binary.* (as of 2008-10-20) this line makes no difference.
+    	addFactoryMethods(); // YANG Baustelle: For all tests in binary.* (as of 2008-10-20) this line makes no difference.
     	super.generateClassfile();
 	}
 }
