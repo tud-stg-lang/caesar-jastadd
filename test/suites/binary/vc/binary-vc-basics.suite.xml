@@ -14,22 +14,7 @@
 			}
         </binary>
     </compile>
-	
-	<!--	
-	<compile id="vcbasics000_java" description="assigning null to a virtual-class-type variable">
-		<code>
-			public class Test{
-				public OuterA.InnerA obj = null;
-			}
-		</code>
-        <binary>
-        	public class OuterA {
-				public class InnerA { }
-			}
-        </binary>
-    </compile>
-	-->
-	
+		
 	<compile id="vcbasics001" description="assigning null to a virtual-class-type variable, multiple virtual classes">
 		<code>
 			public cclass Test{
@@ -86,10 +71,10 @@
 	
 	<!-- ~~~~~~~~~ 02x: Instantiating virtual classes ~~~~~~~~~ -->
 	
-	<compile id="vcbasics020" description="instantiating a virtual class with default constructor, using wildcard reference">
+	<compile-check-error id="vcbasics020" error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT" description="instantiating a virtual class with default constructor">
 		<code>
 			public cclass Test {
-				private Object innerA = OuterA.new InnerA();
+				private Object innerA = new OuterA.InnerA();
 			}
 		</code>
         <binary>
@@ -97,34 +82,7 @@
 				public cclass InnerA { }
 			}
         </binary>
-    </compile>
-	
-	<!--
-	<compile id="vcbasics020_notbinary" description="instantiating a virtual class with default constructor, using wildcard reference">
-		<code>
-			public cclass Test {
-				private Object innerA = OuterA.new InnerA();
-			}
-        	public cclass OuterA {
-				public cclass InnerA { }
-			}
-		</code>
-    </compile>
-	
-	<compile id="vcbasics020_java" description="instantiating a virtual class with default constructor, using wildcard reference">
-		<code>
-			public class Test {
-//				private Object innerA = new OuterA.InnerA();
-				private Object innerA = OuterA.new InnerA();
-			}
-		</code>
-        <binary>
-        	public class OuterA {
-				public class InnerA { }
-			}
-        </binary>
-    </compile>
-	-->
+    </compile-check-error>
 	
 	<compile id="vcbasics021" description="instantiating a virtual class with default constructor, using dependent-type reference">
 		<code>
@@ -140,10 +98,10 @@
         </binary>
     </compile>
 	
-	<compile id="vcbasics022" description="instantiating a virtual class with custom constructor, using wildcard reference">
+	<compile-check-error id="vcbasics022" error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT" description="instantiating a virtual class directly, with custom constructor">
 		<code>
 			public cclass Test {
-				private Object innerA = OuterA.new InnerA("Hello!");
+				private Object innerA = new OuterA.InnerA("Hello!");
 			}
 		</code>
         <binary>
@@ -156,27 +114,7 @@
 				}
 			}
         </binary>
-    </compile>
-	
-	<!--
-	<compile id="vcbasics022_java" description="instantiating a virtual class with custom constructor, using wildcard reference">
-		<code>
-			public class Test {
-				private Object innerA = OuterA.new InnerA("Hello!");
-			}
-		</code>
-        <binary>
-        	public class OuterA {
-				public class InnerA {
-					private String message;
-					public InnerA(String msg) {
-						message = msg;
-					}
-				}
-			}
-        </binary>
-    </compile>
-	-->
+    </compile-check-error>
 	
 	<compile id="vcbasics023" description="instantiating a virtual class with custom constructor, using dependent-type reference">
 		<code>
@@ -196,25 +134,6 @@
         </binary>
     </compile>
 
-	<!--
-	<compile id="vcbasics023_java" description="instantiating a virtual class with custom constructor, using dependent-type reference">
-		<code>
-			public class Test {
-				private Object innerA = new OuterA().new InnerA("Hello!");
-			}
-		</code>
-        <binary>
-        	public class OuterA {
-				public class InnerA {
-					private String message;
-					public InnerA(String msg) {
-						message = msg;
-					}
-				}
-			}
-        </binary>
-    </compile>
-	-->
 	
 	<!-- ~~~~~~~~~ 03x: Miscellaneous basic functionality ~~~~~~~~~ -->
 	
@@ -232,23 +151,6 @@
 			}
         </binary>
     </compile>
-	
-	<!--
-	<compile id="vcbasics030_java" description="Defining a field inside a virtual class">
-		<code>
-			public class Test{
-				public OuterA.InnerA obj = null;
-			}
-		</code>
-        <binary>
-			public class OuterA {
-				public class InnerA {
-					private String xyz;
-				}
-			}
-        </binary>
-    </compile>
-	-->
 	
 
 </testsuite>

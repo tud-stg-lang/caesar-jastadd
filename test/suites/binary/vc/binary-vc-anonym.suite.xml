@@ -154,8 +154,7 @@
 			new CCC().m();
 		</test>
         <code>
-			public cclass BBB { }
-        	public cclass CCC extends AAA &amp; BBB { }
+        	public cclass CCC extends AAA { }
         </code>
 		<binary>
         	public cclass AAA {
@@ -175,13 +174,12 @@
     </compile-run>
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="vcanonym009" description="Test reference to other inner class name">
+    <compile-run id="vcanonym009" description="Instantiate another inner class">
 		<test>			
 			new CCC().m();
 		</test>
         <code>
-			public cclass BBB { }
-        	public cclass CCC extends AAA &amp; BBB { }
+        	public cclass CCC extends AAA { }
         </code>
 		<binary>
         	public cclass AAA {
@@ -193,7 +191,8 @@
 				public void m() {
         		    IfcA a = new IfcA() {
         				public void foo() {
-							System.out.println(new Xxx().x());
+							Xxx myX = new Xxx(); // instantiation throws Error
+							System.out.println(myX.x());
 						}
       				};
       			}

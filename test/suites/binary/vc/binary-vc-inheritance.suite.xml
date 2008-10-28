@@ -151,19 +151,12 @@
 		</binary>
     </compile>
     
-     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error id="vcinheritance009" error="METHOD_NOT_FOUND" description="Cannot access method in sibling">
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vcinheritance009" error="METHOD_NOT_FOUND" description="May not access method in diamond-inheritance sibling's inner class">
         <code>
 			public cclass X extends D &amp; D2 {
 				public cclass N {
 					public int p() { return n() + m() + o(); }
-				}
-			}
-		</code>
-		<binary>
-			public cclass G {
-				public cclass N {
-					public int n() { return 42; }
 				}
 			}
 			public cclass D extends G {
@@ -173,7 +166,16 @@
 			}
 			public cclass D2 extends G {
 				public cclass N {
-					public int o() { return m() + 1; }
+					public int o() {
+						m();
+						return 47; }
+				}
+			}
+		</code>
+		<binary>
+			public cclass G {
+				public cclass N {
+					public int n() { return 42; }
 				}
 			}
 		</binary>		
