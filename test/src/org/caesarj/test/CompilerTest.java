@@ -12,6 +12,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 import org.caesarj.compiler.CaesarCompiler;
+import org.caesarj.util.VerboseProgress;
 
 import parser.JavaParser.SourceError;
 
@@ -127,7 +128,7 @@ public abstract class CompilerTest extends TestCase {
 		CaesarCompiler.initialize();
 		
 		if (compilerVerboseBinaries) {
-			CaesarCompiler.setOption("-verbose");
+			CaesarCompiler.setOption("-verbose");			
 		}
 		
 		/* Extract source files for binaries */

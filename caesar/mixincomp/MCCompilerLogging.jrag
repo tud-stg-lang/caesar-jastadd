@@ -20,5 +20,8 @@ aspect MCCompilerLogging {
 		}
 		super.collectErrors();
     }
-	
+    
+    public Collection CompilationUnit.getErrors() {
+    	return errors;
+	}
 }

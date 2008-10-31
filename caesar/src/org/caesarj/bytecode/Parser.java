@@ -30,7 +30,7 @@ import org.caesarj.ast.TypeDecl;
 
 
 public class Parser {
-	public static final boolean VERBOSE = true;
+	public static final boolean VERBOSE = false;
 
 	private DataInputStream is;
 	public CONSTANT_Class_Info classInfo;

@@ -5,6 +5,7 @@ import java.util.Collection;
 import junit.framework.AssertionFailedError;
 
 import org.caesarj.compiler.CaesarCompiler;
+import org.caesarj.util.VerboseProgress;
 
 public class CompileAndFail extends CompilerTest {
 	private static final String ANY_ERROR = "UNDEF_MESSAGE";
@@ -22,7 +23,7 @@ public class CompileAndFail extends CompilerTest {
 		CaesarCompiler.initialize();
 		
 		if (compilerVerbose) {
-			CaesarCompiler.setOption("-verbose");
+			CaesarCompiler.setOption("-verbose");			
 		}
 		
 		/* Compile */

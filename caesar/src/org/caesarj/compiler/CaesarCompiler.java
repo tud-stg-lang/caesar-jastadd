@@ -6,25 +6,30 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.caesarj.ast.CompilationUnit;
 import org.caesarj.ast.Program;
+import org.caesarj.util.ProgressTracker;
+import org.caesarj.util.VerboseProgress;
 
 import parser.JavaParser;
 
 public class CaesarCompiler {
 	static protected Program program = null;
 	static protected Collection<String> errors = null;
+	static protected ProgressTracker progressTracker = null;
 	
 	public static void initialize() {
 		program = new Program();
 		errors = new LinkedList<String>();
+		progressTracker = new ProgressTracker();
 		Program.initOptions();
 		Program.addKeyValueOption("-classpath");
 		Program.addKeyValueOption("-sourcepath");
 		Program.addKeyValueOption("-bootclasspath");
 		Program.addKeyValueOption("-extdirs");
 		Program.addKeyValueOption("-d");
-		Program.addKeyOption("-verbose");
 		Program.addKeyOption("-logcompiler");
+		Program.addKeyOption("-verbose");
 		Program.addKeyOption("-version");
 		Program.addKeyOption("-help");
 		Program.addKeyOption("-g");
@@ -34,6 +39,11 @@ public class CaesarCompiler {
 	public static void cleanUp() {
 		program = null;
 		errors = null;
+		progressTracker = null;
+	}
+	
+	public static void addOptions(String args[]) {
+		Program.addOptions(args);
 	}
 	
 	public static void setOption(String name) {
@@ -59,6 +69,21 @@ public class CaesarCompiler {
 	}
 	
 	/**
+	 * Get progress tracker 
+	 */
+	public static ProgressTracker getProgressTracker() {
+		return progressTracker;
+	}
+	
+	/**
+	 * Change the progress tracker 
+	 * (should be called before initialization of compiler) 
+	 */
+	public static void setProgressTracker(ProgressTracker tracker) {
+		progressTracker = tracker;
+	}
+	
+	/**
 	 * Pretty printing of parsed AST
 	 */
 	public static String getParsedCode() {
@@ -77,6 +102,9 @@ public class CaesarCompiler {
 	 */
 	
 	public static boolean collectSourceFiles() {
+		
+		progressTracker.startPhase("collectSrc", "Collecting source files...", 0.05);
+		
 		Collection files = program.files();
 		
 		if (files.isEmpty()) {
@@ -120,19 +148,27 @@ public class CaesarCompiler {
 			program.addSourceFile(name);
 		}
 		
+		progressTracker.endPhase("collectSrc");
+		
 		return true;
 	}
 	
 	public static boolean typeCheck() {
+		
+		progressTracker.startPhase("typeCheck",	"Checking for errors...", 0.5);
+		
 		try {
 			program.insertExternalizedVC();
 			
-			if (Program.verbose()) {
-				System.out.println("Parsed source code:");
-				System.out.println(program.toString());
-			}
-			
-			program.errorCheck(errors);
+			double step = 1.0 / countSourceCUs();
+			for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
+				CompilationUnit cu = (CompilationUnit)iter.next();
+				if (cu.fromSource()) {
+					progressTracker.advanceProgress("Checking for errors: " + cu.relativeName(), step);
+					cu.collectErrors();					
+					errors.addAll(cu.getErrors());
+				}
+			}			
 			
 			if (!errors.isEmpty()) {
 				return false;
@@ -142,12 +178,40 @@ public class CaesarCompiler {
 			errors.add(e.getMessage());
 			return false;
 		} 
+		finally {
+			progressTracker.endPhase("typeCheck");
+		}
+		
 		return true;
 	}
 	
 	public static void generateBytecode() {
+		// estimated to take 45% of compilation time
+		progressTracker.startPhase("genBytecode", "Generating bytecode....", 0.45);
+		
 		program.java2Transformation();
-		program.generateClassfile();
+		
+		double step = 1.0 / countSourceCUs();
+        for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
+        	CompilationUnit cu = (CompilationUnit)iter.next();
+        	if (cu.fromSource()) {
+	        	progressTracker.advanceProgress("Generating bytecode: " + cu.relativeName(), step);
+	      		cu.generateClassfile();
+        	}
+    	}
+        
+        progressTracker.endPhase("genBytecode");
+	}
+	
+	private static int countSourceCUs() {
+		int count = 0;
+		for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
+        	CompilationUnit cu = (CompilationUnit)iter.next();
+        	if (cu.fromSource()) {
+        		count++;        		
+        	}
+		}
+		return count;
 	}
 
 	// Ignore directories named "test"
@@ -187,7 +251,8 @@ public class CaesarCompiler {
 						+ "  -extdirs <dirs>           Override location of installed extensions\n"
 						+ "  -d <directory>            Specify where to place generated class files\n"
 						+ "  -help                     Print a synopsis of standard options\n"
-						+ "  -version                  Print version information\n");
+						+ "  -version                  Print version information\n"
+						+ "  -checkonly                Perform only type checking\n");
 	}
 
 	protected static void printVersion() {
@@ -197,48 +262,51 @@ public class CaesarCompiler {
 	
 	
 	public static void main(String args[]) {
-		if (!compile(args))
+		initialize();	
+		addOptions(args);
+		if (!compile()) {
 			System.exit(1);
+		}
 	}
 
-	public static boolean compile(String args[]) {
-		initialize();
+	/**
+	 * Implements compilation process
+	 * 
+	 * call initialize() and set compiler options before compilation
+	 * call cleanUp() after compilation
+	 * 
+	 * @return success
+	 */
+	public static boolean compile() {
 		
-		try {
-			program.addOptions(args);
-			
-			if (program.hasOption("-version")) {
-				printVersion();
-				return false;
-			}
-			if (program.hasOption("-help")) {
-				printUsage();
-				return false;
-			}
-			
-			if (!collectSourceFiles()) {
-				return false;
-			}
-			
-			System.out.println("Checking for errors ...");
-			
-			if (!typeCheck()) {
-				System.out.println("Errors:");
-				for (Iterator err = errors.iterator(); err.hasNext();) {
-					System.out.println((String) err.next());
-				}
-				return false;
-			}
-			
-			if (!program.hasOption("-checkonly")) {
-				System.out.println("Generating class files...");
-				generateBytecode();
-				program.java2Transformation();
-				program.generateClassfile();
-			}
+		if (program.hasOption("-version")) {
+			printVersion();
+			return false;
 		}
-		finally {
-			cleanUp();
+		
+		if (program.hasOption("-help")) {
+			printUsage();
+			return false;
+		}
+		
+		if (program.verbose()) {
+			progressTracker.addProgressListener(new VerboseProgress());
+		}
+		
+		if (!collectSourceFiles()) {
+			return false;
+		}
+		
+		if (!typeCheck()) {
+			System.out.println("Errors:");
+			for (Iterator err = errors.iterator(); err.hasNext();) {
+				System.out.println((String) err.next());
+			}
+			return false;
+		}
+		
+		if (!program.hasOption("-checkonly")) {
+			generateBytecode();
 		}
 		return true;
 	}	

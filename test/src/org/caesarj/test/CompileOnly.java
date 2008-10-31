@@ -1,6 +1,7 @@
 package org.caesarj.test;
 
 import org.caesarj.compiler.CaesarCompiler;
+import org.caesarj.util.VerboseProgress;
 
 public class CompileOnly extends CompilerTest {
 	
@@ -14,7 +15,7 @@ public class CompileOnly extends CompilerTest {
 		CaesarCompiler.initialize();
 		
 		if (compilerVerbose) {
-			CaesarCompiler.setOption("-verbose");
+			CaesarCompiler.setOption("-verbose");			
 		}
 		
 		addSourceFiles(sources);
