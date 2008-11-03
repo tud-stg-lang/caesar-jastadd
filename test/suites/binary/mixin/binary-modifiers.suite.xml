@@ -9,10 +9,10 @@
 				   b.m();
 				}
 			}
+			public cclass BBB extends AAA { public void m() {} }
 		</code>
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }
-			public cclass BBB extends AAA { public void m() {} }
 		</binary>
 	</compile>
 	
@@ -25,10 +25,10 @@
 				   b.m();
 				}
 			}
+			public cclass BBB extends AAA { }
 		</code>
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
-			public cclass BBB extends AAA { }
 		</binary>
 	</compile-check-error>
 	
@@ -40,18 +40,17 @@
 				   c.m();
 				}
 			}
+			public cclass CCC extends BBB { public void m() {} }
 		</code>
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public abstract cclass BBB extends AAA { }
-			public cclass CCC extends BBB { public void m() {} }
 		</binary>
 	</compile>
 	
 	<compile-check-error id="stcmodifiers002e" error="CLASS_MUST_IMPLEMENT"
 		                 description="test error simple indirect inheritance with abstract method">
 		<code>
-			public abstract cclass AAA { public abstract void m(); }	
 			public abstract cclass BBB extends AAA { }
 			public cclass CCC extends BBB { }
 			public cclass Test {
@@ -61,6 +60,9 @@
 				}
 			}
 		</code>
+		<binary>
+			public abstract cclass AAA { public abstract void m(); }	
+		</binary>
 	</compile-check-error>
 	
 	<compile id="stcmodifiers003" description="test multiple inheritance with abstract method">
@@ -69,8 +71,8 @@
 			public cclass BBB { public void m() {} }
 			public cclass CCC extends AAA &amp; BBB { public void m() {} }
 		</binary>
-	<code>
-		public class Test {
+		<code>
+			public class Test {
 				public void test() {
 				   CCC c = null;
 				   c.m();
@@ -83,11 +85,11 @@
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public cclass BBB { public void m() {} }
+		</binary>
+		<code>
 			public abstract cclass CCC extends AAA &amp; BBB { }
 			public cclass DDD extends CCC { public void m() {} } 
-		</binary>
-	<code>
-		public class Test {
+			public class Test {
 				public void test() {
 				   DDD d = null;
 				   d.m();
@@ -101,10 +103,10 @@
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public abstract cclass BBB { public abstract void m(); }
-			public cclass CCC extends AAA &amp; BBB { }
 		</binary>
-	<code>
-		public class Test {
+		<code>
+			public cclass CCC extends AAA &amp; BBB { }
+			public class Test {
 				public void test() {
 				   CCC c = null;
 				   c.m();
@@ -120,7 +122,7 @@
 			public cclass CCC extends AAA &amp; BBB { public void m(){} }
 			public cclass DDD extends CCC { } 
 		</binary>
-	<code>
+		<code>
 		public class Test {
 				public void test() {
 				   DDD d = null;
@@ -135,10 +137,10 @@
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public abstract cclass BBB { public abstract void m(); }
-			public cclass CCC extends AAA &amp; BBB { }
-			public cclass DDD extends CCC { } 
 		</binary>
-	<code>
+		<code>
+		public cclass CCC extends AAA &amp; BBB { }
+		public cclass DDD extends CCC { } 
 		public class Test {
 				public void test() {
 				   DDD d = null;
@@ -148,14 +150,15 @@
 		</code>
 	</compile-check-error>
 	
-	<compile id="stcmodifiers007" description="test inheritance of several abstracts classes">
+	<compile-check-error id="stcmodifiers007" error="CLASS_MUST_IMPLEMENT"
+		                 description="test inheritance of several abstracts classes">
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public abstract cclass BBB { public abstract void m(); }
-			public abstract cclass CCC extends AAA &amp; BBB { }
-			public abstract cclass DDD extends CCC { }
 		</binary>
-	<code>
+		<code>
+		public abstract cclass CCC extends AAA &amp; BBB { }
+		public abstract cclass DDD extends CCC { }
 		public class Test {
 				public void test() {
 				   CCC c = null;
@@ -165,7 +168,7 @@
 				}
 			}
 		</code>
-	</compile>	
+	</compile-check-error>
 	
 	<compile id="stcmodifiers010" description="test static field access">
 		<binary>
@@ -197,9 +200,9 @@
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public cclass BBB { public void m() {} }
-			public cclass CCC extends AAA &amp; BBB { }
 		</binary>
-	<code>
+		<code>
+		public cclass CCC extends AAA &amp; BBB { }
 		public class Test {
 				public void test() {
 				   CCC c = null;
@@ -213,11 +216,11 @@
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
 			public cclass BBB { public void m() {} }
+		</binary>
+		<code>
 			public abstract cclass CCC extends AAA &amp; BBB { }
 			public cclass DDD extends CCC { } 
-		</binary>
-	<code>
-		public class Test {
+			public class Test {
 				public void test() {
 				   DDD d = null;
 				   d.m();

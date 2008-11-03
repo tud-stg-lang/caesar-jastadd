@@ -3,7 +3,7 @@
 	<compile id="visibility001" description="accessing private members of enclosing type">
 		<code>
 			public cclass Test {
-				OuterA.InnerA innerA = OuterA.new InnerA();
+				private OuterA.InnerA innerA = new OuterA().new InnerA();
 				innerA.doAction(); 
 			}
 		</code>
@@ -22,7 +22,7 @@
 	<compile id="visibility002" description="accessing private members of enclosing type, longer chain">
 		<code>
 			public cclass Test {
-				OuterA.InnerA.DeepA deepA = OuterA.new InnerA().new DeepA();
+				private OuterA.InnerA.DeepA deepA = new OuterA().new InnerA().new DeepA();
 				deepA.doAction(); 
 			}
 		</code>

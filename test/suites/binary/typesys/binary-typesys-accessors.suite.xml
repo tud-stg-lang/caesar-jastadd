@@ -1,7 +1,5 @@
 <testsuite name="Test accessor type checking" package="binary.typesys.accessors">
 	
-	<!-- @Yang TODO -->
-	
 	<common-code-base>		
 		public cclass G {
 			public cclass N {
