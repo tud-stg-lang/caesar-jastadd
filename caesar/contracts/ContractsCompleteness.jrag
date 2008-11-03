@@ -82,17 +82,10 @@ aspect ContractsCompleteness {
 	syn lazy Collection CjContractClassDecl.getExplicitImplements() {
 		Collection imps = new ArrayList();
 		
-		// add all implemented
-		for(int i = 0; i < getNumImplements(); i++){
-			imps.add(getImplements(i).type());
+		// add all explicitly implemented
+		for(int i = 0; i < getNumExplicitImplements(); i++){
+			imps.add(getExplicitImplements(i).type());
 		}
-		
-		// but remove required interfaces that might have been
-		// added to provide access to methods via requires
-		// In other words: required interfaces are added to the list of
-		// implemented interfaces for pragmatic reasons but are not to be
-		// considered as being implemented!
-		imps.removeAll(getExplicitRequirements());
 		
 		return imps;
 	}
@@ -156,9 +149,6 @@ aspect ContractsCompleteness {
 	/******
 	 * 10.) <requires> := getExplicitRequirements()
 	 ******/
-
-	// Inherited name type has to be set in parent node
-	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
 
 	syn lazy Collection CjContractClassDecl.getExplicitRequirements() {
 		Collection c = new HashSet();

@@ -2,11 +2,51 @@
 
 aspect ContractsInheritance {
 
+	/* Inherited name type for non terminals has to be set in sub classes */
+	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
+	eq CjContractClassDecl.getExplicitImplements().nameType() = NameType.TYPE_NAME;
+
 	/****** 
-	 * Overwrites attribute from CjClassDecl responsible for determining superclasses
 	 * Adds required interfaces to list of implemented interfaces
 	 * This allows for subtyping and method access via requirements
-	 ******/									  
+	 *
+	 * An important change here is that the list of implemented interfaces
+	 * from the parser is renamed to ExplicitImplements while the former
+	 * list of implemented classes is now computed as a non-terminal to contain
+	 * required interfaces. Cf. contracts.ast, virtclass.ast and mixcomp.ast
+	 ******/		
+	 							 
+	syn List CjContractClassDecl.getImplementsList() {
+		// If the list has been changed or reset do not overwrite!
+		if(getChild(13).numChildren() != 0){
+			return (List)getChild(13);
+		} 
+	
+		// Computing list for the first time so build from scratch
+		List c = new List();
+		
+		for(int i = 0; i < getNumExplicitImplements(); i++){
+     		c.add(getExplicitImplements(i));
+     	}
+	
+     	for(int i = 0; i < getNumRequiredClasses(); i++){
+     		TypeDecl td = (TypeDecl)(getRequiredClasses(i).type());
+     	
+     		// If requirement is an interface and not already in list of 
+     		// explicitly implemented interfaces
+     		if(td instanceof InterfaceDecl && !getExplicitImplements().contains(td)){
+     			c.add(getRequiredClasses(i));	
+     		}
+     	}  
+     	
+     	return c;
+	}
+	  
+	/****** 
+	 * Overwrites attribute from CjClassDecl responsible for determining superclasses
+	 * This allows for subtyping and method access via requirements
+	 ******/
+	 
 	eq CjContractClassDecl.getDeclaredParents() {
 		Collection parents = new HashSet();
 		
@@ -20,21 +60,6 @@ aspect ContractsInheritance {
 		// these are not to be regarded as superclasses
 		parents.removeAll(getReqInterfaces());
 		
-		// Add required interfaces instead to list of implemented interfaces
-  		Collection c = new ArrayList();
-		for(int i = 0; i < getNumImplements(); i++){
-     		c.add(getImplements(i));
-     	}
-	
-     	for(int i = 0; i < getNumRequiredClasses(); i++){
-     		TypeDecl td = (TypeDecl)(getRequiredClasses(i).type());
-     	
-     		// If requirement is an interface and it hasn't been added already	
-     		if((td instanceof InterfaceDecl) && !c.contains(getRequiredClasses(i))){
-     			addImplements(getRequiredClasses(i));	
-     		}
-     	}  
-     	
 	    return parents;
 	}
 
