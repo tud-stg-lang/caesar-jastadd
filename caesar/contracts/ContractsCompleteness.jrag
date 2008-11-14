@@ -213,6 +213,11 @@ aspect ContractsCompleteness {
 	 * 17 - 19.) [requires] := getRequirements()
 	 ******/
 	syn lazy Collection CjContractClassDecl.getRequirements() {
+		// Virtual classes  (i.e. nested classes ) are handled differently
+		if(isNestedType()){
+			return getReqsForVirtCls();
+		}
+	
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -246,6 +251,29 @@ aspect ContractsCompleteness {
 		return c;
 	}
 
+	/******
+	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
+	 ******/
+	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
+		// Get all implicit parents
+		Collection parents = getDirectFurtherbounds();
+		
+		// Return implicit parents whose Enclosing Top Level 
+		// is required by ETL of current class
+		Collection reqs = new ArrayList();
+		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
+			CjContractClassDecl cd = (CjContractClassDecl)itr.next();
+			if(getEnclosingTopLevel() instanceof CjContractClassDecl){
+				CjContractClassDecl tl = ((CjContractClassDecl)getEnclosingTopLevel());
+				
+			   	if(tl.getRequirements().contains(cd.getEnclosingTopLevel())){
+					reqs.add(cd);
+				}
+			}
+		}
+		
+		return reqs;
+	}
 
 	/******
 	 * 20.) complete := isComplete()

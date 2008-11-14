@@ -44,7 +44,7 @@ aspect ContractsErrorCheck{
   	public void CjContractClassDecl.nameCheck() {
   		super.nameCheck();
   		
-  		if(!isTopLevelType() && !getRequirements().isEmpty()){ 
+  		if(!isTopLevelType() && !getExplicitRequirements().isEmpty()){ 
   			String requirements = ": ";
       		for(Iterator iter = getRequirements().iterator(); iter.hasNext(); ){
       			requirements += ((TypeDecl)iter.next()).name();
@@ -90,7 +90,7 @@ aspect ContractsErrorCheck{
 						if(td instanceof CjContractClassDecl){
 							CjContractClassDecl cd = (CjContractClassDecl)td;
 				
-							if(!cd.enclosedMethods(md.name()).isEmpty()) {
+							if(!cd.memberMethods(md.name()).isEmpty()) {
 								error("Implementing a required method directly is forbidden: " 
 								+ md.name() + " in " + fullName() + " implements required method " 
 								+ md.name() + " in " + cd.name());
