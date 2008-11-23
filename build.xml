@@ -63,16 +63,16 @@
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		
-		
-		
 		<fileset dir="caesar/contracts">
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		
-		
+		<fileset dir="caesar/privateinh">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
 	</jastadd>
 	<!-- generate the scanner -->
 	
@@ -89,13 +89,9 @@
 			<include name="*.parser"/>
 			<exclude name="java14.parser"/>
 		</fileset>
-		
-		
 		<fileset dir="caesar/contracts">
 			<include name="contracts.parser"/>
 		</fileset>
-		
-		
 		<!-- <fileset dir="caesar/virtclasses">
 			<include name="virtclass.parser"/>
 		</fileset> -->
