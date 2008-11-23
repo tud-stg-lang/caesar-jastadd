@@ -1,0 +1,27 @@
+<testsuite name="tests pathological cases with uses" package="privateinh.extra">
+
+	<compile-check-error id="extra001" 
+						 error="???"
+						 description="a class using itself">
+		<code>
+			public cclass A uses A {
+				public String a(){ return "a"; }
+			}
+		</code>
+	</compile-check-error>
+
+	<compile-check-error id="extra002" 
+						 error="???"
+						 description="a class using a class that uses it">
+		<code>
+			public cclass A uses B {
+				public String a() { return "a"; }
+			}
+			
+			public cclass B uses A {
+				public String b() { return "b"; }
+			}
+		</code>
+	</compile-check-error>
+
+</testsuite>

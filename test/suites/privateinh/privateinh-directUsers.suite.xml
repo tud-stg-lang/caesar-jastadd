@@ -1,0 +1,45 @@
+<testsuite name="usage semantics for direct users" package="privateinh.directUsers">
+
+<compile-run id="directUsers001"
+				 description="methods should be accessible">
+		
+		<code>
+			public cclass A {
+				public String a(){ return "a"; }
+			}
+			
+			public cclass B uses A {}
+		</code>	
+		
+		<test>
+			B b = new B();
+			
+			assertEquals(b.a(), "a");
+		</test>
+		
+</compile-run>
+
+<compile-run id="directUsers002"
+				 description="contract fulfilled by used class">
+		
+		<code>
+			public abstract cclass A {
+				public abstract String a();
+			}
+			
+			public cclass ProvA extends A {
+				public String a() { return "a"; }
+			}
+			
+			public cclass B extends A uses ProvA {}
+		</code>	
+		
+		<test>
+			B b = new B();
+			
+			assertEquals(b.a(), "a");
+		</test>
+		
+</compile-run>
+
+</testsuite>

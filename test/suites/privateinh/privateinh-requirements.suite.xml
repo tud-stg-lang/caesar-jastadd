@@ -1,0 +1,146 @@
+<testsuite name="usage semantics with requirements" package="privateinh.requirements">
+
+<compile-check-error id="requirements001" 
+						 error="???"
+						 description="requirements are propagated to direct users">
+		<code>
+			public abstract cclass A {
+				public String a();
+			}
+			
+			public cclass B requires A {
+				public String ba() { return a() + "b"; }
+			}
+			
+			public cclass IncompleteC uses B {
+			 	public String cba() { return ba() + "c"; } 
+			}
+			
+			public class Test{
+				public void test(){
+					// Should not be instantiable
+					IncompleteC c = new IncompleteC();
+				}
+			}
+		</code>
+</compile-check-error>
+	
+<compile-run id="requirements002"
+				 description="requirements are propagated to direct users">
+		
+		<code>
+			public abstract cclass A {
+				public String a();
+			}
+		
+			public abstract cclass ProvA {
+				public String a() { return "a"; }
+			}
+			
+			public cclass B requires A {
+				public String ab() { return a() + "b"; }
+			}
+			
+			public cclass IncompleteC uses B {
+			 	public String abc() { return ab() + "c"; } 
+			}
+			
+			public cclass CompleteC extends ProvA &amp; IncompleteC {}
+		</code>
+		
+		<test>
+			CompleteC c = new CompleteC();
+			
+			assertEquals(c.abc(), "abc");
+		</test>
+		
+</compile-run>
+
+<compile-run id="requirements003"
+				 description="reqs are not propagated to indirect users">
+		
+		<code>
+			public abstract cclass A {
+				public String a();
+			}
+		
+			public cclass B requires A {
+				public String ab() { return a() + "b"; }
+			}
+			
+			public cclass IncompleteC uses B {
+			 	public String abc() { return ab() + "c"; } 
+			}
+			
+			// FIXME: this is a problem since abc() is not complete... 
+			// Should requirements then be propagated to indirect users???
+			public cclass CompleteC extends IncompleteC {}
+		</code>
+		
+		<test>
+			CompleteC c = new CompleteC();
+			
+			assertEquals(c.abc(), "abc");
+		</test>
+		
+</compile-run> 
+
+<compile-check-error id="requirements004" 
+				     error="???"
+				     description="used classes do not fulfil reqs implicitly">
+		
+		<code>
+			public abstract cclass A {
+				public String a();
+			}
+		
+			public cclass B extends A {
+				public String a() { return "a"; }
+			}
+			
+			public cclass C requires A {
+			 	 public String ca() { return "c" + a(); }
+			}
+			
+			// Although B fulfills requirement of A, this can't be done implicitly
+			public cclass D extends C uses B {}
+			
+			public class Test{
+				public void test(){
+					// D is incomplete and not instantiable
+					D d = new D();
+				}
+			}
+		</code>
+
+</compile-check-error> 
+
+<compile-run id="requirements005"
+				 description="used classes can however be used to fulfil reqs">
+		
+		<code>
+			public abstract cclass A {
+				public String a();
+			}
+		
+			public cclass B extends A {
+				public String a() { return "a"; }
+			}
+			
+			public cclass C requires A {
+			 	 public String ca() { return "c" + a(); }
+			}
+			
+			// Requirement is explicitly fulfilled using B
+			public cclass D extends C &amp; A uses B {}
+		</code>
+		
+		<test>
+			D d = new D();
+			
+			assertEquals(d.ca(), "ca");
+		</test>
+		
+</compile-run> 
+
+</testsuite> 

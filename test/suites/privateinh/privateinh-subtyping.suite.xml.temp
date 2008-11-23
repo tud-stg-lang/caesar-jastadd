@@ -1,0 +1,9 @@
+<testsuite name="usage semantics related to subtyping" package="privateinh.subtyping">
+
+ (1) subtyping not possible for direct users
+
+ (2) subtyping not possible for indirect users
+
+ (3) subtyping not possible to base class of used class 
+
+</testsuite>
