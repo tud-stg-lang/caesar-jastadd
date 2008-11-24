@@ -1,6 +1,6 @@
 <testsuite name="usage semantics with requirements" package="privateinh.requirements">
 
-<compile-check-error id="requirements001" 
+	<compile-check-error id="requirements001" 
 						 error="???"
 						 description="requirements are propagated to direct users">
 		<code>
@@ -23,9 +23,9 @@
 				}
 			}
 		</code>
-</compile-check-error>
+	</compile-check-error>
 	
-<compile-run id="requirements002"
+	<compile-run id="requirements002"
 				 description="requirements are propagated to direct users">
 		
 		<code>
@@ -54,21 +54,21 @@
 			assertEquals(c.abc(), "abc");
 		</test>
 		
-</compile-run>
+	</compile-run>
 
-<compile-run id="requirements003"
+	<compile-run id="requirements003"
 				 description="reqs are not propagated to indirect users">
 		
 		<code>
 			public abstract cclass A {
-				public String a();
+				public abstract String a();
 			}
 		
 			public cclass B requires A {
 				public String ab() { return a() + "b"; }
 			}
 			
-			public cclass IncompleteC uses B {
+			public cclass IncompleteC uses B requires A {
 			 	public String abc() { return ab() + "c"; } 
 			}
 			
@@ -83,9 +83,9 @@
 			assertEquals(c.abc(), "abc");
 		</test>
 		
-</compile-run> 
+	</compile-run> 
 
-<compile-check-error id="requirements004" 
+	<compile-check-error id="requirements004" 
 				     error="???"
 				     description="used classes do not fulfil reqs implicitly">
 		
@@ -113,9 +113,9 @@
 			}
 		</code>
 
-</compile-check-error> 
+	</compile-check-error> 
 
-<compile-run id="requirements005"
+	<compile-run id="requirements005"
 				 description="used classes can however be used to fulfil reqs">
 		
 		<code>
@@ -141,6 +141,6 @@
 			assertEquals(d.ca(), "ca");
 		</test>
 		
-</compile-run> 
+	</compile-run> 
 
 </testsuite> 

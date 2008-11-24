@@ -42,4 +42,23 @@
 		
 </compile-run>
 
+<compile-check-error id="directUsers003" 
+						 error="???"
+						 description="Direct users must fulfil used contract">
+		<code>
+			public abstract cclass A {
+				public String a() { return "a"; }
+				public abstract String b();
+			}
+		
+			// FIXME: B has to fulfil A's contract...
+			// Does this make sense?  
+			// Should we demand all used classes be complete???
+			// Or at least concrete (non-abstract)?
+			public cclass B uses A {
+			 	public String ba() { return "b" + a(); } 
+			}
+		</code>
+</compile-check-error>
+
 </testsuite>
