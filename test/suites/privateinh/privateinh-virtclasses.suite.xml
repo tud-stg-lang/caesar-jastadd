@@ -1,0 +1,47 @@
+<testsuite name="usage semantics related to virtual classes" package="privateinh.virtclasses">
+
+	<compile-run id="virtclasses001"
+				 description="top-level families can use other classes">
+		
+		<code>
+			public cclass FamilyA {
+				public cclass AA {
+					public String a() { return "a"; }
+				}
+			}
+		
+			public cclass FamilyB uses FamilyA {
+				public cclass BB {
+					AA a = new AA();
+					public String ba() { return "b" + a.a(); }
+				}
+			}
+		
+		</code>
+		
+		<test>
+			final FamilyB b = new FamilyB();
+			
+			FamilyB.BB bb = b.new BB();
+			
+			assertEquals(bb.ca(), "ba");
+		</test>
+		
+	</compile-run> 
+ 
+ 	<compile-check-error id="virtclasses002"
+ 						 error="???"
+				 		 description="virtual classes cannot use other classes">
+		
+		<code>
+			public cclass A {
+				public String a() { return "a"; }	
+			}
+			
+			public cclass FamilyA {
+				public cclass AA uses A {}
+			}
+		</code>
+	</compile-check-error> 
+ 
+</testsuite>

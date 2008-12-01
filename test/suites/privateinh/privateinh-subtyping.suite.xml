@@ -1,6 +1,6 @@
 <testsuite name="usage semantics related to subtyping" package="privateinh.subtyping">
 
-<compile-check-error id="subtyping001" 
+	<compile-check-error id="subtyping001" 
 						 error="???"
 						 description="subtyping not possible for direct users">
 		<code>
@@ -21,9 +21,9 @@
 				}
 			}
 		</code>
-</compile-check-error>
+	</compile-check-error>
 
-<compile-check-error id="subtyping002" 
+	<compile-check-error id="subtyping002" 
 						 error="???"
 						 description="subtyping not possible for indirect users">
 		<code>
@@ -46,8 +46,33 @@
 				}
 			}
 		</code>
-</compile-check-error>
+	</compile-check-error>
 
- (3) subtyping not possible to base class of used class 
+	<compile-check-error id="subtyping003" 
+						 error="???"
+						 description="subtyping not possible to base class of used class">
+		<code>
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+		
+			public cclass A extends ContractA {
+				public String a() { return "a"; }
+			}
+		
+			public cclass B uses A {
+			 	public String ba() { return "b" + a(); } 
+			}
+			
+			public class Test{
+				public void test(){
+					B b = new B();
+					
+					// Not possible
+					ContractA b = b;
+				}
+			}
+		</code>
+	</compile-check-error>
 
 </testsuite>
