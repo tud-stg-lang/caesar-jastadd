@@ -10,7 +10,7 @@
 	
 			public cclass DirectB uses A {}
 		
-			public cclass IndirectB uses A {}
+			public cclass IndirectB extends DirectB {}
 			
 			public class Test {
 				public void test(){
@@ -24,6 +24,29 @@
 	</compile-check-error>
 
 	<compile-check-error id="indirectUsers002"
+						 error="???"
+						 description="methods and behaviour are not accessible">
+		<code>
+			public cclass A {
+				public String a() { return "a"; }
+			}
+	
+			public cclass DirectB uses A {}
+		
+			public cclass IndirectB uses DirectB {}
+			
+			public class Test {
+				public void test(){
+					IndirectB b = new IndirectB();
+				
+					// Should not be accessible
+					b.a();
+				}
+			} 
+		</code>
+	</compile-check-error>
+
+	<compile-check-error id="indirectUsers003"
 						 error="???"
 						 description="contracts should not be fulfilled via indirect usage">
 		<code>
@@ -48,4 +71,28 @@
 		</code>
 	</compile-check-error>
 
+	<compile-check-error id="indirectUsers004"
+						 error="???"
+						 description="contracts should not be fulfilled via indirect usage">
+		<code>
+			public abstract cclass ContractA {
+				public abstract String a();
+			}
+	
+			public cclass ProviderA extends ContractA {
+				public String a(){ return "a"; };
+			}
+		
+			public cclass DirectB uses ProviderA {}
+		
+			public cclass IndirectB extends ContractA uses DirectB {}
+		
+			public class Test {
+				public void test(){
+					// IndirectB should not be instantiable
+					IndirectB b = new IndirectB();
+				}
+			} 
+		</code>
+	</compile-check-error>
 </testsuite>

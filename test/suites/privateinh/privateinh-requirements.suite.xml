@@ -2,90 +2,110 @@
 
 	<compile-check-error id="requirements001" 
 						 error="???"
-						 description="requirements are propagated to direct users">
+						 description="requirements via uses must be implemented, redeclared or inherited 
+						 via other extends or requires relationships">
 		<code>
 			public abstract cclass A {
-				public String a();
+				public abstract String a();
 			}
 			
 			public cclass B requires A {
-				public String ba() { return a() + "b"; }
+				public String ab() { return a() + "b"; }
 			}
 			
-			public cclass IncompleteC uses B {
-			 	public String cba() { return ba() + "c"; } 
-			}
-			
-			public class Test{
-				public void test(){
-					// Should not be instantiable
-					IncompleteC c = new IncompleteC();
-				}
+			public cclass C uses B {
+			 	public String abc() { return ab() + "c"; } 
 			}
 		</code>
 	</compile-check-error>
 	
 	<compile-run id="requirements002"
-				 description="requirements are propagated to direct users">
-		
-		<code>
-			public abstract cclass A {
-				public String a();
-			}
-		
-			public abstract cclass ProvA {
-				public String a() { return "a"; }
-			}
-			
-			public cclass B requires A {
-				public String ab() { return a() + "b"; }
-			}
-			
-			public cclass IncompleteC uses B {
-			 	public String abc() { return ab() + "c"; } 
-			}
-			
-			public cclass CompleteC extends ProvA &amp; IncompleteC {}
-		</code>
-		
-		<test>
-			CompleteC c = new CompleteC();
-			
-			assertEquals(c.abc(), "abc");
-		</test>
-		
-	</compile-run>
-
-	<compile-run id="requirements003"
-				 description="reqs are not propagated to indirect users">
+				 description="reqs via uses can be implemented">
 		
 		<code>
 			public abstract cclass A {
 				public abstract String a();
 			}
-		
+			
 			public cclass B requires A {
 				public String ab() { return a() + "b"; }
 			}
 			
-			public cclass IncompleteC uses B requires A {
+			public cclass C extends A uses B {
+				public String a() { return "a"; }
 			 	public String abc() { return ab() + "c"; } 
 			}
-			
-			// FIXME: this is a problem since abc() is not complete... 
-			// Should requirements then be propagated to indirect users???
-			public cclass CompleteC extends IncompleteC {}
 		</code>
 		
 		<test>
-			CompleteC c = new CompleteC();
-			
-			assertEquals(c.abc(), "abc");
+			public class Test{
+				public void test(){
+					C c = new C();
+					
+					assertEquals(c.abc(), "abc");
+				}
+			}
 		</test>
 		
-	</compile-run> 
-
-	<compile-check-error id="requirements004" 
+	</compile-run>
+	
+	<compile id="requirements003"
+				 description="reqs via uses can be redeclared">
+		
+		<code>
+			public abstract cclass A {
+				public abstract String a();
+			}
+			
+			public cclass B requires A {
+				public String ab() { return a() + "b"; }
+			}
+			
+			public cclass C requires A uses B {
+			 	public String abc() { return ab() + "c"; } 
+			}
+		</code>
+	</compile>
+	
+	<compile-run id="requirements004"
+				 description="reqs via uses can be inherited via other means">
+		
+		<code>
+			public abstract cclass A {
+				public abstract String a();
+			}
+			
+			public cclass B requires A {
+				public String ab() { return a() + "b"; }
+			}
+			
+			public cclass D requires A {
+				public String ad() { return a() + "d"; }
+			}
+			
+			public cclass C extends D uses B {
+			 	public String abad() { return ab() + ad(); } 
+			}
+			
+			public cclass ProvA extends A {
+				public String a() { return "a"; }
+			}
+			
+			public cclass Complete extends C &amp; D {}
+		</code>
+		
+		<test>
+			public class Test(){
+				public void test(){
+					Complete comp = new Complete();
+					
+					assertEquals(comp.abad(), "abad");
+				}
+			}
+		</test>
+	</compile-run>
+	
+	<compile-check-error id="requirements005" 
 				     error="???"
 				     description="used classes do not fulfil reqs implicitly">
 		
@@ -115,7 +135,7 @@
 
 	</compile-check-error> 
 
-	<compile-run id="requirements005"
+	<compile-run id="requirements006"
 				 description="used classes can however be used to fulfil reqs">
 		
 		<code>
