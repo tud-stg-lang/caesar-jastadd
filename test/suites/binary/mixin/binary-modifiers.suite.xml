@@ -150,7 +150,7 @@
 		</code>
 	</compile-check-error>
 	
-	<compile-check-error id="stcmodifiers007" error="CLASS_MUST_IMPLEMENT"
+	<compile id="stcmodifiers007" error="CLASS_MUST_IMPLEMENT"
 		                 description="test inheritance of several abstracts classes">
 		<binary>
 			public abstract cclass AAA { public abstract void m(); }	
@@ -168,7 +168,7 @@
 				}
 			}
 		</code>
-	</compile-check-error>
+	</compile>
 	
 	<compile id="stcmodifiers010" description="test static field access">
 		<binary>
