@@ -18,8 +18,10 @@ aspect ContractsInheritance {
 	 							 
 	syn List CjContractClassDecl.getImplementsList() {
 		// If the list has been changed or reset do not overwrite!
-		if(getChild(13).numChildren() != 0){
-			return (List)getChild(13);
+		int pos = getImplementsListChildPosition();
+		
+		if(getChild(pos).numChildren() != 0){
+			return (List)getChild(pos);
 		} 
 	
 		// Computing list for the first time so build from scratch
