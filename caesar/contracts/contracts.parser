@@ -14,56 +14,41 @@ ClassDecl class_declaration =
   ;
 
 CjClassDecl cclass_declaration =
-    modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(m, id, s, i, b, new List()); :}
-  |             CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, b, new List()); :}
-  | modifiers.m CCLASS IDENTIFIER.id         interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), i, b, new List()); :}
-  |             CCLASS IDENTIFIER.id         interfaces.i class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, b, new List()); :}
-  | modifiers.m CCLASS IDENTIFIER.id mixin.s              class_body.b 
-                                               {: return new CjContractClassDecl(m, id, s, new List(), b, new List()); :}
-  |             CCLASS IDENTIFIER.id mixin.s              class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), b, new List()); :}
-  | modifiers.m CCLASS IDENTIFIER.id                      class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), new List(), b, new List()); :}
-  |             CCLASS IDENTIFIER.id                      class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), b, new List()); :}                                                                
-  | modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i requirements.r class_body.b
-  											   {: return new CjContractClassDecl(m, id, s, i, b, r); :}
-  |             CCLASS IDENTIFIER.id mixin.s interfaces.i requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, i, b, r); :}
-  | modifiers.m CCLASS IDENTIFIER.id         interfaces.i requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), i, b, r); :}
-  |             CCLASS IDENTIFIER.id         interfaces.i requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), i, b, r); :}
-  | modifiers.m CCLASS IDENTIFIER.id mixin.s              requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(m, id, s, new List(), b, r); :}
-  |             CCLASS IDENTIFIER.id mixin.s              requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, s, new List(), b, r); :}
-  | modifiers.m CCLASS IDENTIFIER.id                      requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(m, id, new List(), new List(), b, r); :}
-  |             CCLASS IDENTIFIER.id                      requirements.r class_body.b 
-                                               {: return new CjContractClassDecl(new Modifiers(), id, new List(), new List(), b, r); :}        
+  	modifiers_list.m CCLASS IDENTIFIER.id mixin.s interfaces_list.i requirements.r class_body.b	                                                
+                                                		{: return new CjContractClassDecl(m, id, s, i, b, r); :}        
+  ;
+  
+Modifiers modifiers_list =
+														{: return new Modifiers(); :}
+  | modifiers.l											{: return l; :}
   ;
 
 List mixin =
-    EXTENDS mixin_type_list.i                  {: return i; :} ;
-List mixin_type_list =
-    mixin_type.t                               {: return new List().add(t); :}
-  | mixin_type_list.l AND mixin_type.t         {: return l.add(t); :}
-  ;
-Access mixin_type =
-    name.n                                     {: return n; :}
+												 		{: return new List(); :}
+  | EXTENDS mixin_type_list.i                  			{: return i; :} 
   ;
 
+List mixin_type_list =
+    mixin_type.t                               			{: return new List().add(t); :}
+  | mixin_type_list.l AND mixin_type.t         			{: return l.add(t); :}
+  ;
+Access mixin_type =
+	name.n                                     			{: return n; :}
+  ;
+
+List interfaces_list =
+												 		{: return new List(); :}
+  | interfaces.l										{: return l; :}
+  ;
+	
 List requirements =
-    REQUIRES requirements_type_list.i                  {: return i; :} ;
+		 										 		{: return new List(); :}	
+  | REQUIRES requirements_type_list.i          			{: return i; :} 
+  ;
 List requirements_type_list =
-    requirements_type.t                                {: return new List().add(t); :}
-  | requirements_type_list.l AND requirements_type.t   {: return l.add(t); :}
+    requirements_type.t                                	{: return new List().add(t); :}
+  | requirements_type_list.l AND requirements_type.t   	{: return l.add(t); :}
   ;
 Access requirements_type =
-    name.n                                     {: return n; :}
+    name.n                                     			{: return n; :}
   ;
