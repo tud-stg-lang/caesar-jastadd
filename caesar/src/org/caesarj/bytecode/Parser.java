@@ -10,6 +10,7 @@ import java.io.InputStream;
 import org.caesarj.ast.ASTNode;
 import org.caesarj.ast.Access;
 import org.caesarj.ast.BodyDecl;
+import org.caesarj.ast.CjContractClassDecl;
 import org.caesarj.ast.CjVirtualClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.CompilationUnit;
@@ -274,9 +275,8 @@ public class Parser {
 		// If the type is a CaesarJ class in a ClassDecl hull, make it a CjVirtualClassDecl and add inherited members:
 		List superclassesList = attrs.superclassesList();
 		if(attrs.isCjClass() || superclassesList != null) {
-			typeDecl = transformBodyAndSuperclasses(typeDecl, superclassesList);
+			typeDecl = transformBodyAndSuperclasses((ClassDecl)typeDecl, superclassesList);
 		}
-		int j = 1;
 		CompilationUnit cu = new CompilationUnit();
 		cu.setPackageDecl(classInfo.packageDecl());
 
@@ -292,7 +292,7 @@ public class Parser {
 	}
 
 	/** Transforms a TypeDecl into a CjVirtualClassDecl */
-	CjVirtualClassDecl transformBodyAndSuperclasses(TypeDecl typeDecl, List superclassesList) {
+	CjVirtualClassDecl transformBodyAndSuperclasses(ClassDecl typeDecl, List superclassesList) {
 		List body = typeDecl.getBodyDeclListNoTransform();
 		List newbody = new List();
 		for(int i = 0; i < body.getNumChild(); ++i) {
@@ -309,12 +309,14 @@ public class Parser {
 			superclassesList = new List(); //ignore typeDecl.getSuperClassAccess()
 
 		// Make a CjClassDecl, including its superclasses and its inherited members:
-		CjVirtualClassDecl transformedTypeDecl = new CjVirtualClassDecl(
-				typeDecl.getModifiersNoTransform(),
-				typeDecl.getID(),
-				superclassesList,
-				typeDecl.getDynamicTypeListNoTransform(),
-				newbody);
+		CjContractClassDecl transformedTypeDecl = 
+			new CjContractClassDecl(
+					typeDecl.getModifiersNoTransform(), 
+					typeDecl.getID(), 
+					superclassesList, 
+					typeDecl.getImplementsList(), 
+					newbody, 
+					new List()); 
 		
 		// For virtual classes replace them in the parent
 		ASTNode parent = typeDecl.getParent();
