@@ -50,19 +50,33 @@ aspect ContractsInheritance {
 	 ******/
 	 
 	eq CjContractClassDecl.getDeclaredParents() {
-		Collection parents = new HashSet();
+		Collection parents = new ArrayList();
+		java.util.List uniquifier = new java.util.LinkedList();
 		
-		// Add parents via direct extends
-		parents.addAll(super.getDeclaredParents());
+		// Add parents via direct extends; filter duplicates
+		for (Iterator i = super.getDeclaredParents().iterator(); i.hasNext(); ) {
+			ASTNode dp = (ASTNode)i.next();
+			if (!uniquifier.contains(dp)) {
+				uniquifier.add(dp);
+				parents.add(dp);
+			}
+		}
 		
-		// Add parents via direct requirements
-		parents.addAll(getExplicitRequirements());
+		// Add parents via direct requirements; also filter duplicates via new list
+		uniquifier.clear();
+		for (Iterator i = getExplicitRequirements().iterator(); i.hasNext(); ) {
+			ASTNode dp = (ASTNode)i.next();
+			if (!uniquifier.contains(dp)) {
+				uniquifier.add(dp);
+				parents.add(dp);
+			}
+		}
 		
 		// Remove requirements that are interfaces since
 		// these are not to be regarded as superclasses
 		parents.removeAll(getReqInterfaces());
 		
-	    return parents;
+		return parents;
 	}
 
 
