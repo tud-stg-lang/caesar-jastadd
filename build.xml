@@ -76,7 +76,9 @@
 	</jastadd>
 	<!-- generate the scanner -->
 	
-	<jflex file="caesar/contracts/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/>
+	<jflex file="caesar/privateinh/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/>
+	
+	<!-- <jflex file="caesar/contracts/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/> -->
 	
 	<!-- <jflex file="caesar/mixincomp/caesar.flex" outdir="${target.dir}/parser" nobak="yes"/> -->
 	
@@ -89,9 +91,12 @@
 			<include name="*.parser"/>
 			<exclude name="java14.parser"/>
 		</fileset>
-		<fileset dir="caesar/contracts">
-			<include name="contracts.parser"/>
+		<fileset dir="caesar/privateinh">
+			<include name="privateinh.parser"/>
 		</fileset>
+		<!-- <fileset dir="caesar/contracts">
+			<include name="contracts.parser"/>
+		</fileset> -->
 		<!-- <fileset dir="caesar/virtclasses">
 			<include name="virtclass.parser"/>
 		</fileset> -->
