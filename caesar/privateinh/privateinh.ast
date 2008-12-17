@@ -1,0 +1,1 @@
+CjPrivInhClassDecl : CjContractClassDecl ::=  UsedClasses:Access*;

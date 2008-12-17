@@ -1,0 +1,63 @@
+CompilationUnit compilation_unit =
+    encl_cclass_declaration.p import_declarations.i type_declarations.t {: return new ExternCompUnit(p, i, t); :}
+  | encl_cclass_declaration.p                       type_declarations.t {: return new ExternCompUnit(p, new List(), t); :}
+  | encl_cclass_declaration.p import_declarations.i                     {: return new ExternCompUnit(p, i, new List()); :}
+  | encl_cclass_declaration.p                                           {: return new ExternCompUnit(p, new List(), new List()); :}
+  ;
+  
+Access encl_cclass_declaration =
+    CCLASS name.n SEMICOLON              {: return n; :}
+  ;  
+
+ClassDecl class_declaration =
+    cclass_declaration.c                 {: return c; :}
+  ;
+
+CjClassDecl cclass_declaration =
+	modifiers_list.m CCLASS IDENTIFIER.id mixin.s interfaces_list.i requirements.r uses.u class_body.b
+										 				{: return new CjPrivInhClassDecl(m, id, s, i, b, r, u); :}
+  ;
+												
+Modifiers modifiers_list =								
+										 				{: return new Modifiers(); :}
+  | modifiers.l							 				{: return l; :}
+  ;											
+												
+List mixin =
+										 				{: return new List(); :}
+  | EXTENDS mixin_type_list.i           	 			{: return i; :} 
+  ;
+List mixin_type_list =
+    mixin_type.t                         				{: return new List().add(t); :}
+  | mixin_type_list.l AND mixin_type.t   				{: return l.add(t); :}
+  ;
+Access mixin_type =
+    name.n                               				{: return n; :}
+  ;
+
+List interfaces_list =
+										 				{: return new List(); :}
+  | interfaces.l					 					{: return l; :}
+  ;
+
+List requirements =
+													   	{: return new List(); :}	 												
+  | REQUIRES requirements_type_list.i                  	{: return i; :} ;
+List requirements_type_list =
+    requirements_type.t                                	{: return new List().add(t); :}
+  | requirements_type_list.l AND requirements_type.t   	{: return l.add(t); :}
+  ;
+Access requirements_type =
+    name.n                                     			{: return n; :}
+  ;
+  
+List uses =
+													   	{: return new List(); :}	 												
+  | USES uses_type_list.i	 		                 	{: return i; :} ;
+List uses_type_list =
+    uses_type.t                                			{: return new List().add(t); :}
+  | uses_type_list.l AND uses_type.t   					{: return l.add(t); :}
+  ;
+Access uses_type =
+    name.n                                     			{: return n; :}
+  ;

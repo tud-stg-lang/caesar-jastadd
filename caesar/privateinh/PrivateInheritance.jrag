@@ -1,0 +1,7 @@
+// Implements correct inheritance relationships with contracts
+
+aspect PrivateInheritance {
+
+	/* Inherited name type for non terminals has to be set in sub classes */
+	eq CjPrivInhClassDecl.getUsedClasses().nameType() = NameType.TYPE_NAME;
+}
