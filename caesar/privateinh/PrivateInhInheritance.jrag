@@ -1,0 +1,25 @@
+// Implements correct inheritance relationships with private inheritance
+
+aspect PrivateInheritance {
+
+	/* Inherited name type for non terminals has to be set in sub classes */
+	eq CjPrivInhClassDecl.getUsedClasses().nameType() = NameType.TYPE_NAME;
+	
+	/******
+	 * Add used classes as superclasses.  
+	 * Access control provided via error checks.
+	 * Avoiding creating duplicates. 
+	 ******/
+	eq CjPrivInhClassDecl.getDeclaredParents() {
+		Collection parents = super.getDeclaredParents();
+		
+		for(int i = 0; i < getNumUsedClasses(); i++){
+			if(!parents.contains(getUsedClasses(i).type())){
+				parents.add(getUsedClasses(i).type());
+			}
+		}
+		
+		return parents;
+	}
+	
+}

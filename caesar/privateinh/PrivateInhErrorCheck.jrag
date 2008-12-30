@@ -1,0 +1,66 @@
+// Adds checks that define semantics for private inheritance
+
+aspect ErrorCheck {
+
+	/*****
+ 	 * Abstract members and reqs cannot be inherited via uses
+ 	 *****/
+	public void CjPrivInhClassDecl.checkModifiers() {
+		super.checkModifiers();
+		
+		for(int i = 0; i < getNumUsedClasses(); i++){
+			TypeDecl td = getUsedClasses(i).type();
+			
+			if(td instanceof CjContractClassDecl){
+				CjContractClassDecl cd = (CjContractClassDecl)td;
+				
+				// Uses is between top-level-families and as such a complete used class is concrete,
+				// has no unfulfilled reqs and can be safely used
+				if(!cd.isComplete()){
+					// check if inherited abstract members are redeclared or implemented
+					
+					//FIXME: how best to implement?
+					
+					/*if cd is not abstract we're done
+					
+					unimpViaUsed := determine all (also in virtual classes) unimplemented methods of cd
+					
+					unimpWithoutUsed := determine all (also in virtual classes) unimplemented methods of this excluding cd
+					
+					unimpWithUsed := determine unimplemented methods including cd
+					
+					unimplemented methods are redeclared if unimpWithoutUsed contains unimpViaUsed
+					
+					unimplemented methods are implemented if unimpWithUsed doesn't contain unimpViaUsed */
+					
+					// check if reqs are redeclared or implemented
+					
+					/*reqsViaUsed:= get all unfulfilled reqs of used class cd
+				
+					reqsWithoutUsed := determine unfulfilled reqs of this excluding cd
+					
+					reqsWithUsed := determine unfulfilled reqs including cd
+					
+					reqs are redeclared if reqsWithoutUsed contains reqsViaUsed
+					
+					reqs are implemented or provided if reqsWithUsed doesn't contain reqsViaUsed */
+				}
+			}
+		}	
+	}
+
+	/*****
+ 	 * Prevent access from indirect users
+ 	 *****/
+	refine AccessControl public void TypeAccess.accessControl() {
+		AccessControl.TypeAccess.accessControl();
+	
+		//FIXME: what exactly is the hostType?  I think it is the defining class... 
+	
+    	if(hostType() != null && !hostType().isUnknown()){
+    		/* get all used classes (direct and indirect)
+    		
+    		   if hostType is part of indirect used classes - trouble */	
+    	}
+  	}
+}
