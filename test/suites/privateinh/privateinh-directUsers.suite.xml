@@ -44,15 +44,16 @@
 
 	<compile-check-error id="directUsers003" 
 						 error="???"
-						 description="Direct users must fulfil used contract - i.e. abstract methods cannot be 
-						 inherited via uses and must be implemented, redefined or inherited via extends or requires.">
+						 description="Direct (also abstract) users must fulfil used contract 
+						 - i.e. abstract methods cannot be inherited via uses and must be 
+						 implemented, redefined or inherited via extends or requires.">
 		<code>
 			public abstract cclass A {
 				public String a() { return "a"; }
 				public abstract String ba();
 			}
 		
-			public cclass B uses A {}
+			public abstract cclass B uses A {}
 		</code>
 	</compile-check-error>
 
@@ -113,7 +114,7 @@
 				public String a() { return "a"; }
 			}
 		
-			public abstract ContractBA {
+			public abstract cclass ContractBA {
 				public abstract String ba();
 			}
 		

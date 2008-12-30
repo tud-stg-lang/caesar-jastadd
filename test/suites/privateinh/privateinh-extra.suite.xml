@@ -1,7 +1,7 @@
 <testsuite name="tests pathological cases with uses" package="privateinh.extra">
 
 	<compile-check-error id="extra001" 
-						 error="???"
+						 error="CLASS_CIRCULARITY"
 						 description="a class using itself">
 		<code>
 			public cclass A uses A {
@@ -11,7 +11,7 @@
 	</compile-check-error>
 
 	<compile-check-error id="extra002" 
-						 error="???"
+						 error="CLASS_CIRCULARITY"
 						 description="a class using a class that uses it">
 		<code>
 			public cclass A uses B {

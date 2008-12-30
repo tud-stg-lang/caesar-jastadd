@@ -13,7 +13,7 @@
 				public String ab() { return a() + "b"; }
 			}
 			
-			public cclass C uses B {
+			public abstract cclass C uses B {
 			 	public String abc() { return ab() + "c"; } 
 			}
 		</code>
@@ -21,30 +21,25 @@
 	
 	<compile-run id="requirements002"
 				 description="reqs via uses can be implemented">
-		
 		<code>
-			public abstract cclass A {
+			public abstract cclass ContractA {
 				public abstract String a();
 			}
 			
-			public cclass B requires A {
+			public cclass B requires ContractA {
 				public String ab() { return a() + "b"; }
 			}
 			
-			public cclass C extends A uses B {
+			public cclass C extends ContractA uses B {
 				public String a() { return "a"; }
 			 	public String abc() { return ab() + "c"; } 
 			}
 		</code>
 		
 		<test>
-			public class Test{
-				public void test(){
-					C c = new C();
+			C c = new C();
 					
-					assertEquals(c.abc(), "abc");
-				}
-			}
+			assertEquals(c.abc(), "abc");
 		</test>
 		
 	</compile-run>
@@ -91,27 +86,23 @@
 				public String a() { return "a"; }
 			}
 			
-			public cclass Complete extends C &amp; D {}
+			public cclass Complete extends C &amp; ProvA {}
 		</code>
 		
 		<test>
-			public class Test(){
-				public void test(){
-					Complete comp = new Complete();
+			Complete comp = new Complete();
 					
-					assertEquals(comp.abad(), "abad");
-				}
-			}
+			assertEquals(comp.abad(), "abad");
 		</test>
 	</compile-run>
 	
 	<compile-check-error id="requirements005" 
-				     error="???"
+				     error="NEW_INCOMPLETE"
 				     description="used classes do not fulfil reqs implicitly">
 		
 		<code>
 			public abstract cclass A {
-				public String a();
+				public abstract String a();
 			}
 		
 			public cclass B extends A {
@@ -140,7 +131,7 @@
 		
 		<code>
 			public abstract cclass A {
-				public String a();
+				public abstract String a();
 			}
 		
 			public cclass B extends A {

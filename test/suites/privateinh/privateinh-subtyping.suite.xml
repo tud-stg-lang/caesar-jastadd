@@ -69,7 +69,7 @@
 					B b = new B();
 					
 					// Not possible
-					ContractA b = b;
+					ContractA bb = b;
 				}
 			}
 		</code>

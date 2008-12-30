@@ -22,8 +22,31 @@
 			} 
 		</code>
 	</compile-check-error>
-
+	
 	<compile-check-error id="indirectUsers002"
+						 error="???"
+						 description="methods and behaviour are not accessible">
+		<code>
+			public cclass A {
+				public String a = "a";
+			}
+	
+			public cclass DirectB uses A {}
+		
+			public cclass IndirectB extends DirectB {}
+			
+			public class Test {
+				public void test(){
+					IndirectB b = new IndirectB();
+				
+					// Should not be accessible
+					String test = b.a;
+				}
+			} 
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="indirectUsers003"
 						 error="???"
 						 description="methods and behaviour are not accessible">
 		<code>
@@ -46,7 +69,7 @@
 		</code>
 	</compile-check-error>
 
-	<compile-check-error id="indirectUsers003"
+	<compile-check-error id="indirectUsers004"
 						 error="???"
 						 description="contracts should not be fulfilled via indirect usage">
 		<code>
@@ -71,7 +94,7 @@
 		</code>
 	</compile-check-error>
 
-	<compile-check-error id="indirectUsers004"
+	<compile-check-error id="indirectUsers005"
 						 error="???"
 						 description="contracts should not be fulfilled via indirect usage">
 		<code>

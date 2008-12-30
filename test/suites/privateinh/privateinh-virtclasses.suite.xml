@@ -12,8 +12,7 @@
 		
 			public cclass FamilyB uses FamilyA {
 				public cclass BB {
-					AA a = new AA();
-					public String ba() { return "b" + a.a(); }
+					public String ba() { return "b" + (new AA()).a(); }
 				}
 			}
 		
@@ -24,7 +23,7 @@
 			
 			FamilyB.BB bb = b.new BB();
 			
-			assertEquals(bb.ca(), "ba");
+			assertEquals(bb.ba(), "ba");
 		</test>
 		
 	</compile-run> 
@@ -44,4 +43,160 @@
 		</code>
 	</compile-check-error> 
  
+ 	<compile-check-error id="virtclasses003"
+ 						 error="???"
+				 		 description="Abstract methods in virtual classes cannot be inherited via uses">
+		
+		<code>
+			public abstract cclass FamilyA {
+				public cclass AA {
+					public abstract String a();
+				}
+			}
+
+			public abstract cclass FamilyB uses FamilyA {}
+			
+		</code>
+	</compile-check-error> 
+  	 	
+  	<compile-run id="virtclasses004"
+				 description="Abstract methods in virtual classes can be redeclared">
+		
+		<code>
+			public abstract cclass FamilyA {
+				public cclass AA {
+					public abstract String a();
+					public String b(){ return "b";}
+				}
+			}
+
+			public abstract cclass FamilyB uses FamilyA {
+				public cclass AA {
+					public abstract String a();
+					public String cab() { return "c" + a() + b();}
+				}
+			}
+			
+			public cclass FamilyC extends FamilyB {
+				public String testCab(){
+					AA aa = new AA();
+					
+					return aa.cab();
+				}
+			
+				public cclass AA {
+					public String a() { return "a";}
+				}
+			}
+		</code>
+		
+		<test>
+			FamilyC fc = new FamilyC();
+			
+			assertEquals(fc.testCab(), "cab");
+		</test>
+		
+	</compile-run> 
+	
+	<compile-run id="virtclasses005"
+				 description="Abstract methods in virtual classes can be implemented">
+		
+		<code>
+			public abstract cclass FamilyA {
+				public cclass AA {
+					public abstract String aa();
+					public String a() { return "a"; }
+				}
+			}
+
+			public cclass FamilyB uses FamilyA {
+				public String testAa() {
+					AA aa = new AA();
+					return aa.aa();
+				}
+			
+				public cclass AA {
+					public String aa() { return a() + a(); }
+				}
+			}
+		</code>
+		
+		<test>
+			FamilyB fb = new FamilyB();
+			
+			assertEquals(fb.testAa(), "aa");
+		</test>
+		
+	</compile-run> 
+  	 	
+  	<compile-check-error id="virtclasses006"
+ 						 error="???"
+				 		 description="Required methods in virtual classes cannot be inherited via uses">
+		
+		<code>
+			public abstract cclass FamilyA {
+				public cclass AA {
+					public abstract String a();
+				}
+			}
+
+			public cclass FamilyB requires FamilyA {}
+			
+			public abstract cclass FamilyC uses FamilyB {}
+			
+		</code>
+	</compile-check-error> 
+ 
+ 	<compile id="virtclasses007"
+				 description="Required methods in virtual classes can be redeclared">
+		
+		<code>
+			public abstract cclass FamilyA {
+				public cclass AA {
+					public abstract String a();
+				}
+			}
+
+			public cclass FamilyB requires FamilyA {}
+			
+			public cclass FamilyC requires FamilyA uses FamilyB {}
+		</code>
+	</compile> 
+ 
+ 	<compile-run id="virtclasses008"
+				 description="Required methods in virtual classes can be implemented">
+		
+		<code>
+			public abstract cclass FamilyA {
+				public cclass AA {
+					public abstract String a();
+				}
+			}
+
+			public cclass FamilyB requires FamilyA {
+				public cclass AA {
+					public String ba() { return "b" + a(); }
+				}
+			}
+			
+			public cclass FamilyC extends FamilyA uses FamilyB {
+				public String testBa() {
+					AA aa = new AA();
+					
+					return aa.ba();
+				}
+				
+				public cclass AA {
+					public String a() { return "a"; }
+				}
+			}
+		</code>
+		
+		<test>
+			FamilyC fc = new FamilyC();
+			
+			assertEquals(fc.testBa(), "ba");
+		</test>
+		
+	</compile-run> 
 </testsuite>
