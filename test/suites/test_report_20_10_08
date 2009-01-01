@@ -1,5 +1,5 @@
 ----------------
-All binary tests
+Skip binary tests
 ----------------
 
 -----------------------------------------
@@ -27,11 +27,15 @@ vc.allfromcc.vcallfromcc018b
 vc.allfromcc.vcallfromcc023
 vc.allfromcc.vcallfromcc024
 vc.allfromcc.vcallfromcc027
+vc.allfromcc.vcallfromcc030 (passes and fails randomly)
 vc.allfromcc.vcallfromcc037
+
 
 ------------------------------------------------
 Virtual classes: Anonymous classes, constructors
 ------------------------------------------------
+vc.anonym.vcanonym008 (passes and fails randomly)
+
 vc.inheritance.vcinheritance002
 vc.inheritance.vcinheritance011
 vc.inheritance.vcinheritance013
@@ -45,21 +49,18 @@ vc.visibility.vcvis013
 ---------------------------
 tests pass or fail randomly
 ---------------------------
-mixin.check.inhmethods.stcinhmethods014
-mixin.check.inhmethods.stcinhmethods016
+mixin.check.inhmethods.stcinhmethods014 (passes and fails randomly)
+mixin.check.inhmethods.stcinhmethods016 (passes and fails randomly)
 
-mixin.transform.supercall.mitsuper005
+mixin.transform.supercall.mitsuper005 (passes and fails randomly)
 
-mixin.transform.inhmethods.mitinhmethods005
-mixin.transform.inhmethods.mitinhmethods006
+mixin.transform.inhmethods.mitinhmethods005 (passes and fails randomly)
+mixin.transform.inhmethods.mitinhmethods006 (passes and fails randomly)
 
-vc.allfromcc.vcallfromcc014b
-vc.allfromcc.vcallfromcc018
-vc.allfromcc.vcallfromcc019
-vc.allfromcc.vcallfromcc020
-vc.allfromcc.vcallfromcc021
-vc.allfromcc.vcallfromcc025
-vc.allfromcc.vcallfromcc028
-vc.allfromcc.vcallfromcc030
-
-vc.anonym.vcanonym008
+vc.allfromcc.vcallfromcc014b (passes and fails randomly)
+vc.allfromcc.vcallfromcc018 (passes and fails randomly)
+vc.allfromcc.vcallfromcc019 (passes and fails randomly)
+vc.allfromcc.vcallfromcc020 (passes and fails randomly)
+vc.allfromcc.vcallfromcc021 (passes and fails randomly)
+vc.allfromcc.vcallfromcc025 (passes and fails randomly)
+vc.allfromcc.vcallfromcc028 (passes and fails randomly)
