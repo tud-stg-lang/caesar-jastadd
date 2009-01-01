@@ -29,7 +29,7 @@
 	</compile-run> 
  
  	<compile-check-error id="virtclasses002"
- 						 error="???"
+ 						 error="VITUAL_WITH_USES"
 				 		 description="virtual classes cannot use other classes">
 		
 		<code>

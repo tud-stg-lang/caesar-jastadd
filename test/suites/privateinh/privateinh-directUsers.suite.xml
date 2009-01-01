@@ -44,7 +44,7 @@
 
 	<compile-check-error id="directUsers003" 
 						 error="???"
-						 description="Direct (also abstract) users must fulfil used contract 
+						 description="Direct - also abstract - users must fulfil used contract 
 						 - i.e. abstract methods cannot be inherited via uses and must be 
 						 implemented, redefined or inherited via extends or requires.">
 		<code>
