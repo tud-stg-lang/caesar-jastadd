@@ -2,65 +2,104 @@
 
 aspect ErrorCheck {
 
+    /******
+  	 * Only top level types can have used classes
+	 ******/
+  	public void CjPrivInhClassDecl.nameCheck() {
+  		super.nameCheck();
+  		
+  		if(!isTopLevelType() && getNumUsedClasses() != 0){ 
+  			String usedClasses = ": ";
+      		for(int i = 0; i < getNumUsedClasses(); i++){
+      			usedClasses += ((TypeDecl)getUsedClasses(i).type()).name();
+      			
+      			if(i < getNumUsedClasses() - 1){ usedClasses += ", "; }
+      		}
+      		
+  			error(name() + " is a (nested) virtual class and uses" + usedClasses +   
+  				".  Only top-level families or normal classes can have used classes.");
+  		}
+  	}
+
 	/*****
  	 * Abstract members and reqs cannot be inherited via uses
  	 *****/
 	public void CjPrivInhClassDecl.checkModifiers() {
 		super.checkModifiers();
 		
-		for(int i = 0; i < getNumUsedClasses(); i++){
-			TypeDecl td = getUsedClasses(i).type();
-			
-			if(td instanceof CjContractClassDecl){
-				CjContractClassDecl cd = (CjContractClassDecl)td;
-				
-				// Uses is between top-level-families and as such a complete used class is concrete,
-				// has no unfulfilled reqs and can be safely used
-				if(!cd.isComplete()){
-					// check if inherited abstract members are redeclared or implemented
+		// Check for inherited abstract methods if class is abstract:
+		
+		//1.)  determine directly used classes
+				// - for virtual classes use Enclosing Top Level i.e. further bounds 
+				//   whose ETL is directly used by current ETL are the used classes 
+		
+		//2.)  determine unimplemented methods including used classes, this is the normal
+			   // call to unimplemented()
+		
+		//3.)  determine unimplemented methods excluding used classes
+		
+		//4.)  determine unimplemented methods of all used classes
+		
+		//5.)  for all methods m in (4):
+				//	not implemented -> (2) contains m
+				//	not redeclared -> (3) doesn't contain m
 					
-					//FIXME: how best to implement?
-					
-					/*if cd is not abstract we're done
-					
-					unimpViaUsed := determine all (also in virtual classes) unimplemented methods of cd
-					
-					unimpWithoutUsed := determine all (also in virtual classes) unimplemented methods of this excluding cd
-					
-					unimpWithUsed := determine unimplemented methods including cd
-					
-					unimplemented methods are redeclared if unimpWithoutUsed contains unimpViaUsed
-					
-					unimplemented methods are implemented if unimpWithUsed doesn't contain unimpViaUsed */
-					
-					// check if reqs are redeclared or implemented
-					
-					/*reqsViaUsed:= get all unfulfilled reqs of used class cd
-				
-					reqsWithoutUsed := determine unfulfilled reqs of this excluding cd
-					
-					reqsWithUsed := determine unfulfilled reqs including cd
-					
-					reqs are redeclared if reqsWithoutUsed contains reqsViaUsed
-					
-					reqs are implemented or provided if reqsWithUsed doesn't contain reqsViaUsed */
-				}
-			}
-		}	
+				//		-> error!
+						
+		// Check for inh requirements is class is incomplete:
+		
+		//1.) same as above
+		
+		//2.) determine all unfulfilled required classes
+		
+		//3.) determine unfulfilled required classes excluding used classes
+		
+		//4.) determine unfulfilled required classes of all used classes
+		
+		//5.)  for all reqs r in (4):
+				//	not fulfilled ->  (2) contains r
+				//	not redeclared -> (3) doesn't contain r
+	
+				//		-> error!
+		
 	}
 
 	/*****
  	 * Prevent access from indirect users
  	 *****/
-	refine AccessControl public void TypeAccess.accessControl() {
-		AccessControl.TypeAccess.accessControl();
+ 	 
+	// Don't really know what check to refine / extend
 	
-		//FIXME: what exactly is the hostType?  I think it is the defining class... 
+	// MethodAccess.nameCheck() and VarAccess.nameCheck() TypeAccess.accessControl()?
 	
-    	if(hostType() != null && !hostType().isUnknown()){
-    		/* get all used classes (direct and indirect)
-    		
-    		   if hostType is part of indirect used classes - trouble */	
-    	}
-  	}
+	// Do I need to understand the whole lookUp procedure?
+	
+	// Where do I have enough information to:
+	
+    	// get all used classes (direct and indirect) 
+    		// -> need enclosing class of access
+    	// if declaring class is part of indirect used classes - trouble 
+    		// -> need class where method/variable originates from
+    
+    
+
+  	 
+	/*****
+  	 * Refine completeness check to disallow indirect users from fulfilling contract
+  	 *****/
+  	 
+	// If class is complete refine completeness check to take usage into consideration
+  	
+  	// This seems really hard..  don't have an idea that makes much sense yet
+  	
+  	// The aim is to go through all unimplemented methods and check -- before replacing abstract versions of 
+  	// a method by a concrete version -- that the concrete version is NOT from an indirect user that is not used 
+  	// directly by any superclass that provides the contract to which the method belongs...
+  	
+  	/*****
+  	 * Prevent subtyping to used classes
+  	 *****/
+  	 
+  	// Still have to check what can be extended / has to be changed.. what check is carried out when subtyping?
+  	 
 }
