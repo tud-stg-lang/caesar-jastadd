@@ -1,7 +1,7 @@
 <testsuite name="usage semantics with requirements" package="privateinh.requirements">
 
 	<compile-check-error id="requirements001" 
-						 error="???"
+						 error="USED_REQS_CANNOT_BE_INHERITED"
 						 description="requirements via uses must be implemented, redeclared or inherited 
 						 via other extends or requires relationships">
 		<code>
@@ -13,6 +13,7 @@
 				public String ab() { return a() + "b"; }
 			}
 			
+			// C inherits abstract method a() via a requirement to subclasses - this is not allowed!
 			public abstract cclass C uses B {
 			 	public String abc() { return ab() + "c"; } 
 			}

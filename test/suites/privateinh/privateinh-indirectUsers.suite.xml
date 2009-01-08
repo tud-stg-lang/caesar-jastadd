@@ -1,7 +1,7 @@
 <testsuite name="Usage semantics for indirect users" package="privateinh.indirectUsers">
 
 	<compile-check-error id="indirectUsers001"
-						 error="???"
+						 error="METHOD_NOT_ACCESSIBLE"
 						 description="methods and behaviour are not accessible">
 		<code>
 			public cclass A {
@@ -24,7 +24,7 @@
 	</compile-check-error>
 	
 	<compile-check-error id="indirectUsers002"
-						 error="???"
+						 error="FIELD_NOT_ACCESSIBLE"
 						 description="methods and behaviour are not accessible">
 		<code>
 			public cclass A {
@@ -47,7 +47,7 @@
 	</compile-check-error>
 	
 	<compile-check-error id="indirectUsers003"
-						 error="???"
+						 error="METHOD_NOT_ACCESSIBLE"
 						 description="methods and behaviour are not accessible">
 		<code>
 			public cclass A {
@@ -70,7 +70,7 @@
 	</compile-check-error>
 
 	<compile-check-error id="indirectUsers004"
-						 error="???"
+						 error="CLASS_MUST_IMPLEMENT"
 						 description="contracts should not be fulfilled via indirect usage">
 		<code>
 			public abstract cclass ContractA {
@@ -95,7 +95,7 @@
 	</compile-check-error>
 
 	<compile-check-error id="indirectUsers005"
-						 error="???"
+						 error="CLASS_MUST_IMPLEMENT"
 						 description="contracts should not be fulfilled via indirect usage">
 		<code>
 			public abstract cclass ContractA {

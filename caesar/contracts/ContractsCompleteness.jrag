@@ -255,6 +255,9 @@ aspect ContractsCompleteness {
 	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
 	 ******/
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
+		// TODO: Does this generalise to indirect requirements of virtual classes 
+		//		 and is this necessary?
+	
 		// Get all implicit parents
 		Collection parents = getDirectFurtherbounds();
 		

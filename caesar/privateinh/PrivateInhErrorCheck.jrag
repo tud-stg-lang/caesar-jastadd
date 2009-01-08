@@ -20,7 +20,40 @@ aspect ErrorCheck {
   				".  Only top-level families or normal classes can have used classes.");
   		}
   	}
+  	
 
+	/*****
+ 	 * Prevent access from indirect users
+ 	 *****/
+ 	 
+ 	 refine AccessControl eq MethodDecl.accessibleFrom(TypeDecl type) {
+ 	 	if(!AccessControl.MethodDecl.accessibleFrom(type)){
+ 	 		// Private inheritance can only reduce accessibility
+ 	 		return false;
+ 	 	}
+ 	 	
+ 	 	// Refine check by taking usage (private inheritance) into account
+ 	 	if(type instanceof CjPrivInhClassDecl){
+ 	 		// not accessible if type uses hostType() (= class declaring method) indirectly
+ 	 		return !((CjPrivInhClassDecl)type).getIndirectlyUsed().contains(hostType());
+ 	 	}else
+ 	 		return true;	
+ 	 }
+  
+  	 refine AccessControl eq FieldDeclaration.accessibleFrom(TypeDecl type) {
+  		if(!AccessControl.FieldDeclaration.accessibleFrom(type)){
+  			// Private inheritance can only reduce accessibility
+  			return false;
+  		}
+  		
+  		// Refine check by taking usage (private inheritance) into account
+ 	 	if(type instanceof CjPrivInhClassDecl)
+ 	 		// not accessible if type uses hostType() (= class declaring field) indirectly
+ 	 		return !((CjPrivInhClassDecl)type).getIndirectlyUsed().contains(hostType());
+ 	 	else
+ 	 		return true;
+  	 }
+ 	 	
 	/*****
  	 * Abstract members and reqs cannot be inherited via uses
  	 *****/
@@ -28,78 +61,46 @@ aspect ErrorCheck {
 		super.checkModifiers();
 		
 		// Check for inherited abstract methods if class is abstract:
+		if(isAbstract()){
+			for(Iterator iter = unimplementedMethods().iterator(); iter.hasNext();){
+				MethodDecl m = (MethodDecl)iter.next();
+			
+				// If class from which abstract method m originates is a parent via uses -> error
+				if(getAllUsed().contains(m.hostType())){
+					error("Abstract method " + m.name() + " in " + name() + " cannot be inherited from used class "
+					+ m.hostType().name() + " and must be implemented or redeclared.");
+				}
+			}
+		}
 		
-		//1.)  determine directly used classes
-				// - for virtual classes use Enclosing Top Level i.e. further bounds 
-				//   whose ETL is directly used by current ETL are the used classes 
-		
-		//2.)  determine unimplemented methods including used classes, this is the normal
-			   // call to unimplemented()
-		
-		//3.)  determine unimplemented methods excluding used classes
-		
-		//4.)  determine unimplemented methods of all used classes
-		
-		//5.)  for all methods m in (4):
-				//	not implemented -> (2) contains m
-				//	not redeclared -> (3) doesn't contain m
-					
-				//		-> error!
-						
-		// Check for inh requirements is class is incomplete:
-		
-		//1.) same as above
-		
-		//2.) determine all unfulfilled required classes
-		
-		//3.) determine unfulfilled required classes excluding used classes
-		
-		//4.) determine unfulfilled required classes of all used classes
-		
-		//5.)  for all reqs r in (4):
-				//	not fulfilled ->  (2) contains r
-				//	not redeclared -> (3) doesn't contain r
-	
-				//		-> error!
-		
-	}
+		// Check for inherited requirements from used classes if not complete:
+		if(!isComplete()){
+			Collection contractWithoutUsage = new ArrayList();
+			contractWithoutUsage.addAll(getProvided());
+			contractWithoutUsage.addAll(getRequirements());
+			
+			Collection requirementsViaUsage = new ArrayList();
+			for(Iterator iter = getDirectlyUsed().iterator(); iter.hasNext(); ){
+				TypeDecl td = (TypeDecl)iter.next();
+				
+				if(td instanceof CjPrivInhClassDecl)
+					requirementsViaUsage.addAll(((CjPrivInhClassDecl)td).getRequirements());
+			}
+			
+			// Contract without used classes must subsume contract via used classes
+			for(Iterator iter = requirementsViaUsage.iterator(); iter.hasNext(); ){
+				TypeDecl td = (TypeDecl)iter.next();
+				if(!contractWithoutUsage.contains(td)){
+					error(name() + " cannot inherit requirement " + td.name() + " via usage (private inheritance)" +
+					" and must redeclare or fulfil " + td.name());
+				}
+			}
+		}				
+	}    
 
-	/*****
- 	 * Prevent access from indirect users
- 	 *****/
- 	 
-	// Don't really know what check to refine / extend
-	
-	// MethodAccess.nameCheck() and VarAccess.nameCheck() TypeAccess.accessControl()?
-	
-	// Do I need to understand the whole lookUp procedure?
-	
-	// Where do I have enough information to:
-	
-    	// get all used classes (direct and indirect) 
-    		// -> need enclosing class of access
-    	// if declaring class is part of indirect used classes - trouble 
-    		// -> need class where method/variable originates from
-    
-    
-
-  	 
-	/*****
-  	 * Refine completeness check to disallow indirect users from fulfilling contract
-  	 *****/
-  	 
-	// If class is complete refine completeness check to take usage into consideration
-  	
-  	// This seems really hard..  don't have an idea that makes much sense yet
-  	
-  	// The aim is to go through all unimplemented methods and check -- before replacing abstract versions of 
-  	// a method by a concrete version -- that the concrete version is NOT from an indirect user that is not used 
-  	// directly by any superclass that provides the contract to which the method belongs...
-  	
   	/*****
   	 * Prevent subtyping to used classes
   	 *****/
-  	 
-  	// Still have to check what can be extended / has to be changed.. what check is carried out when subtyping?
-  	 
+  	//TODO
+  	// Still have to check what can be extended / has to be changed.. what check is carried out when subtyping?   	 
 }

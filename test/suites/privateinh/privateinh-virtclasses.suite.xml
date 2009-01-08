@@ -15,7 +15,6 @@
 					public String ba() { return "b" + (new AA()).a(); }
 				}
 			}
-		
 		</code>
 		
 		<test>
@@ -29,7 +28,7 @@
 	</compile-run> 
  
  	<compile-check-error id="virtclasses002"
- 						 error="VITUAL_WITH_USES"
+ 						 error="VIRTUAL_WITH_USES"
 				 		 description="virtual classes cannot use other classes">
 		
 		<code>
@@ -44,7 +43,7 @@
 	</compile-check-error> 
  
  	<compile-check-error id="virtclasses003"
- 						 error="???"
+ 						 error="USED_ABSTRACT_CANNOT_BE_INHERITED"
 				 		 description="Abstract methods in virtual classes cannot be inherited via uses">
 		
 		<code>
@@ -130,7 +129,7 @@
 	</compile-run> 
   	 	
   	<compile-check-error id="virtclasses006"
- 						 error="???"
+ 						 error="USED_REQS_CANNOT_BE_INHERITED"
 				 		 description="Required methods in virtual classes cannot be inherited via uses">
 		
 		<code>
@@ -199,4 +198,46 @@
 		</test>
 		
 	</compile-run> 
+	
+	<compile-check-error id="virtclasses009"
+ 						 error="METHOD_NOT_ACCESSIBLE"
+				 		 description="Access to indirectly used classes is prohibited">
+		
+		<code>
+			public cclass FamilyA {
+				public cclass AA {
+					public String a() { return "a"; }
+				}
+			}
+
+			public cclass FamilyB uses FamilyA {}
+			
+			public cclass FamilyC extends FamilyB {
+				public cclass BB {
+					public String ba() { return "b" + (new AA()).a(); }
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="virtclasses010"
+ 						 error="METHOD_NOT_ACCESSIBLE"
+				 		 description="Access to indirectly used classes is prohibited">
+		
+		<code>
+			public cclass FamilyA {
+				public cclass AA {
+					public String a() { return "a"; }
+				}
+			}
+
+			public cclass FamilyB uses FamilyA {}
+			
+			public cclass FamilyC extends FamilyB {
+				public cclass AA {
+					public String aa() { return "a" + a(); }
+				}
+			}
+		</code>
+	</compile-check-error>  
 </testsuite>

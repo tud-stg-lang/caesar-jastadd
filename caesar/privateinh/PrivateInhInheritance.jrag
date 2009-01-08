@@ -22,4 +22,95 @@ aspect PrivateInheritance {
 		return parents;
 	}
 	
+	/*****
+	 * Determines all indirectly used classes
+	 *****/
+	syn Collection CjPrivInhClassDecl.getIndirectlyUsed() {
+		Collection c = getAllUsed();
+		
+		c.removeAll(getDirectlyUsed());
+		
+		return c;
+	}
+	
+	/*****
+	 * Determines all directly used classes
+	 *****/
+	syn Collection CjPrivInhClassDecl.getDirectlyUsed() {
+		// Virtual classes  (i.e. nested classes ) are handled differently
+		if(isNestedType()){
+			return getDirectlyUsedForVirtCls();
+		}
+		
+		Collection c = new ArrayList();
+		
+		for(int i = 0; i < getNumUsedClasses(); i++){
+			if(!c.contains(getUsedClasses(i).type())){
+				c.add(getUsedClasses(i).type());
+			}
+		}
+		
+		return c;
+	}
+	
+	/*****
+	 * Determines all used classes
+	 *****/
+	syn Collection CjPrivInhClassDecl.getAllUsed() {
+		// Avoid endless recursion
+		if(isCircular())
+			return Collections.EMPTY_LIST;
+		
+		Collection c = new ArrayList();
+	
+		c.addAll(getDirectlyUsed());
+		
+		// Call recursively (recursion anchor = no superclass relationships)
+		for(Iterator parents = getDirectParents().iterator(); parents.hasNext(); ){
+			TypeDecl tdParent = (TypeDecl)parents.next();
+			
+			if(tdParent instanceof CjPrivInhClassDecl){
+				for(Iterator used = ((CjPrivInhClassDecl)tdParent).getAllUsed().iterator(); used.hasNext();){				
+					TypeDecl tdUsed = (TypeDecl)used.next();
+					
+					if(!c.contains(tdUsed)){
+						c.add(tdUsed);
+					}
+				}
+			}
+		}
+		
+		return c;
+	}	
+	
+	/******
+	 * Override method in CjContractClassDecl to instantiate implicit virtual classes of right type
+	 ******/
+	public CjPrivInhClassDecl CjPrivInhClassDecl.createImplicitClass(Modifiers modifiers, String name) {
+		return new CjPrivInhClassDecl(modifiers, name, new List(), new List(), new List(), new List(), new List());
+	}
+	
+	/*****
+	 * Generalise concept of used classes for virtual classes	 
+	 *****/	
+	 syn Collection CjPrivInhClassDecl.getDirectlyUsedForVirtCls(){
+		// Get all implicit direct parents
+		Collection parents = getDirectFurtherbounds();
+		
+		// Return implicit parents whose Enclosing Top Level 
+		// is directly used by ETL of current class
+		Collection dirUsed = new ArrayList();
+		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
+			CjPrivInhClassDecl cd = (CjPrivInhClassDecl)itr.next();
+			if(getEnclosingTopLevel() instanceof CjPrivInhClassDecl){
+				CjPrivInhClassDecl tl = ((CjPrivInhClassDecl)getEnclosingTopLevel());
+				
+			   	if(tl.getDirectlyUsed().contains(cd.getEnclosingTopLevel())){
+					dirUsed.add(cd);
+				}
+			}
+		}
+		
+		return dirUsed;
+	}
 }

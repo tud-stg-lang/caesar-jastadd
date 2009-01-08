@@ -43,7 +43,7 @@
 	</compile-run>
 
 	<compile-check-error id="directUsers003" 
-						 error="???"
+						 error="USED_ABSTRACT_CANNOT_BE_INHERITED"
 						 description="Direct - also abstract - users must fulfil used contract 
 						 - i.e. abstract methods cannot be inherited via uses and must be 
 						 implemented, redefined or inherited via extends or requires.">
