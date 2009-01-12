@@ -97,10 +97,4 @@ aspect ErrorCheck {
 			}
 		}				
 	}    
-
-  	/*****
-  	 * Prevent subtyping to used classes
-  	 *****/
-  	//TODO
-  	// Still have to check what can be extended / has to be changed.. what check is carried out when subtyping?   	 
 }

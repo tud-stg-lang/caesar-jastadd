@@ -10,9 +10,7 @@ mixin.old.misc.mixinmisc008
 -----------------------
 Private inheritance (currently in implementation)
 ---------------
-privateinh-subtyping.suite.subtyping001
-privateinh-subtyping.suite.subtyping002
-privateinh-subtyping.suite.subtyping003
+privateinh.subtyping.subtyping003
 
 ---------------
 Dependent types

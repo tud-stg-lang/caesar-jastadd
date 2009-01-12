@@ -257,6 +257,8 @@ aspect ContractsCompleteness {
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
 		// TODO: Does this generalise to indirect requirements of virtual classes 
 		//		 and is this necessary?
+		//		 Problem here is that getDirectFurtherbounds only returns direct fb and not
+		//		 indirect as needed for checking for indirect requirements...
 	
 		// Get all implicit parents
 		Collection parents = getDirectFurtherbounds();

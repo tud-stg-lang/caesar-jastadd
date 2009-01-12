@@ -1,7 +1,7 @@
 <testsuite name="usage semantics related to subtyping" package="privateinh.subtyping">
 
 	<compile-check-error id="subtyping001" 
-						 error="???"
+						 error="INCOMPATIBLE_TYPE"
 						 description="subtyping not possible for direct users">
 		<code>
 			public cclass A {
@@ -24,7 +24,7 @@
 	</compile-check-error>
 
 	<compile-check-error id="subtyping002" 
-						 error="???"
+						 error="INCOMPATIBLE_TYPE"
 						 description="subtyping not possible for indirect users">
 		<code>
 			public cclass A {
@@ -49,7 +49,7 @@
 	</compile-check-error>
 
 	<compile-check-error id="subtyping003" 
-						 error="???"
+						 error="INCOMPATIBLE_TYPE"
 						 description="subtyping not possible to base class of used class">
 		<code>
 			public abstract cclass ContractA {

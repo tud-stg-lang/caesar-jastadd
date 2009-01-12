@@ -56,6 +56,11 @@ aspect PrivateInheritance {
 	/*****
 	 * Determines all used classes
 	 *****/
+	 
+	//TODO How about base classes of used classes?  Are they used as well?
+	//	   This would solve problem with subtyping to base classes of used classes
+	//     Problem here would be to filter base classes that are inherited via extends or reqs
+	 
 	syn Collection CjPrivInhClassDecl.getAllUsed() {
 		// Avoid endless recursion
 		if(isCircular())
@@ -113,4 +118,20 @@ aspect PrivateInheritance {
 		
 		return dirUsed;
 	}
+	
+	/*****
+  	 * Prevent subtyping to used classes
+  	 *****/
+  	
+  	//TODO are these all cases?  How about casting, subtyping via arguments (polymorphism)?
+  	 
+	eq CjPrivInhClassDecl.wideningConversionTo(TypeDecl type){
+  		// Make sure type is not a used class
+  		return instanceOf(type) && !getAllUsed().contains(type);
+  	}
+  	
+  	eq CjPrivInhClassDecl.narrowingConversionTo(TypeDecl type){
+  		// Make sure type is not a used class
+  		return instanceOf(type) && !getAllUsed().contains(type);
+  	}	
 }
