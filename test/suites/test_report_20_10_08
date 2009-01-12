@@ -1,16 +1,11 @@
 ----------------
-Skip binary tests
+TODO binary tests
 ----------------
 
 -----------------------------------------
 An exotic test concerning inlined classes
 -----------------------------------------
 mixin.old.misc.mixinmisc008
-
------------------------
-Private inheritance (currently in implementation)
----------------
-privateinh.subtyping.subtyping003
 
 ---------------
 Dependent types
@@ -32,14 +27,14 @@ vc.allfromcc.vcallfromcc018b
 vc.allfromcc.vcallfromcc023
 vc.allfromcc.vcallfromcc024
 vc.allfromcc.vcallfromcc027
-vc.allfromcc.vcallfromcc030 (passes and fails randomly?)
+vc.allfromcc.vcallfromcc030
 vc.allfromcc.vcallfromcc037
 
 
 ------------------------------------------------
 Virtual classes: Anonymous classes, constructors
 ------------------------------------------------
-vc.anonym.vcanonym008 (passes and fails randomly?)
+vc.anonym.vcanonym008
 
 vc.inheritance.vcinheritance002
 vc.inheritance.vcinheritance011

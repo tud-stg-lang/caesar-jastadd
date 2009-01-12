@@ -163,9 +163,9 @@ aspect ContractsCompleteness {
 	
 	
 	/******
-	 * 11 - 16.) [subtypeof] := getSubtypesOf() for classes
+	 * 11 - 16.) [subtypeof] := getSupertypesOf() for classes (i.e. A [subtypeof] B == A.getSupertypesOf().contains(B))
 	 ******/
-	syn lazy Collection CjContractClassDecl.getSubtypesOf() {
+	syn lazy Collection CjContractClassDecl.getSupertypesOf() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -186,7 +186,7 @@ aspect ContractsCompleteness {
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
-				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+				c.addAll(((CjContractClassDecl)td).getSupertypesOf());
 			}
 		}			
 		
@@ -194,7 +194,7 @@ aspect ContractsCompleteness {
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
-				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+				c.addAll(((CjContractClassDecl)td).getSupertypesOf());
 			}
 		}			
 		
@@ -202,7 +202,7 @@ aspect ContractsCompleteness {
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
-				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+				c.addAll(((CjContractClassDecl)td).getSupertypesOf());
 			}
 		}			
 					
@@ -227,14 +227,14 @@ aspect ContractsCompleteness {
 		// Add explicit requirements
 		c.addAll(getExplicitRequirements());
 		
-		// Add recursively all subtypes of direct requirements
+		// Add recursively all supertypes of direct requirements
 		for(Iterator iter = getExplicitRequirements().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
-				c.addAll(((CjContractClassDecl)td).getSubtypesOf());
+				c.addAll(((CjContractClassDecl)td).getSupertypesOf());
 			} else if(td instanceof InterfaceDecl){
-				// For interfaces, getSubtypesOf simplifies to getAllExtends
+				// For interfaces, getSupertypesOf simplifies to getAllExtends
 				c.addAll(((InterfaceDecl)td).getAllExtends());
 			}
 		}			
@@ -257,7 +257,7 @@ aspect ContractsCompleteness {
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
 		// TODO: Does this generalise to indirect requirements of virtual classes 
 		//		 and is this necessary?
-		//		 Problem here is that getDirectFurtherbounds only returns direct fb and not
+		//		 Problem here is that getDirectFurtherbounds only returns direct fbs and not
 		//		 indirect as needed for checking for indirect requirements...
 	
 		// Get all implicit parents

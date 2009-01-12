@@ -57,10 +57,6 @@ aspect PrivateInheritance {
 	 * Determines all used classes
 	 *****/
 	 
-	//TODO How about base classes of used classes?  Are they used as well?
-	//	   This would solve problem with subtyping to base classes of used classes
-	//     Problem here would be to filter base classes that are inherited via extends or reqs
-	 
 	syn Collection CjPrivInhClassDecl.getAllUsed() {
 		// Avoid endless recursion
 		if(isCircular())
@@ -71,6 +67,9 @@ aspect PrivateInheritance {
 		c.addAll(getDirectlyUsed());
 		
 		// Call recursively (recursion anchor = no superclass relationships)
+		
+		// Get used classes of direct parents, 
+		// getDirectParents() generalise for virtual classes by including directFurtherBounds
 		for(Iterator parents = getDirectParents().iterator(); parents.hasNext(); ){
 			TypeDecl tdParent = (TypeDecl)parents.next();
 			
@@ -84,6 +83,29 @@ aspect PrivateInheritance {
 				}
 			}
 		}
+		
+		// Get all superclasses of directly used classes
+		for(Iterator dirUses = getDirectlyUsed().iterator(); dirUses.hasNext(); ){
+			TypeDecl td = (TypeDecl)dirUses.next();
+					
+			if(td instanceof CjPrivInhClassDecl){
+				CjPrivInhClassDecl cd = (CjPrivInhClassDecl)td;
+				
+				for(Iterator iter = cd.getSupertypesOf().iterator(); iter.hasNext(); ){
+					TypeDecl s = (TypeDecl)iter.next();
+					
+					// Supertypes include all requirements, superclasses (extends)
+					// and all implemented interfaces.
+					// Interfaces are not to be considered here...
+					if(!(s instanceof InterfaceDecl) && !c.contains(s)){
+						c.add(s);
+					}
+				}
+			}
+		}
+		
+		// Remove used classes that are supertypes of this via other means
+		c.removeAll(getSupertypesOf());
 		
 		return c;
 	}	
@@ -133,5 +155,5 @@ aspect PrivateInheritance {
   	eq CjPrivInhClassDecl.narrowingConversionTo(TypeDecl type){
   		// Make sure type is not a used class
   		return instanceOf(type) && !getAllUsed().contains(type);
-  	}	
+  	}
 }
