@@ -145,7 +145,16 @@ aspect PrivateInheritance {
   	 * Prevent subtyping to used classes
   	 *****/
   	
-  	//TODO are these all cases?  How about casting, subtyping via arguments (polymorphism)?
+  	//TODO Write tests for:
+  		// casting to check widening and narrowing for reference types
+  		// Arrays?
+  		// subtyping for dependent types:
+  			// cclass X {cclass A {} cclass B {}}
+  			// cclass Y [extends|uses] X {cclass B [extends|uses] A {}}
+  			// final X x = new Y();
+  			// x.A a = x.new B();
+  			// final Y y = new Y();
+  			// y.A ay = y.new B();
   	 
 	eq CjPrivInhClassDecl.wideningConversionTo(TypeDecl type){
   		// Make sure type is not a used class
@@ -156,4 +165,6 @@ aspect PrivateInheritance {
   		// Make sure type is not a used class
   		return instanceOf(type) && !getAllUsed().contains(type);
   	}
+  	
+  	
 }
