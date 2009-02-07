@@ -35,7 +35,7 @@ aspect VCExternalizedClasses {
 		
 		public void addSourceFile(String fileName) {
 			try {
-				// compute cannonical name of the class in the file
+				// compute canonical name of the class in the file
 				Reader reader = new FileReader(fileName);
 				JavaScanner scanner = new JavaScanner(new Unicode(reader));
 				StringBuffer packageName = new StringBuffer();
@@ -74,7 +74,7 @@ aspect VCExternalizedClasses {
 				int end = fileName.lastIndexOf('.');
 				packageName.append(fileName.substring(begin, end));
 				
-				// register the file for the cannonical name
+				// register the file for the canonical name
 				String canonicalName = packageName.toString();
 				sourceFiles.put(canonicalName, fileName);
 				
