@@ -240,5 +240,62 @@ aspect MCByteCode {
     }
 	*/
 	
+  class IsCjClassAttribute extends Attribute {
+		public IsCjClassAttribute(ConstantPool p) {
+			super(p, "de.tud.caesarj.IsCjClass");
+			 // attribute of length zero (just like DeprecatedAttribute in Java)
+		}
+	}
+
+  class CjSuperclassesAttribute extends Attribute {
+		public CjSuperclassesAttribute(CjClassDecl decl) {
+			super(decl.constantPool(), "de.tud.caesarj.Superclasses");
+			ConstantPool c = decl.constantPool();
+			Collection list = decl.getDeclaredParents();
+			u2(list.size()); 										// cj_superclasses_length
+			for(Iterator iter = list.iterator(); iter.hasNext(); ) {
+				TypeDecl superclassType = (TypeDecl)iter.next();
+				u2(c.addClass(superclassType.constantPoolName()));	// cj_superclasses_index
+			}
+		}
+	}
+
+  class OriginalModifiersAttribute extends Attribute {
+		public OriginalModifiersAttribute(ConstantPool cp, MethodDecl decl) {
+			super(cp, "de.tud.caesarj.OriginalModifiers");
+			final Modifiers m = decl.getModifiers();
+			int attributes = 0;
+			if(m.isPublic()) attributes |= Modifiers.ACC_PUBLIC;
+			if(decl.isPrivate()) attributes |= Modifiers.ACC_PRIVATE;
+			if(decl.isProtected()) attributes |= Modifiers.ACC_PROTECTED;
+			if(decl.isStatic()) attributes |= Modifiers.ACC_STATIC;
+			if(decl.isFinal()) attributes |= Modifiers.ACC_FINAL;
+			if(decl.isSynchronized()) attributes |= Modifiers.ACC_SYNCHRONIZED;
+			if(decl.isNative()) attributes |= Modifiers.ACC_NATIVE;
+			if(m.isAbstract()) attributes |= Modifiers.ACC_ABSTRACT;
+			if(decl.isStrictfp()) attributes |= Modifiers.ACC_STRICT;
+			u2(attributes);
+		}
+		public OriginalModifiersAttribute(ConstantPool cp, ConstructorDecl decl) {
+			super(cp, "de.tud.caesarj.OriginalModifiers");
+			int attributes = 0;
+			if(decl.isPublic()) attributes |= Modifiers.ACC_PUBLIC;
+			if(decl.isPrivate()) attributes |= Modifiers.ACC_PRIVATE;
+			if(decl.isProtected()) attributes |= Modifiers.ACC_PROTECTED;
+			u2(attributes);
+		}
+	}
+
+  refine Annotations eq MethodDecl.attributes() = attributesMC(Annotations.MethodDecl.attributes());
+  public Collection MethodDecl.attributesMC(Collection c) {
+    c.add(new OriginalModifiersAttribute(hostType().constantPool(), this));
+    return c;
+  }
+  refine Annotations eq ConstructorDecl.attributes() = attributesMC(Annotations.ConstructorDecl.attributes());
+  public Collection ConstructorDecl.attributesMC(Collection c) {
+    c.add(new OriginalModifiersAttribute(hostType().constantPool(), this));
+    return c;
+  }
+
 	
 }
