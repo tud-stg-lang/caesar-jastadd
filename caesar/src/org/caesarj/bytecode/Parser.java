@@ -11,7 +11,6 @@ import org.caesarj.ast.ASTNode;
 import org.caesarj.ast.Access;
 import org.caesarj.ast.BodyDecl;
 import org.caesarj.ast.CjContractClassDecl;
-import org.caesarj.ast.CjVirtualClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.CompilationUnit;
 import org.caesarj.ast.Dot;
@@ -25,6 +24,7 @@ import org.caesarj.ast.Opt;
 import org.caesarj.ast.ParseName;
 import org.caesarj.ast.Program;
 import org.caesarj.ast.TypeDecl;
+import org.objectweb.asm.ClassReader;
 
 //import sun.management.MethodInfo;
 //import sun.reflect.FieldInfo;
@@ -291,8 +291,9 @@ public class Parser {
 		return cu;
 	}
 
-	/** Transforms a TypeDecl into a CjVirtualClassDecl */
-	CjVirtualClassDecl transformBodyAndSuperclasses(ClassDecl typeDecl, List superclassesList) {
+	/** Transforms a TypeDecl into a CjContractClassDecl */
+	//TODO: Make sure to always use the most concrete CjClassDecl derivate
+	CjContractClassDecl transformBodyAndSuperclasses(ClassDecl typeDecl, List superclassesList) {
 		List body = typeDecl.getBodyDeclListNoTransform();
 		List newbody = new List();
 		for(int i = 0; i < body.getNumChild(); ++i) {
@@ -308,16 +309,18 @@ public class Parser {
 		if (superclassesList == null)
 			superclassesList = new List(); //ignore typeDecl.getSuperClassAccess()
 
-		// Make a CjClassDecl, including its superclasses and its inherited members:
-		CjContractClassDecl transformedTypeDecl = 
-			new CjContractClassDecl(
-					typeDecl.getModifiersNoTransform(), 
-					typeDecl.getID(), 
-					superclassesList, 
-					typeDecl.getImplementsList(), 
-					newbody, 
-					new List()); 
-		
+		// Make a CjContractClassDecl, including its superclasses and its inherited members:
+		CjContractClassDecl transformedTypeDecl =
+				new CjContractClassDecl(
+						typeDecl.getModifiersNoTransform(),
+						typeDecl.getID(),
+						superclassesList,
+						typeDecl.getImplementsListNoTransform(),
+						newbody,
+						new List());
+		transformedTypeDecl.setDynamicTypeList(
+				typeDecl.getDynamicTypeListNoTransform());
+
 		// For virtual classes replace them in the parent
 		ASTNode parent = typeDecl.getParent();
 		if (parent != null) {
@@ -400,9 +403,45 @@ public class Parser {
 		int count = u2();
 		for (int i = 0; i < count; i++) {
 			CONSTANT_Class_Info info = (CONSTANT_Class_Info) constantPool[u2()];
-			list.add(info.access());
+			replaceInterfaces(info.name(), list);
 		}
 		return list;
+	}
+	
+	protected void replaceInterfaces(String ifcTypeName, List list) {
+		if (ifcTypeName.endsWith("_ccIfc")) {
+			try {
+				final String ifcFilePath = ifcTypeName.replace('.', '/');
+				ClassReader cr = new ClassReader(ClassLoader
+						.getSystemResourceAsStream(ifcFilePath + ".class"));
+				for (String ifc : cr.getInterfaces())
+					if (!ifc.equals("org/caesarj/runtime/CjObjectIfc"))
+						replaceInterfaces(ifc.replace('/', '.'), list);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else
+			list.add(access(ifcTypeName));
+	}
+	
+	protected Access access(String ifc) {
+		String name = ifc.replace('/', '.').replace('$', '.');
+		int index = -1;
+		int pos = 0;
+		Access result = null;
+		do {
+			pos = name.indexOf('.', index + 1);
+			if (pos == -1)
+				pos = name.length();
+			String s = name.substring(index + 1, pos);
+			if (index == -1) {
+				result = new ParseName(s);
+			} else {
+				result = new Dot(result, new ParseName(s));
+			}
+			index = pos;
+		} while (pos != name.length());
+		return result;
 	}
 
 
