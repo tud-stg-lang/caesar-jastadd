@@ -2,7 +2,6 @@ package org.caesarj.bytecode;
 
 import java.io.FileNotFoundException;
 
-import org.caesarj.ast.CjVirtualClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.InterfaceDecl;
 import org.caesarj.ast.List;
@@ -20,6 +19,7 @@ class Attributes {
 	private CONSTANT_Info constantValue;
 	private List superclassesList;
 	private boolean isCjClass;
+	private int flags;
 	
 	/** "Trickle-up": This field is used for passing the outer <code>TypeDecl</code>, to which a 
 	 *  <code>MemberClassDecl</code> (corresponding to the inner class) was added, along the cascade 
@@ -36,6 +36,7 @@ class Attributes {
 		exceptionList = new List();
 		isSynthetic = false;
 		isCjClass = false;
+		flags = 0;
 
 		int attributes_count = p.u2();
 		printIfVerbose("    " + attributes_count + " attributes:");
@@ -52,6 +53,9 @@ class Attributes {
 				continue;
 			} else if (attribute_name.equals("de.tud.caesarj.IsCjClass")) {
 				isCjClass = true;
+				continue;
+			} else if (attribute_name.equals("de.tud.caesarj.OriginalModifiers")) {
+				flags = p.u2();
 				continue;
 			} else if (attribute_name.equals("InnerClasses")) {
 				innerClasses(typeDecl, outerTypeDeclParam, classPath);
@@ -192,6 +196,10 @@ class Attributes {
 
 	public boolean isCjClass() {
 		return isCjClass;
+	}
+	
+	public int flags() {
+		return flags;
 	}
 	
 	TypeDecl getOuterTypeDecl() {
