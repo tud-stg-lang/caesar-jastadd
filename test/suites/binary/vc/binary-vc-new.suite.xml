@@ -1,0 +1,192 @@
+<testsuite name="Test new operator with Caesar classes" package="binary.vc.newop">
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="METHOD_NOT_FOUND"  id="binvcnew001" description="new operator with parameter">
+        <binary>
+      public cclass ClassA { }
+        </binary>
+        <code>
+        	public class Test {
+				public void test() {
+					ClassA a = new ClassA(1);
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="binvcnew002" description="new array on cclass">
+        <binary>
+      public cclass ClassA { }
+        </binary>
+        <code>
+        	public class Test {
+				public void test() {
+					Object a = new ClassA[2];
+				}
+			}
+        </code>
+    </compile>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT"  id="binvcnew003" description="direct construction of inner class">
+        <binary>
+			public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+        </binary>
+	    <code>
+        	public class Test {
+				public void test() {
+					Object a = new OuterA.InnerA();
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="INSTANCE_METHOD_CALL_IN_STATIC_CONTEXT"  id="binvcnew004" description="constructing external inner class">
+        <binary>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+        </binary>
+        <code>
+			public cclass OuterB {
+				public cclass InnerA {
+				}
+				public void m() {
+					InnerA a = new OuterA.InnerA();
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="TYPE_UNKNOWN"  id="binvcnew005" description="statically qualified new operator">
+        <binary>
+      public cclass OuterA {
+        public cclass InnerA {
+        }
+      }
+        </binary>
+        <code>
+        	public class Test {
+				public void test() {
+					OuterA.InnerA a = OuterA.new InnerA();
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error error="TYPE_UNKNOWN"  id="binvcnew006" description="constructing non-existing inner class">
+		<!-- error=TYPE_UNKNOWN ??? -->
+        <binary>
+        	public cclass OuterA {
+				public cclass InnerA {
+				}
+			}
+        </binary>
+        <code>
+			public cclass OuterB extends OuterA {
+				public cclass InnerB {
+				}
+				public void m() {
+					OuterB.InnerB a = new OuterA().new InnerB();
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="binvcnew007" description="constructor with parameter">
+	    <test>
+			OuterB.InnerA a1 = new OuterB().new InnerA(5);
+			assertEquals(a1.getA(), 5);
+			assertEquals(a1.getB(), -1);
+			OuterB.InnerA a2 = new OuterB().new InnerA(4, 7);
+			assertEquals(a2.getB(), 7);
+		</test>
+        <binary>
+        	public cclass OuterA {
+        		public cclass InnerA {
+        			protected int a;
+					public InnerA(int a) {
+					    this.a = a;
+					}
+					public int getA() {
+						return a;
+					}
+        		}
+			}
+        </binary>
+        <code>
+			public cclass OuterB extends OuterA {
+        		public cclass InnerA {
+        			protected int b;
+        			public InnerA(int a) {
+					    this.a = a;
+					    this.b = -1;
+					}
+					public InnerA(int a, int b) {
+					    this.a = a;
+					    this.b = b;
+					}
+					public int getB() {
+						return b;
+					}
+        		}
+			}			
+        </code>
+    </compile-run>
+    
+    <compile-run id="binvcnew008" description="test instance variable initializers in a virtual class">
+		<test>
+			String expectedResult = "foo";
+			A.Y y = new B().new Y();
+			String result = y.getX();
+			assertEquals(expectedResult, result);
+		</test>
+        <binary>
+        	public cclass A {
+        		public String y = "foo";
+				
+				public cclass Y {
+					private String x = y;
+					public String getX() { return x; }
+				}
+			}
+        </binary>
+        <code>
+			public cclass B extends A { }
+        </code>
+    </compile-run> 
+    
+    <compile-run id="binvcnew009" description="test instance variable initializers in a virtual class">
+		<test>
+			String expectedResult = "foo";
+			A.Y y = new B().new Y();
+			String result = y.getX().foo();
+			assertEquals(expectedResult, result);
+		</test>
+        <binary>
+        	public cclass A {
+				public cclass X {
+					public String foo() { return "foo"; }
+				}
+				
+				public cclass Y {
+					private X x = new X();
+					public X getX() { return x; }
+				}
+			}
+        </binary>
+        <code>
+			public cclass B extends A { }
+        </code>
+    </compile-run> 
+
+</testsuite>

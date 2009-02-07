@@ -1,0 +1,164 @@
+<testsuite name="Optimization of virtual class generation" package="binary.vc.optim">
+
+	<compile-run description="Top level abstract class" id="binvcoptim001">
+	    <test>
+			AAA a = new BBB();
+			a.m();
+		</test>
+		<binary>
+			abstract public cclass AAA {
+			   public void m() { }
+			}
+    </binary>
+    <code>
+			public cclass BBB extends AAA { }
+		</code>
+	</compile-run>
+		
+    <compile-run description="Abstract mixin copy" id="binvcoptim002">
+	    <test>
+			AAA a = new CCC();
+			a.m();
+		</test>
+		<binary>
+			abstract public cclass AAA {
+			   public void m() { }
+			}
+			abstract public cclass BBB {
+			}
+    </binary>
+    <code>
+			public cclass CCC extends AAA &amp; BBB { }
+		</code>
+	</compile-run>
+	
+	<compile-run description="Abstract virtual classes" id="binvcoptim003">
+	    <test>
+	        final XXX x = new XXX();
+			XXX.AAA a = x.new BBB();
+			a.m();
+		</test>
+		<binary>
+		    public cclass XXX {
+				abstract public cclass AAA {
+				   public void m() { }
+				}
+				public cclass BBB extends AAA { }
+			}
+		</binary>
+    <code>
+      public cclass YYY extends XXX { }
+    </code>
+	</compile-run>
+	
+	<compile-run description="Abstract virtual classes" id="binvcoptim004">
+	    <test>
+	        final XXX x = new XXX();
+	    	XXX.AAA a = x.new CCC();
+			a.m();
+		</test>
+		<binary>
+		    public cclass XXX {
+				abstract public cclass AAA {
+				   public void m() { }
+				}
+				abstract public cclass BBB {
+				}
+				public cclass CCC extends AAA &amp; BBB { }
+			}
+		</binary>
+    <code>
+      public cclass YYY extends XXX { }
+    </code>
+	</compile-run>
+	
+	<compile-run description="Abstract virtual classes" id="binvcoptim005">
+	    <test>
+	        final XXX x = new YYY();
+	    	XXX.AAA a = x.new CCC();
+			a.m();
+		</test>
+		<binary>
+		    abstract public cclass XXX {
+				abstract public cclass AAA {
+				   public void m() { }
+				}
+				abstract public cclass BBB {
+				}
+				public cclass CCC extends AAA &amp; BBB { }
+			}
+    </binary>
+    <code>
+			public cclass YYY extends XXX { }
+		</code>
+	</compile-run>
+	
+	<compile-run description="Abstract virtual classes" id="binvcoptim006">
+	    <test>
+	        final YYY x = new YYY();
+	    	XXX.AAA a = x.new CCC();
+			a.m();
+		</test>
+		<binary>
+		    abstract public cclass XXX {
+				abstract public cclass AAA {
+				   public void m() { }
+				}
+				abstract public cclass BBB {
+				}				
+			}
+    </binary>
+    <code>
+			public cclass YYY extends XXX { 
+				public cclass CCC extends AAA &amp; BBB { }
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run description="Abstract virtual classes" id="binvcoptim007">
+	    <test>
+	        final YYY x = new YYY();
+	    	XXX.AAA a = x.new CCC();
+			a.m();
+		</test>
+		<binary>
+		    abstract public cclass XXX {
+				abstract public cclass AAA {
+				   public void m() { }
+				}
+				abstract public cclass BBB {
+				}				
+			}
+			abstract public cclass ZZZ {
+			}
+    </binary>
+    <code>
+			public cclass YYY extends XXX &amp; ZZZ { 
+				public cclass CCC extends AAA &amp; BBB { }
+			}
+		</code>
+	</compile-run>	
+	
+	<compile-run description="All abstract" id="binvcoptim008">
+	    <test>
+	        final YYY x = new YYY();	    	
+		</test>
+		<binary>
+		    abstract public cclass XXX {
+				abstract public cclass AAA {
+				   public void m() { }
+				}
+				abstract public cclass BBB {
+				}				
+			}
+			public cclass ZZZ extends XXX {
+			}
+    </binary>
+    <code>
+			public cclass YYY extends XXX &amp; ZZZ { 
+				abstract public cclass CCC extends AAA &amp; BBB { }
+			}
+		</code>
+	</compile-run>	
+
+</testsuite>

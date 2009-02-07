@@ -1,0 +1,112 @@
+<testsuite name="cclass constructors" package="binary.vc.constr">
+	
+	<common-code-base> 
+		public cclass GraphLib{ public cclass Node{} }
+	</common-code-base>
+
+  <compile-check-error error="CONSTRUCTOR_NOTFOUND"
+    description="Need explicit super" 
+    id="vcconstr000">
+    
+    <binary>
+      public class X{
+        public X(int i){
+        }
+      }
+    </binary>
+    <code>
+      public class Y extends X{
+        public Y(String s){
+        }
+      }
+    </code>
+    
+  </compile-check-error>
+    
+  <compile description="Default constructor is always available" 
+        id="vcconstr001">
+    <binary>
+      public cclass X{
+        public X(int i){ 
+        }
+      }
+    </binary>
+    <code>
+      public class Main{
+       public static void main(String[] args){
+        new X();
+       }
+      }
+    </code>
+  </compile>
+
+  <compile-run description="test explicit super call" id="vcconstr002">
+    <test>
+      assertEquals(42, new Y(42).i);
+    </test>
+    <binary>
+      public cclass X{
+        public int i;
+        public X(int i){
+          this.i = i;
+        }
+      }
+    </binary>
+      
+    <code>
+      public cclass Y extends X {
+        public Y(int i){
+          super(i);
+        }
+      }
+    </code>
+  </compile-run>  
+  
+  <compile-run description="test implicit super call" id="vcconstr003">
+    <test>
+      assertEquals(42, new Y(0).i);
+    </test>
+    <binary>
+      public cclass X{
+        public int i;
+        public X(){
+          this.i = 42;
+        }
+      }
+    </binary>
+      
+    <code>
+      public cclass Y extends X {
+        public Y(int i){          
+        }
+      }
+    </code>
+  </compile-run>  
+  
+  <compile-run description="test this constructor call" id="vcconstr004">
+    <test>
+      assertEquals(42, new Y().i);
+    </test>
+    <binary>
+      public cclass X{
+        public int i;
+        public X(int i){
+          this.i = i;
+        }
+      }
+    </binary>
+      
+    <code>
+      public cclass Y extends X {
+        public Y() {
+          this(42);
+        }
+        public Y(int i){
+          super(i);
+        }
+      }
+    </code>
+  </compile-run>  
+
+
+</testsuite>
