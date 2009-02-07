@@ -18,36 +18,39 @@ class MethodInfo {
 	public MethodInfo(Parser parser) {
 		p = parser;
 		flags = p.u2();
-    if(Parser.VERBOSE)
-      p.print("  Flags: " + Integer.toBinaryString(flags));
-		int name_index = p.u2();
-    CONSTANT_Info info = p.constantPool[name_index];
-    if(info == null || !(info instanceof CONSTANT_Utf8_Info)) {
-      System.err.println("Expected CONSTANT_Utf8_Info but found: " + info.getClass().getName());
-      //if(info instanceof CONSTANT_Class_Info) {
-      //  System.err.println(" found CONSTANT_Class_Info: " + ((CONSTANT_Class_Info)info).name());
-      //  name = ((CONSTANT_Class_Info)info).name();
-      //}
-    } 
-    name = ((CONSTANT_Utf8_Info)info).string();
+		if(Parser.VERBOSE)
+		  p.print("  Flags: " + Integer.toBinaryString(flags));
+			int name_index = p.u2();
+		CONSTANT_Info info = p.constantPool[name_index];
+		if(info == null || !(info instanceof CONSTANT_Utf8_Info)) {
+		  System.err.println("Expected CONSTANT_Utf8_Info but found: " + info.getClass().getName());
+		  //if(info instanceof CONSTANT_Class_Info) {
+		  //  System.err.println(" found CONSTANT_Class_Info: " + ((CONSTANT_Class_Info)info).name());
+		  //  name = ((CONSTANT_Class_Info)info).name();
+		  //}
+		} 
+		name = ((CONSTANT_Utf8_Info)info).string();
 		methodDescriptor = new MethodDescriptor(p, name);
 		attributes = new Attributes(p);
+		// Use the originally typed flags
+		if (attributes.flags() != 0)
+			flags = attributes.flags();
 	}
 	
 	public BodyDecl bodyDecl() {
 		if(isConstructor()) {
 			return new ConstructorDecl(
-				this.p.modifiers(flags),
+				Parser.modifiers(flags),
 				name,
 				methodDescriptor.parameterList(),
 				attributes.exceptionList(),
-        new Opt(),
+				new Opt(),
 				new Block()
 			);
 		}
 		else {
 			return new MethodDecl(
-				this.p.modifiers(flags),
+				Parser.modifiers(flags),
 				methodDescriptor.type(),
 				name,
 				methodDescriptor.parameterList(),
