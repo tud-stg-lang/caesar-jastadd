@@ -74,7 +74,7 @@ aspect Attributes {
 			 * 
 			 * "If C is not a member, the value of the outer_class_info_index item must be zero. Otherwise, 
 			 * the value of the outer_class_info_index item must be a valid index into the constant_pool table, 
-			 * and the entry at that index must be a CONSTANT_Class_info (¤4.4.1) structure representing the 
+			 * and the entry at that index must be a CONSTANT_Class_info (ï¿½4.4.1) structure representing the 
 			 * class or interface of which C is a member."
 			 * ( http://java.sun.com/docs/books/jvms/second_edition/html/ClassFile.doc.html#79996 )
 			 */
@@ -152,27 +152,6 @@ aspect Attributes {
     }
   }
   
-  class IsCjClassAttribute extends Attribute {
-		public IsCjClassAttribute(ConstantPool p) {
-			super(p, "de.tud.caesarj.IsCjClass");
-			 // attribute of length zero (just like DeprecatedAttribute in Java)
-		}
-	}
-
-  class CjSuperclassesAttribute extends Attribute {
-		// Declared in Attributes.jrag at line 141
-		public CjSuperclassesAttribute(CjClassDecl decl) {
-			super(decl.constantPool(), "de.tud.caesarj.Superclasses");
-			ConstantPool c = decl.constantPool();
-			Collection list = decl.getDeclaredParents();
-			u2(list.size()); 										// cj_superclasses_length
-			for(Iterator iter = list.iterator(); iter.hasNext(); ) {
-				TypeDecl superclassType = (TypeDecl)iter.next();
-				u2(c.addClass(superclassType.constantPoolName()));	// cj_superclasses_index
-			}
-		}
-	}
-
   interface ExceptionHolder {
     public int getNumException();
     public Access getException(int i);
@@ -211,7 +190,6 @@ aspect Attributes {
     }
     return c;
   }
-  // CjClassDecl.attributes() is defined in MCByteCode.jrag
   
   syn lazy Collection BodyDecl.attributes() = new ArrayList();
   eq FieldDeclaration.attributes() {
