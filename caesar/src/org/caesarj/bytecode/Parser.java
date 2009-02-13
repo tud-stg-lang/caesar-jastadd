@@ -11,6 +11,7 @@ import org.caesarj.ast.ASTNode;
 import org.caesarj.ast.Access;
 import org.caesarj.ast.BodyDecl;
 import org.caesarj.ast.CjContractClassDecl;
+import org.caesarj.ast.CjPrivInhClassDecl;
 import org.caesarj.ast.ClassDecl;
 import org.caesarj.ast.CompilationUnit;
 import org.caesarj.ast.Dot;
@@ -310,13 +311,14 @@ public class Parser {
 			superclassesList = new List(); //ignore typeDecl.getSuperClassAccess()
 
 		// Make a CjContractClassDecl, including its superclasses and its inherited members:
-		CjContractClassDecl transformedTypeDecl =
-				new CjContractClassDecl(
+		CjPrivInhClassDecl transformedTypeDecl =
+				new CjPrivInhClassDecl(
 						typeDecl.getModifiersNoTransform(),
 						typeDecl.getID(),
 						superclassesList,
 						typeDecl.getImplementsListNoTransform(),
 						newbody,
+						new List(),
 						new List());
 		transformedTypeDecl.setDynamicTypeList(
 				typeDecl.getDynamicTypeListNoTransform());
