@@ -144,10 +144,9 @@ public abstract class CompilerTest extends TestCase {
 		/* Compilation process */
 		addSourceFiles(binarySources);
 		typeCheck();
-		generateClassfiles();
-		
 		/* Check if compilation succeeded */
 		assertTrue(CaesarCompiler.getErrors().toString(), CaesarCompiler.getErrors().isEmpty());
+		generateClassfiles();
 		
 		CaesarCompiler.cleanUp();
 
