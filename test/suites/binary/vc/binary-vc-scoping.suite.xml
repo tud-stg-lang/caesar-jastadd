@@ -57,7 +57,7 @@
     </compile-run>    
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error error="CCLASS_UNKNOWN"  id="vcscoping003" description="inheriting from non-existing class">
+    <compile id="vcscoping003" description="inheriting from non-existing class">
         <binary>
         	public cclass OuterA {
 				public cclass InnerB extends InnerA {
@@ -67,7 +67,7 @@
         <code>
           public cclass OuterB extends OuterA { }
         </code>
-    </compile-check-error>
+    </compile>
     
     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile id="vcscoping004" description="Outer access">
