@@ -74,5 +74,79 @@
 			}
 		</code>
 	</compile-check-error>
+  			
+  	<compile-check-error id="subtyping004" 
+						 error="INCOMPATIBLE_TYPE"
+						 description="subtyping and dependent types">
+		<code>
+			public cclass X {public cclass A {} public cclass B {}}
+  			
+  			public cclass Y extends X {public cclass B uses A {}}
+  			
+			public class Test{
+				public void test(){
+					final X x = new Y();
+					
+					// Not possible for Y
+  					x.A a = x.new B();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="subtyping005" 
+						 error="VIRTUAL_WITH_USES"
+						 description="subtyping and dependent types">
+		<code>
+			public cclass X {public cclass A {} public cclass B {}}
+  			
+  			public cclass Y extends X {public cclass B uses A {}}
+  			
+			public class Test{
+				public void test(){
+  					final Y y = new Y();
+  					
+  					// Also not possible
+  					y.A ay = y.new B();
+				}
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="subtyping006" 
+						 error="INCOMPATIBLE_TYPE"
+						 description="subtyping and dependent types">
+		<code>
+			public cclass X {public cclass A {} public cclass B {}}
+  			
+  			public cclass Y uses X {public cclass B extends A {}}
+  			
+			public class Test{
+				public void test(){
+					// Not allowed
+					final X x = new Y();
+				}
+			}
+		</code>
+		
+	</compile-check-error>
 
+		<compile-check-error id="subtyping007" 
+						 error="VIRTUAL_WITH_USES"
+						 description="subtyping and dependent types">
+		<code>
+			public cclass X {public cclass A {} public cclass B {}}
+  			
+  			public cclass Y uses X {public cclass B uses A {}}
+  			
+			public class Test{
+				public void test(){
+					final Y y = new Y();
+  					
+  					// Also not possible
+  					y.A ay = y.new B();
+				}
+			}
+		</code>
+	</compile-check-error>
 </testsuite>
