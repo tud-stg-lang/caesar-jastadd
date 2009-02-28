@@ -252,6 +252,9 @@ aspect ClassPath {
     protected String fileSuffix() {
       return isSource ? ".java" : ".class";
     }
+    protected String cjFileSuffix() {
+      return isSource ? ".java" : ".cjclass";
+    }
 
     public static PathPart createSourcePath(String fileName, Program program) {
       PathPart p = createPathPart(fileName);
@@ -303,8 +306,9 @@ aspect ClassPath {
           u.setRelativeName(relativeName);
           u.setFromSource(false);
           
-          is.close();
-          is = null;
+          // Avoid double closing of input stream!!!
+          //is.close();
+          //is = null;
           
           if(Program.verbose())
             System.out.println("in " + (System.currentTimeMillis() - startTime) + " ms");
@@ -357,7 +361,7 @@ aspect ClassPath {
       String packageName = index == -1 ? "" : canonicalName.substring(0, index);
       String typeName = canonicalName.substring(index + 1, canonicalName.length());
       Collection c = filesInPackage(packageName);
-      return c != null && (c.contains(typeName + fileSuffix()) || c.contains(typeName + ".cjclass"));
+      return c != null && (c.contains(typeName + fileSuffix()) || c.contains(typeName + cjFileSuffix()));
     }
     
     private Collection filesInPackage(String packageName) {
@@ -382,10 +386,16 @@ aspect ClassPath {
     public boolean selectCompilationUnit(String canonicalName) throws IOException {
     	if(hasCompilationUnit(canonicalName)) {
     		String fileName = canonicalName.replace('.', File.separatorChar);
+    		if (new File(folder, fileName + fileSuffix()).isFile()
+    		    && new File(folder, fileName + cjFileSuffix()).isFile()) {
+    		  throw new Error(String.format(
+    		    "The folder %s contains duplicate type %s in %s and in %s files",
+    		    folder.getCanonicalPath(), fileName, fileSuffix()));
+    		}
     		String fs = fileSuffix();
     		File classFile = new File(folder, fileName + fs); 	// try getting .java/.class file
     		if (!classFile.isFile()) {
-    			fs = ".cjclass";
+    			fs = cjFileSuffix();
     			classFile = new File(folder, fileName + fs);	// try again with .cjclass extension
     		}
     		if(classFile.isFile()) {
@@ -435,6 +445,12 @@ aspect ClassPath {
 
     public boolean selectCompilationUnit(String canonicalName) throws IOException {
     	String name = canonicalName.replace('.', '/'); // ZipFiles do always use '/' as separator
+        if (set.contains(name + fileSuffix())
+            && set.contains(name + cjFileSuffix())) {
+          throw new Error(String.format(
+            "The archive file %s contains duplicate type %s in %s and in %s files",
+            file.getName(), name, fileSuffix(), cjFileSuffix()));
+        }
     	String nameWithExt = name + fileSuffix();
     	if(set.contains(nameWithExt)) {
     		ZipEntry zipEntry = file.getEntry(nameWithExt);
@@ -446,16 +462,16 @@ aspect ClassPath {
     			fullName = canonicalName;
     			return true;
     		}
-    	} else if (set.contains(name + ".cjclass")) {
+    	} else if (set.contains(name + cjFileSuffix())) {
     		// TODO refactor the whole fileSuffix() thing to accomodate CaesarJ binaries
     		
-    		nameWithExt = name + ".cjclass";
+    		nameWithExt = name + cjFileSuffix();
     		ZipEntry zipEntry = file.getEntry(nameWithExt);
     		if(zipEntry != null && !zipEntry.isDirectory()) {
     			is = file.getInputStream(zipEntry);
     			age = zipEntry.getTime();
     			pathName = file.getName();
-    			relativeName = nameWithExt + ".cjclass";
+    			relativeName = nameWithExt + cjFileSuffix();
     			fullName = canonicalName;
     			return true;    	  
     		}
