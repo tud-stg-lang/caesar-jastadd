@@ -85,5 +85,47 @@
           public cclass OuterB extends OuterA { }
         </code>
     </compile>	
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="vcscoping005" description="Outer access 2">
+    <binary>
+          public cclass OuterA {
+        public int v;
+        public cclass InnerA {
+          public void m() { }
+        }
+      }
+        </binary>
+        <code>
+          public cclass OuterB extends OuterA {
+            public cclass InnerB {
+              public void m() {
+                int b = OuterB.this.v;
+              }
+            }
+          }
+        </code>
+    </compile>  
    	    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile id="vcscoping006" description="Outer access 3">
+    <binary>
+          public cclass OuterA {
+        public int v;
+        public cclass InnerA {
+          public void m() { }
+        }
+      }
+        </binary>
+        <code>
+          public cclass OuterB extends OuterA {
+            public cclass InnerB {
+              public void m() {
+                int b = ((OuterA)(OuterB.this)).v;
+              }
+            }
+          }
+        </code>
+    </compile>  
+        
 </testsuite>
