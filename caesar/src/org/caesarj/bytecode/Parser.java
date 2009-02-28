@@ -273,7 +273,7 @@ public class Parser {
 		parseMethods(typeDecl);
 		Attributes attrs = new Attributes(this, typeDecl, outerTypeDeclParam, classPath);
 
-		// If the type is a CaesarJ class in a ClassDecl hull, make it a CjVirtualClassDecl and add inherited members:
+		// If the type is a CaesarJ class in a ClassDecl hull, make it a CjPrivInhClassDecl and add inherited members:
 		List superclassesList = attrs.superclassesList();
 		if(attrs.isCjClass() || superclassesList != null) {
 			typeDecl = transformBodyAndSuperclasses((ClassDecl)typeDecl, superclassesList);
@@ -292,9 +292,9 @@ public class Parser {
 		return cu;
 	}
 
-	/** Transforms a TypeDecl into a CjContractClassDecl */
+	/** Transforms a TypeDecl into a CjPrivInhClassDecl */
 	//TODO: Make sure to always use the most concrete CjClassDecl derivate
-	CjContractClassDecl transformBodyAndSuperclasses(ClassDecl typeDecl, List superclassesList) {
+	CjPrivInhClassDecl transformBodyAndSuperclasses(ClassDecl typeDecl, List superclassesList) {
 		List body = typeDecl.getBodyDeclListNoTransform();
 		List newbody = new List();
 		for(int i = 0; i < body.getNumChild(); ++i) {
@@ -630,6 +630,12 @@ public class Parser {
 
 	public TypeDecl getOuterTypeDecl() {
 		return this.outerTypeDecl;
+	}
+	
+
+	public void printIfVerbose(String message) {
+	      if(VERBOSE)
+	          println(message);
 	}
 
 }
