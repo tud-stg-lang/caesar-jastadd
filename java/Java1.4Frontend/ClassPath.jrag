@@ -390,7 +390,7 @@ aspect ClassPath {
     		    && new File(folder, fileName + cjFileSuffix()).isFile()) {
     		  throw new Error(String.format(
     		    "The folder %s contains duplicate type %s in %s and in %s files",
-    		    folder.getCanonicalPath(), fileName, fileSuffix()));
+    		    folder.getCanonicalPath(), canonicalName, fileName, fileSuffix()));
     		}
     		String fs = fileSuffix();
     		File classFile = new File(folder, fileName + fs); 	// try getting .java/.class file

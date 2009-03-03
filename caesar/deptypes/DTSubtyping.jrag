@@ -20,8 +20,14 @@ aspect DTSubtyping {
 	
 	eq DependentTypeDecl.instanceOf(TypeDecl type) = type.isSupertypeOfDependentType(this);
 	
-	syn boolean TypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) = 
-		type.absoluteType().instanceOf(this);
+	syn boolean TypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) { 
+	  try {
+		  return type.absoluteType().instanceOf(this);
+		}
+		catch (DependentTypeException e) {
+		  return false;
+		}  
+	}
 	
 	eq DependentTypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) {
 		DependentType type1 = type.depType();
