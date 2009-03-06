@@ -21,15 +21,10 @@ typesys.overriding.overriding008
 typesys.wildcards.wildcard007
 
 ----------------------------------------
-Linearization rules & support for arrays
+support for arrays & type casts
 ----------------------------------------
-vc.allfromcc.vcallfromcc018b
-vc.allfromcc.vcallfromcc023
 vc.allfromcc.vcallfromcc024
-vc.allfromcc.vcallfromcc027
-vc.allfromcc.vcallfromcc030
 vc.allfromcc.vcallfromcc037
-
 
 ------------------------------------------------
 Virtual classes: Anonymous classes, constructors
