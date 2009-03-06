@@ -64,7 +64,8 @@ aspect VCInheritance {
 	}
 	
 	// furtherbounds are inherited versions of the virtual class 
-	// they have the same names in the superclasses of enclosing type 
+	// they have the same names in the superclasses of enclosing type
+	// the method return all furtherbounds of the class 
 	syn lazy Collection CjVirtualClassDecl.getFurtherboundMixins() {
 		if (isNestedType()) {
 			TypeDecl outer = enclosingType();
@@ -114,17 +115,22 @@ aspect VCInheritance {
 	// collects all classes from the extends clauses 
 	// of the virtual class and its furtherbounds
 	syn lazy Collection CjVirtualClassDecl.getExplicitParentNames() {
-		Collection names = new ArrayList();
-		for (Iterator it = getDeclaredParents().iterator(); it.hasNext();) {
-			names.add(((TypeDecl)it.next()).name());
+	    Collection names = new ArrayList();
+	    for (Iterator it = getDeclaredParents().iterator(); it.hasNext(); ) {
+			String name = ((TypeDecl)it.next()).name();
+			names.add(name);
 		}
-		for (Iterator it = getDirectFurtherbounds().iterator(); it.hasNext();) {
+		// iterate over all furtherbounds preciselly according to the order
+		// determined by the linearization of the enclosing classes
+		// collect parents preciselly in the order they appear in the furtherbounds
+		// eliminate duplicate parent names
+		for (Iterator it = getFurtherboundMixins().iterator(); it.hasNext();) {
 			Object parent = it.next();
 			// check if parent is correctly resolved 
 			if (parent instanceof CjVirtualClassDecl) {
-				for (Iterator it2 = ((CjVirtualClassDecl)parent).getExplicitParentNames().iterator();
+				for (Iterator it2 = ((CjVirtualClassDecl)parent).getDeclaredParents().iterator();
 				     it2.hasNext(); ) {
-					String name = (String)it2.next();
+					String name = ((TypeDecl)it2.next()).name();
 					// Note that we cannot use a Set collection, because the order of names is important
 					if (!names.contains(name)) {
 						names.add(name);
