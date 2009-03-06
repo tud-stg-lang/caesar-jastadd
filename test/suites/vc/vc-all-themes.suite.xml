@@ -21,7 +21,7 @@
 			//TestCase0.A.X x1 = a.new X();
 			//TestCase0.A.X x2 = b.new X();		
 			
-			assertEquals(x1.toString()+'-'+x2.toString(), "A.X-B.X");
+			assertEquals("A.X-B.X", x1.toString()+'-'+x2.toString());
 	
 			System.out.println("VCTest 0: end");
 		</test>
@@ -101,7 +101,7 @@
 			e.init("n1", "n2");
 	
 			System.out.println("connecting: "+e.isConnecting("n1", "n2"));
-			assertEquals(e.isConnecting("n1", "n2"), false);
+			assertEquals(false, e.isConnecting("n1", "n2"));
 	
 			System.out.println("-> VCTest 2: end");
 		</test>
@@ -163,10 +163,10 @@
 			g.doSomethingWithEdge(e);
 	
 			System.out.println("e: "+e);
-			assertEquals(e.toString(), "col:#a1babe, n1->n2, n2->n1");
+			assertEquals("col:#a1babe, n1->n2, n2->n1", e.toString());
 	
 			System.out.println("connecting: "+e.isConnecting(n1, n2));
-			assertEquals(e.isConnecting(n1, n2), true);
+			assertEquals(true, e.isConnecting(n1, n2));
 	
 			System.out.println(" VCTest 3: end");
 		</test>
@@ -393,10 +393,10 @@
 			OuterB.InnerA a2 = ob.new InnerA();
 	
 			System.out.println(a1.accessOuterA());
-			assertEquals(a1.accessOuterA(), expectedResult1);
+			assertEquals(expectedResult1, a1.accessOuterA());
 	
 			System.out.println(a2.accessOuterB());
-			assertEquals(a2.accessOuterB(), expectedResult2);
+			assertEquals(expectedResult2, a2.accessOuterB());
 	
 			System.out.println("VCTest 5: end");
 		</test>
@@ -543,7 +543,7 @@
 			String result = resA + ", " + resB + ", " + resC + ", " + resD;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 6: end");
 		</test>
@@ -619,7 +619,7 @@
 			String result = resA + ", " + resB + ", " + resC + ", " + resD;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 7: end");
 		</test>
@@ -828,7 +828,7 @@
 								 + resE + ", " + resF;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 9: end");
 		</test>
@@ -937,7 +937,7 @@
 			String result = resAA + ", " + resAB + ", " + resBA + ", " + resBB + ", " + resBC + ", " + resBA1 + ", " + resBB1;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 10: end");
 		</test>
@@ -1099,7 +1099,7 @@
 				+ ", " + resAAA1 + ", " + resAAB1 + ", " + resAAC1;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 12: end");											  
 		</test>
@@ -1202,7 +1202,7 @@
 			String result = resA + ", " + resB + ", " + resC + ", " + resD + ", " + resE + ", " + resF + ", " + resG;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 13: end");
 		</test>
@@ -1334,7 +1334,7 @@
 			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResultBB);
+			assertEquals(expectedResultBB, result);
 	
 			//ob.InnerA ba = ob.new InnerA();
 			OuterB.InnerA ba = ob.new InnerA();
@@ -1349,7 +1349,7 @@
 			result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResultBA);
+			assertEquals(expectedResultBA, result);
 	
 			System.out.println("VCTest 14: end");
 		</test>
@@ -1551,7 +1551,7 @@
 			String result = cd.queryA();
 	
 			System.out.println(result);
-			assertEquals(result, expectedResultCD);
+			assertEquals(expectedResultCD, result);
 	
 		 	oc.InnerF cf = oc.new InnerF();        // with dependent types
 			// OuterC.InnerF cf = oc.new InnerF(); // without dependent types
@@ -1559,7 +1559,7 @@
 			result = cf.queryA();
 	
 			System.out.println(result);
-			assertEquals(result, expectedResultCF);
+			assertEquals(expectedResultCF, result);
 	
 			System.out.println("VCTest 15: end");
 		</test>
@@ -1908,7 +1908,7 @@
 			String result = b.defaultObject().queryA();
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 17: end");
 		</test>
@@ -2105,7 +2105,7 @@
 			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 18: end");
 		</test>
@@ -2288,7 +2288,7 @@
 			String result = resA + "; " + resB + "; " + resC + "; " + resD + "; " + resE + "; " + resF + "; " + resG;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 19: end");
 		</test>
@@ -2497,7 +2497,7 @@
 								 + "; " + resH + "; " + resI;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 20: end");												
 		</test>
@@ -2609,7 +2609,7 @@
 			String result = new OuterD().defaultObject().queryA();
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 21: end");
 		</test>
@@ -2902,7 +2902,7 @@
 			String result = resM + ", " + resN + ", " + resO + ", " + resQ + ", " + resA + ", " + resB + ", " + resC;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 22: end");
 		</test>
@@ -3038,9 +3038,9 @@
 			"A.A, C.A, B.A, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D; " +			  					// D lt B and C
 			"A.A, C.A, B.A, A.E; " +						  										// E lt A
 			"A.A, C.A, B.A, A.E, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D, A.F, B.F; " +				// F lt D and A
-			"A.A, C.A, B.A, A.E, A.B, C.B, A.C, C.C, B.C, A.D, C.D, B.D, A.F, B.F, B.G; " + 		// G lt C and F
+			"A.A, C.A, B.A, A.E, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D, A.F, B.F, B.G; " + 		// G lt C and F
 			"A.A, C.A, B.A, A.C, C.C, B.C, A.B, C.B, C.H; " +	  									// H lt B and C
-			"A.A, C.A, B.A, A.E, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D, A.F, B.F, D.I";			// I lt F and D
+			"A.A, C.A, B.A, A.C, C.C, B.C, A.B, C.B, A.D, C.D, B.D, A.E, A.F, B.F, D.I";			// I lt F and D
 			
 			System.out.println("VCTest 23: Test joined polymorphism: start");
 
@@ -3060,7 +3060,7 @@
 							"; " + resH + "; " + resI;
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 23: end");
 		</test>
@@ -3224,7 +3224,7 @@
 			String result = ob.createDefaultA().queryA();
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 24: end");
 		</test>
@@ -3327,7 +3327,7 @@
 			String result = oa.queryA() + "; " + ia.queryA() + "; " + ob.queryA() + "; " + ib.queryA() + "; " + id.queryA();
 	
 			System.out.println(result);
-			assertEquals(result, expectedResult);
+			assertEquals(expectedResult, result);
 	
 			System.out.println("VCTest 25: end");
 		</test>
@@ -3528,7 +3528,7 @@
 		<test>
 			String expectedResult =
 						"A.A, C.A, F.A, D.A, E.A, G.A; " +
-						"A.A, C.A, F.A, E.A, D.A, G.A, B.A, H.A; " +
+						"A.A, C.A, F.A, D.A, E.A, G.A, B.A, H.A; " +
 						"A.B, C.B, E.B, G.B; " +
 						"A.B, C.B, E.B, G.B";
 						
@@ -3917,14 +3917,14 @@
 				"B.M.M, B.F.M; " +
 				"C.O.O, C.E.O; " +
 		
-				// InnerG lt A: InnerE( lt C: InnerO ), B: InnerM, C: InnerP( lt C: InnerO )
+				// InnerG lt B: InnerM, C: InnerP( lt C: InnerO ), A: InnerE( lt C: InnerO ) 
 		
 				"A.E.E, A.G.E; " +
 				"B.M.M, B.G.M; " +
 				"C.O.O, C.E.O, C.P.O, C.G.O; " +
 				"C.P.P, C.G.P; " +
 		
-				// InnerH lt A: InnerE( lt C: InnerO ), C: InnerP( lt C: InnerO ), InnerA( lt B: InnerM )
+				// InnerH lt C: InnerP( lt C: InnerO ), InnerA( lt B: InnerM ), A: InnerE( lt C: InnerO ) 
 		
 				"A.E.E, A.H.E; " +
 				"C.O.O, C.E.O, C.P.O, C.H.O; " +
