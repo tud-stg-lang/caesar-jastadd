@@ -134,4 +134,24 @@
 		</test>
 		
 	</compile-run>
+	<compile-run id="directUsers007"
+				description="Direct users can access parents of used classes.">
+		
+		<code>
+			public cclass A {
+				public String a(){ return "a"; }
+			}
+			
+			public cclass B extends A {}
+			
+			public cclass C uses B {}
+		</code>	
+		
+		<test>
+			C c = new C();
+			
+			assertEquals(c.a(), "a");
+		</test>
+		
+	</compile-run>
 </testsuite>
