@@ -83,7 +83,8 @@ aspect ContractsErrorCheck{
 				MethodDecl md = (MethodDecl)getBodyDecl(i);
 				
 				// Check each method that is implemented
-				if(md.hasBlock()) {
+				// But ignore constructors...
+				if(md.hasBlock() && !md.name().equals("$cj$init")) {
 					for(Iterator iter = unfulfilledReqs.iterator(); iter.hasNext(); ) {
 						TypeDecl td = (TypeDecl)iter.next();
 					
