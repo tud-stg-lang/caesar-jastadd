@@ -35,7 +35,7 @@ aspect ErrorCheck {
  	 	// Refine check by taking usage (private inheritance) into account
  	 	if(type instanceof CjPrivInhClassDecl){
  	 		// not accessible if type uses hostType() (= class declaring method) indirectly
- 	 		return !((CjPrivInhClassDecl)type).getIndirectlyUsed().contains(hostType());
+ 	 		return !((CjPrivInhClassDecl)type).getTransitivelyUsed().contains(hostType());
  	 	}else
  	 		return true;	
  	 }
@@ -49,7 +49,7 @@ aspect ErrorCheck {
   		// Refine check by taking usage (private inheritance) into account
  	 	if(type instanceof CjPrivInhClassDecl)
  	 		// not accessible if type uses hostType() (= class declaring field) indirectly
- 	 		return !((CjPrivInhClassDecl)type).getIndirectlyUsed().contains(hostType());
+ 	 		return !((CjPrivInhClassDecl)type).getTransitivelyUsed().contains(hostType());
  	 	else
  	 		return true;
   	 }

@@ -23,12 +23,32 @@ aspect PrivateInheritance {
 	}
 	
 	/*****
-	 * Determines all indirectly used classes
+	 * Determines all transitively used classes (should not be accessed directly via usage)
 	 *****/
-	syn Collection CjPrivInhClassDecl.getIndirectlyUsed() {
+	syn Collection CjPrivInhClassDecl.getTransitivelyUsed() {
 		Collection c = getAllUsed();
 		
 		c.removeAll(getDirectlyUsed());
+		
+		// Remove superclasses of directly used classes (these can be accessed via usage)
+		for(Iterator dirUses = getDirectlyUsed().iterator(); dirUses.hasNext(); ){
+			TypeDecl td = (TypeDecl)dirUses.next();
+					
+			if(td instanceof CjPrivInhClassDecl){
+				CjPrivInhClassDecl cd = (CjPrivInhClassDecl)td;
+				
+				for(Iterator iter = cd.getSupertypesOf().iterator(); iter.hasNext(); ){
+					TypeDecl s = (TypeDecl)iter.next();
+					
+					// Supertypes include all requirements, superclasses (extends)
+					// and all implemented interfaces.
+					// Interfaces are not to be considered here...
+					if(!(s instanceof InterfaceDecl) && c.contains(s)){
+						c.remove(s);
+					}
+				}
+			}
+		}
 		
 		return c;
 	}
@@ -83,6 +103,7 @@ aspect PrivateInheritance {
 				}
 			}
 		}
+		
 		
 		// Get all superclasses of directly used classes
 		for(Iterator dirUses = getDirectlyUsed().iterator(); dirUses.hasNext(); ){
