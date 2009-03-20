@@ -36,4 +36,37 @@
         </test>
         
 	</compile-run>
+	
+		<compile-run id="vc003"
+			 	 description="fulfilled required virtual classes">
+		<code>
+
+			public cclass ProvA {
+				public cclass A {
+					public String s;
+					
+					public A(String s){
+						this.s = s;
+					}
+				}	
+			}
+			
+			public cclass UserA requires ProvA {
+				public A createA(){
+					return new A("a"); 
+				}
+			}
+			
+			public cclass CompleteA extends UserA &amp; ProvA {}
+
+        </code>
+        
+        <test>
+			CompleteA ca = new CompleteA();
+			
+			assertEquals(ca.createA().s, "a");	
+        </test>
+        
+	</compile-run>
+		
 </testsuite>

@@ -112,6 +112,11 @@ aspect ContractsCompleteness {
 	 * 8,9.) [provides] := getProvided()
 	 ******/
 	syn lazy Collection CjContractClassDecl.getProvided() {
+		// Virtual classes  (i.e. nested classes ) are handled differently
+		if(isNestedType()){
+			return getProvidedForVirtCls();
+		}
+	
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -255,11 +260,6 @@ aspect ContractsCompleteness {
 	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
 	 ******/
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
-		// TODO: Does this generalise to indirect requirements of virtual classes 
-		//		 and is this necessary?
-		//		 Problem here is that getDirectFurtherbounds only returns direct fbs and not
-		//		 indirect as needed for checking for indirect requirements...
-	
 		// Get all implicit parents
 		Collection parents = getDirectFurtherbounds();
 		
@@ -279,7 +279,31 @@ aspect ContractsCompleteness {
 		
 		return reqs;
 	}
-
+	
+	/******
+	 * Auxiliary method for 8,9: Generalizes getProvided for virtual classes 
+	 ******/
+	syn lazy Collection CjContractClassDecl.getProvidedForVirtCls(){
+		// Get all implicit parents
+		Collection parents = getDirectFurtherbounds();
+		
+		// Return implicit parents whose Enclosing Top Level 
+		// is provided by ETL of current class
+		Collection provided = new ArrayList();
+		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
+			CjContractClassDecl cd = (CjContractClassDecl)itr.next();
+			if(getEnclosingTopLevel() instanceof CjContractClassDecl){
+				CjContractClassDecl tl = ((CjContractClassDecl)getEnclosingTopLevel());
+				
+			   	if(tl.getProvided().contains(cd.getEnclosingTopLevel())){
+					provided.add(cd);
+				}
+			}
+		}
+		
+		return provided;
+	}
+	
 	/******
 	 * 20.) complete := isComplete()
 	 ******/
