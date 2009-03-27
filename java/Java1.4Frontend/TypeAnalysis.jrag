@@ -212,6 +212,11 @@ aspect TypeAnalysis {
   eq InterfaceDecl.isInterfaceDecl() = true;
   syn boolean TypeDecl.isArrayDecl() = false;
   eq ArrayDecl.isArrayDecl() = true;
+  
+  // begin vaidas
+  syn ClassDecl TypeDecl.getClassDecl() = null;
+  eq ClassDecl.getClassDecl() = this;
+  // end vaidas
 
   inh lazy boolean TypeDecl.isAnonymous();
   eq ClassInstanceExpr.getTypeDecl().isAnonymous() = true;

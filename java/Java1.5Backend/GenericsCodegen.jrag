@@ -133,7 +133,9 @@ aspect GenericsCodegen {
       getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
     }
     if(!decl.isStatic() && isQualified() && prevExpr().isSuperAccess()) {
-      if(!hostType().instanceOf(prevExpr().type()))
+      // begin vaidas
+      if (needsSuperAccessor()) 
+      // end vaidas
         decl().createSuperAccessor(superAccessorTarget()).emitInvokeMethod(gen, superAccessorTarget());
       else
         decl.emitInvokeSpecialMethod(gen, methodQualifierType());

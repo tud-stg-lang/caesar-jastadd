@@ -167,7 +167,9 @@ aspect MethodSignature15 {
     if(m.getNumParameter() != getNumArg())
       return false;
     for(int i = 0; i < m.getNumParameter(); i++)
-      if(!getArg(i).type().instanceOf(m.getParameter(i).type()))
+    // begin vaidas
+      if(!getArg(i).type().instanceOf(m.getParamType(i, this)))
+    // end vaidas  
         return false;
     return true;
   }
@@ -319,7 +321,9 @@ aspect MethodSignature15 {
     if(!decl().isVariableArity() || invokesVariableArityAsArray()) {
       for(int i = 0; i < decl().getNumParameter(); i++) {
         TypeDecl exprType = getArg(i).type();
-        TypeDecl parmType = decl().getParameter(i).type();
+        // begin vaidas
+        TypeDecl parmType = decl().getParamType(i,this);
+        // end vaidas
         if(!exprType.methodInvocationConversionTo(parmType) && !exprType.isUnknown() && !parmType.isUnknown()) {
           error("#The type " + exprType.typeName() + " of expr " +
             getArg(i) + " is not compatible with the method parameter " +

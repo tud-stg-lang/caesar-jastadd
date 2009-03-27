@@ -149,13 +149,21 @@ aspect MethodDecl {
     return true;
   }
   
+  // begin vaidas
+  syn TypeDecl MethodDecl.getParamType(int i, MethodAccess ma) {
+	  return getParameter(i).type();	  
+  }
+  // end vaidas
+  
   public boolean MethodAccess.applicable(MethodDecl decl) {
     if(getNumArg() != decl.getNumParameter())
       return false;
     if(!name().equals(decl.name()))
       return false;
     for(int i = 0; i < getNumArg(); i++) {
-      if(!getArg(i).type().instanceOf(decl.getParameter(i).type()))
+      // begin vaidas
+      if(!getArg(i).type().instanceOf(decl.getParamType(i, this)))
+      // end vaidas
         return false;
     }
     return true;

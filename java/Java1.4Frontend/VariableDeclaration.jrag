@@ -108,7 +108,9 @@ aspect VariableDeclarationTransformation {
   rewrite FieldDecl {
     when(getNumVariableDecl() == 1)
     to FieldDeclaration {
-      FieldDeclaration decl = getVariableDecl(0).createFieldDeclarationFrom(getModifiers(), getTypeAccess());
+      // begin vaidas
+      FieldDeclaration decl = getVariableDecl(0).createFieldDeclarationFrom(getModifiers(), getTypeAccessNoTransform());
+      // end vaidas
       decl.setStart(start); // copy location information
       decl.setEnd(end); // copy location information
       return decl;
@@ -124,7 +126,9 @@ aspect VariableDeclarationTransformation {
         FieldDeclaration f = 
           getVariableDecl(j).createFieldDeclarationFrom(
             (Modifiers)getModifiers().fullCopy(),
-            (Access)getTypeAccess().fullCopy()
+            // begin vaidas
+            (Access)getTypeAccessNoTransform().fullCopy()
+            // end vaidas
           );
         if(j == 0)
           f.setStart(start);
@@ -150,7 +154,9 @@ aspect VariableDeclarationTransformation {
   rewrite VarDeclStmt {
     when(getNumVariableDecl() == 1)
     to VariableDeclaration {
-      VariableDeclaration decl = getVariableDecl(0).createVariableDeclarationFrom(getModifiers(), getTypeAccess());
+      // begin vaidas
+      VariableDeclaration decl = getVariableDecl(0).createVariableDeclarationFrom(getModifiers(), getTypeAccessNoTransform());
+      // end vaidas
       decl.setStart(start); // copy location information
       decl.setEnd(end); // copy location information
       return decl;
@@ -173,7 +179,9 @@ aspect VariableDeclarationTransformation {
       VariableDeclaration v =
         getVariableDecl(j).createVariableDeclarationFrom(
           (Modifiers)getModifiers().fullCopy(),
-          (Access)getTypeAccess().fullCopy()
+          // begin vaidas
+          (Access)getTypeAccessNoTransform().fullCopy()
+          // end vaidas
         );
       if(j == 0)
         v.setStart(start);

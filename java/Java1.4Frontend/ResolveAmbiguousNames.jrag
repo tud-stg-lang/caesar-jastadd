@@ -52,8 +52,10 @@ aspect AccessTypes {
 }
 
 aspect QualifiedNames {
-  syn boolean Expr.isLeftChildOfDot() = hasParentDot() && parentDot().getLeft() == this;
-  syn boolean Expr.isRightChildOfDot() = hasParentDot() && parentDot().getRight() == this;
+  // begin vaidas
+  syn boolean Expr.isLeftChildOfDot() = hasParentDot() && parentDot().getLeftNoTransform() == this;
+  syn boolean Expr.isRightChildOfDot() = hasParentDot() && parentDot().getRightNoTransform() == this;
+  // end vaidas 
   
   syn boolean Access.isQualified() = hasPrevExpr();
   eq AbstractDot.isQualified() = hasParentDot();
