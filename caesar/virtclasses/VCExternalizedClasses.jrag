@@ -1,7 +1,7 @@
 aspect VCExternalizedClasses {
 	
 	public void Program.initCjSourceFiles() {
-		this.sourceFiles = new CjFileNamesPart();
+		this.sourceFiles = new CjFileNamesPart(this);
 	}
 	
 	// A modified version of FileNamesPart
@@ -9,7 +9,8 @@ aspect VCExternalizedClasses {
 		private HashMap sourceFiles = new HashMap();
 		private HashSet packages = new HashSet();
 
-		public CjFileNamesPart() {
+		public CjFileNamesPart(Program prog) {
+		    super(prog);
 			isSource = true;
 		}
 
@@ -37,27 +38,27 @@ aspect VCExternalizedClasses {
 			try {
 				// compute canonical name of the class in the file
 				Reader reader = new FileReader(fileName);
-				JavaScanner scanner = new JavaScanner(new Unicode(reader));
+				scanner.JavaScanner scanner = new scanner.JavaScanner(new scanner.Unicode(reader));
 				StringBuffer packageName = new StringBuffer();
 				Symbol sym = scanner.nextToken();
 				boolean isExternalized = false;
-				if (sym.getId() == JavaParser.Terminals.PACKAGE) {
+				if (sym.getId() == parser.JavaParser.Terminals.PACKAGE) {
 					while(true) {
 						sym = scanner.nextToken();
-						if(sym.getId() == JavaParser.Terminals.SEMICOLON)
+						if(sym.getId() == parser.JavaParser.Terminals.SEMICOLON)
 							break;
 						packageName.append(sym.value);
 					}
 				}
-				else if (sym.getId() == JavaParser.Terminals.CCLASS) {
+				else if (sym.getId() == parser.JavaParser.Terminals.CCLASS) {
 					while(true) {
 						sym = scanner.nextToken();
-						if (sym.getId() == JavaParser.Terminals.SEMICOLON) {
+						if (sym.getId() == parser.JavaParser.Terminals.SEMICOLON) {
 							isExternalized = true;
 							break;
 						}
-						else if (sym.getId() == JavaParser.Terminals.IDENTIFIER ||
-								 sym.getId() == JavaParser.Terminals.DOT) {
+						else if (sym.getId() == parser.JavaParser.Terminals.IDENTIFIER ||
+								 sym.getId() == parser.JavaParser.Terminals.DOT) {
 							packageName.append(sym.value);
 						}
 						else {

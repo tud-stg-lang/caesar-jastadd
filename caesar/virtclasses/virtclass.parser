@@ -1,36 +1,20 @@
 CompilationUnit compilation_unit =
-    encl_cclass_declaration.p import_declarations.i type_declarations.t {: return new ExternCompUnit(p, i, t); :}
-  | encl_cclass_declaration.p                       type_declarations.t {: return new ExternCompUnit(p, new List(), t); :}
-  | encl_cclass_declaration.p import_declarations.i                     {: return new ExternCompUnit(p, i, new List()); :}
-  | encl_cclass_declaration.p                                           {: return new ExternCompUnit(p, new List(), new List()); :}
+    encl_cclass_declaration.p import_declarations.i? type_declarations.t? 
+                                               {: return new ExternCompUnit("<undefined>", i, t,p); :}
   ;
   
 Access encl_cclass_declaration =
-    CCLASS name.n SEMICOLON              {: return n; :}
+    CCLASS name.n SEMICOLON                    {: return n; :}
   ;  
 
 ClassDecl class_declaration =
-    cclass_declaration.c                      {: return c; :}
+    cclass_declaration.c                       {: return c; :}
   ;
 
 CjClassDecl cclass_declaration =
-    modifiers.m CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
-                                               {: return new CjVirtualClassDecl(m, id, s, i, b); :}
-  |             CCLASS IDENTIFIER.id mixin.s interfaces.i class_body.b 
-                                               {: return new CjVirtualClassDecl(new Modifiers(), id, s, i, b); :}
-  | modifiers.m CCLASS IDENTIFIER.id         interfaces.i class_body.b 
-                                               {: return new CjVirtualClassDecl(m, id, new List(), i, b); :}
-  |             CCLASS IDENTIFIER.id         interfaces.i class_body.b 
-                                               {: return new CjVirtualClassDecl(new Modifiers(), id, new List(), i, b); :}
-  | modifiers.m CCLASS IDENTIFIER.id mixin.s              class_body.b 
-                                               {: return new CjVirtualClassDecl(m, id, s, new List(), b); :}
-  |             CCLASS IDENTIFIER.id mixin.s              class_body.b 
-                                               {: return new CjVirtualClassDecl(new Modifiers(), id, s, new List(), b); :}
-  | modifiers.m CCLASS IDENTIFIER.id                      class_body.b 
-                                               {: return new CjVirtualClassDecl(m, id, new List(), new List(), b); :}
-  |             CCLASS IDENTIFIER.id                      class_body.b 
-                                               {: return new CjVirtualClassDecl(new Modifiers(), id, new List(), new List(), b); :}
-  ;
+    modifiers.m? CCLASS IDENTIFIER mixin.s? interfaces.i? class_body.b 
+                                               {: return new CjVirtualClassDecl(new Modifiers(m), IDENTIFIER, s, i, b); :}
+  ;  
 
 List mixin =
     EXTENDS mixin_type_list.i                  {: return i; :}
@@ -41,4 +25,4 @@ List mixin_type_list =
   ;
 Access mixin_type =
     name.n                                     {: return n; :}
-  ;
+  ;  

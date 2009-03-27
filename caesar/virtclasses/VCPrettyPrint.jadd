@@ -37,13 +37,10 @@ aspect VCPrettyPrint {
 			}
 			s.append("\n");
 		}
-		indent++;
 		for(int i=0; i < getNumBodyDecl(); i++) {
 			getBodyDecl(i).toString(s);
 		}
-		indent--;
 		s.append(indent() + "}\n");
-//		s.append(getCjInterface().toString()+ "\n");
 	}
 	
 	public void DirectMethodAccess.toString(StringBuffer s) {

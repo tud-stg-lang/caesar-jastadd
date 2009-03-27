@@ -19,7 +19,7 @@ aspect VCInheritance {
 			BodyDecl member = getBodyDecl(i);
 			if (member instanceof MemberTypeDecl) {
 				MemberTypeDecl mtd = (MemberTypeDecl)member;
-				TypeDecl type = mtd.getTypeDecl();
+				TypeDecl type = mtd.typeDecl();
 				if (type.isVirtualClassDecl()) {
 					ret.add(type);
 				}				
@@ -27,7 +27,7 @@ aspect VCInheritance {
 		}
 		// add implicit members
 		for (int i = 0; i < getNumImplicitClass(); i++) {
-			ret.add(getImplicitClass(i).getTypeDecl());			
+			ret.add(getImplicitClass(i).typeDecl());			
 		}
 		return ret;
 	}
@@ -233,7 +233,7 @@ aspect VCInheritance {
 			for (int i = 0; i < getNumBodyDecl(); i++) {
 				BodyDecl member = getBodyDecl(i);
 				if (member instanceof MemberTypeDecl) {
-					ret.remove(((MemberTypeDecl) member).getTypeDecl().name());
+					ret.remove(((MemberTypeDecl) member).typeDecl().name());
 				}
 			}
 		}
@@ -298,11 +298,11 @@ aspect VCInheritance {
 	
 	// propagate java2transformation to implicit virtual classes
 	// i.e. get them included to the list of nested types
-	public void CjVirtualClassDecl.java2Transformation() {
-	    super.java2Transformation();
+	public void CjVirtualClassDecl.transformation() {
+	    super.transformation();
 	    for (int i = 0; i < getNumImplicitClass(); i++) {
 	    	MemberTypeDecl decl = getImplicitClass(i);
-	    	decl.java2Transformation();			
+	    	decl.transformation();			
 		}	    
 	}
 }

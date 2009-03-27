@@ -23,7 +23,6 @@ aspect VCFactoryMethod {
 			new TypeAccess(this.name()),
 			"new$" + name(),
 			new List(), // Parameters
-			new List(), // Brackets
 			new List(), // Exceptions
 			isAbstract() ? new Opt() : new Opt(
 					new Block(new List().add(new ReturnStmt(cie)))));
@@ -40,7 +39,7 @@ aspect VCFactoryMethod {
 		when ( rewriteWithFactory() )
 		to Expr {
 			MethodDecl factory = factoryMethod();
-			return new DirectMethodAccess(new List(), factory.name(), factory);
+			return new DirectMethodAccess(factory.name(), new List(), factory);
 		}
 	}
 	
