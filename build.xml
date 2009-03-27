@@ -66,6 +66,16 @@
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
+		<fileset dir="caesar/virtclasses">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
+		<fileset dir="caesar/deptypes">
+			<include name="**/*.ast"/>
+			<include name="**/*.jrag"/>
+			<include name="**/*.jadd"/>
+		</fileset>
 	</jastadd>
 	<!-- copy library files-->
 	<copy todir="${target.dir}/beaver" preservelastmodified="true">
@@ -133,7 +143,7 @@
 		<fileset dir="${Java1.5Frontend}">
 			<include name="*.parser"/>
 		</fileset>
-		<fileset dir="caesar/mixincomp">
+		<fileset dir="caesar/virtclasses">
 			<include name="*.parser"/>
 		</fileset>
 	</concat>
