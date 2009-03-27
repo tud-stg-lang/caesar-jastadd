@@ -1,6 +1,6 @@
 %header {:
  package parser;
- import AST.*;
+ import org.caesarj.ast.*;
 :};
 %embed {:
   class Events extends Parser.Events {
