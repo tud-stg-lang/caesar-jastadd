@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 
 // 5.1 Kinds of Conversion
@@ -92,8 +101,7 @@ aspect TypeConversion {
       return type.instanceOf(this);
     }
     else if(type.isClassDecl()) {
-      //return !type.isFinal() || instanceOf(type);
-      return !type.isFinal() || type.instanceOf(this); // Check this!
+      return !type.isFinal() || type.instanceOf(this);
     }
     else if(type.isInterfaceDecl()) {
       for(Iterator i1 = methodsIterator(); i1.hasNext(); ) {
@@ -110,16 +118,12 @@ aspect TypeConversion {
   }
   
   eq ArrayDecl.castingConversionTo(TypeDecl type) {
-    //System.err.println("ArrayDecl.castingConversionTo");
     if(type.isArrayDecl()) {
-      //System.err.println("Both are arrays");
       TypeDecl SC = componentType();
       TypeDecl TC = type.componentType();
-      //System.err.println("Elements are " + SC.fullName() + " and " + TC.fullName());
       if(SC.isPrimitiveType() && TC.isPrimitiveType() && SC == TC)
         return true;
       if(SC.isReferenceType() && TC.isReferenceType()) {
-        //System.err.println("Trying recursively with " + SC.fullName() + " and " + TC.fullName());
         return SC.castingConversionTo(TC);
       }
       return false;
@@ -139,7 +143,7 @@ aspect TypeConversion {
 }
 
 aspect NumericPromotion {
-  syn TypeDecl TypeDecl.unaryNumericPromotion() = unknownType();
+  syn TypeDecl TypeDecl.unaryNumericPromotion() = this; // not unknown since this would be 
   // 5.6.1 Unary Numeric Promotion
   syn lazy TypeDecl NumericType.unaryNumericPromotion() = this;
   eq ByteType.unaryNumericPromotion() = typeInt();
@@ -208,16 +212,11 @@ aspect TypeAnalysis {
   eq InterfaceDecl.isInterfaceDecl() = true;
   syn boolean TypeDecl.isArrayDecl() = false;
   eq ArrayDecl.isArrayDecl() = true;
-  
-  // begin vaidas
-  syn ClassDecl TypeDecl.getClassDecl() = null;
-  eq ClassDecl.getClassDecl() = this;
-  // end vaidas
 
   inh lazy boolean TypeDecl.isAnonymous();
   eq ClassInstanceExpr.getTypeDecl().isAnonymous() = true;
   eq TypeDecl.getBodyDecl().isAnonymous() = false;
-  eq CompilationUnit.getTypeDecl().isAnonymous() = false;
+  eq Program.getChild().isAnonymous() = false;
 
   syn boolean TypeDecl.isPrimitive() = false;
   eq PrimitiveType.isPrimitive() = true;
@@ -231,18 +230,18 @@ aspect TypeAnalysis {
   syn boolean TypeDecl.isUnknown() = false;
   eq UnknownType.isUnknown() = true;
 
-  eq Program.getCompilationUnit().unknownField() = unknownType().findSingleVariable("unknown");
+  eq Program.getChild().unknownField() = unknownType().findSingleVariable("unknown");
   public FieldDeclaration TypeDecl.findSingleVariable(String name) {
-    return (FieldDeclaration)fields(name).iterator().next();
+    return (FieldDeclaration)memberFields(name).iterator().next();
   }
-  eq Program.getCompilationUnit().unknownMethod() {
+  eq Program.getChild().unknownMethod() {
     for(Iterator iter = unknownType().memberMethods("unknown").iterator(); iter.hasNext(); ) {
       MethodDecl m = (MethodDecl)iter.next();
       return m;
     }
     throw new Error("Could not find method unknown in type Unknown");
   }
-  eq Program.getCompilationUnit().unknownConstructor() = unknownConstructor(); 
+  eq Program.getChild().unknownConstructor() = unknownConstructor(); 
   syn lazy ConstructorDecl Program.unknownConstructor() {
     return (ConstructorDecl)unknownType().constructors().iterator().next();
   }
@@ -251,15 +250,10 @@ aspect TypeAnalysis {
   
   syn TypeDecl FieldDeclaration.type() = getTypeAccess().type();
   syn TypeDecl VariableDeclaration.type() = getTypeAccess().type();
-  syn lazy TypeDecl ParameterDeclaration.type() {
-    TypeDecl type = getTypeAccess().type();
-    for(int i = 0; i < getNumEmptyBracket(); i++)
-      type = type.arrayType();
-    return type;
-  }
+  syn lazy TypeDecl ParameterDeclaration.type() = getTypeAccess().type();
 
   inh lazy TypeDecl ArrayInit.declType();
-  eq Program.getCompilationUnit(int i).declType() = null;
+  eq Program.getChild(int i).declType() = null;
   eq FieldDecl.getVariableDecl().declType() = null;
   eq VarDeclStmt.getVariableDecl().declType() = null;
   
@@ -272,12 +266,7 @@ aspect TypeAnalysis {
 
   inh TypeDecl ConstructorDecl.unknownType();
   syn TypeDecl ConstructorDecl.type() = unknownType();
-  syn lazy TypeDecl MethodDecl.type() {
-    TypeDecl type = getTypeAccess().type();
-    for(int i = 0; i < getNumEmptyBracket(); i++)
-      type = type.arrayType();
-    return type;
-  }
+  syn lazy TypeDecl MethodDecl.type() = getTypeAccess().type();
 
   syn boolean BodyDecl.isVoid() = false;
   eq MethodDecl.isVoid() = type().isVoid();
@@ -296,7 +285,15 @@ aspect TypeAnalysis {
   eq ConstructorAccess.type() = decl().type();
 
   eq ThisAccess.type() = decl();
-  eq SuperAccess.type() = decl();
+  eq SuperAccess.type() {
+    TypeDecl typeDecl = decl();
+    if(!typeDecl.isClassDecl())
+      return unknownType();
+    ClassDecl classDecl = (ClassDecl)typeDecl;
+    if(!classDecl.hasSuperclass())
+      return unknownType();
+    return classDecl.superclass();
+  }
 
   eq AssignExpr.type() = getDest().type();
   
@@ -309,15 +306,10 @@ aspect TypeAnalysis {
   eq StringLiteral.type() = typeString();
   eq NullLiteral.type() = typeNull();
 
-  eq ParExpr.type() = getExpr().type();
+  eq ParExpr.type() = getExpr().isTypeAccess() ? unknownType() : getExpr().type();
 
   eq ClassInstanceExpr.type() = hasTypeDecl() ? getTypeDecl() : getAccess().type();
-  eq ArrayCreationExpr.type() {
-    TypeDecl typeDecl = getTypeAccess().type();
-    for(int i = 0; i < getNumDims(); i++)
-      typeDecl = typeDecl.arrayType();
-    return typeDecl;
-  }
+  eq ArrayCreationExpr.type() = getTypeAccess().type();
 
   eq Unary.type() = getOperand().type();
   eq PlusExpr.type() = getOperand().type().unaryNumericPromotion();
@@ -421,12 +413,12 @@ aspect TypeWideningAndIdentity {
   eq NullType.instanceOf(TypeDecl type) = type.isSupertypeOfNullType(this);
   eq VoidType.instanceOf(TypeDecl type) = type.isSupertypeOfVoidType(this);
 
-  eq UnknownType.instanceOf(TypeDecl type) = false;
-  eq UnknownType.isSupertypeOfClassDecl(ClassDecl type) = false;
-  eq UnknownType.isSupertypeOfInterfaceDecl(InterfaceDecl type) = false;
-  eq UnknownType.isSupertypeOfArrayDecl(ArrayDecl type) = false;
-  eq UnknownType.isSupertypeOfPrimitiveType(PrimitiveType type) = false;
-  eq UnknownType.isSupertypeOfNullType(NullType type) = false;
+  eq UnknownType.instanceOf(TypeDecl type) = true;
+  eq UnknownType.isSupertypeOfClassDecl(ClassDecl type) = true;
+  eq UnknownType.isSupertypeOfInterfaceDecl(InterfaceDecl type) = true;
+  eq UnknownType.isSupertypeOfArrayDecl(ArrayDecl type) = true;
+  eq UnknownType.isSupertypeOfPrimitiveType(PrimitiveType type) = true;
+  eq UnknownType.isSupertypeOfNullType(NullType type) = true;
   
   syn boolean TypeDecl.isSupertypeOfClassDecl(ClassDecl type) = type == this;
   eq ClassDecl.isSupertypeOfClassDecl(ClassDecl type) {
@@ -498,8 +490,7 @@ aspect TypeWideningAndIdentity {
 aspect NestedTypes {
 
   
-  eq CompilationUnit.getTypeDecl().enclosingType() = null;
-  eq CompilationUnit.getImportDecl().enclosingType() = null;
+  eq CompilationUnit.getChild().enclosingType() = null;
   
   eq TypeDecl.getBodyDecl().enclosingType() = this;
 
@@ -517,11 +508,16 @@ aspect NestedTypes {
     return (Stmt)node;
   }
 
+  inh BodyDecl Expr.enclosingBodyDecl();
+  inh BodyDecl Stmt.enclosingBodyDecl();
+  inh BodyDecl TypeDecl.enclosingBodyDecl();
+  eq Program.getChild().enclosingBodyDecl() = null;
+  eq BodyDecl.getChild().enclosingBodyDecl() = this;
+  
 
   // 8
   inh boolean TypeDecl.isNestedType();
-  eq CompilationUnit.getTypeDecl().isNestedType() = false;
-  eq CompilationUnit.getImportDecl().isNestedType() = false;
+  eq CompilationUnit.getChild().isNestedType() = false;
   eq TypeDecl.getBodyDecl().isNestedType() = true;
 
   // 8
@@ -533,6 +529,7 @@ aspect NestedTypes {
   eq MemberInterfaceDecl.getInterfaceDecl().isMemberType() = true;
   eq CompilationUnit.getTypeDecl().isMemberType() = false;
   eq ClassInstanceExpr.getTypeDecl().isMemberType() = false;
+  eq Program.getChild().isMemberType() = false;
   
   // 8.1.2
   syn boolean TypeDecl.isInnerClass() = false;
@@ -542,8 +539,7 @@ aspect NestedTypes {
   syn boolean TypeDecl.isInnerTypeOf(TypeDecl typeDecl) = typeDecl == this || (isInnerType() && enclosingType().isInnerTypeOf(typeDecl));
 
   inh boolean TypeDecl.isLocalClass();
-  eq CompilationUnit.getTypeDecl().isLocalClass() = false;
-  eq CompilationUnit.getImportDecl().isLocalClass() = false;
+  eq CompilationUnit.getChild().isLocalClass() = false;
   eq TypeDecl.getBodyDecl().isLocalClass() = false;
   eq LocalClassDeclStmt.getClassDecl().isLocalClass() = true;
   
@@ -565,8 +561,7 @@ aspect NestedTypes {
     return enclosingType().enclosedBy(type);
   }
 
-  eq CompilationUnit.getTypeDecl().hostPackage() = packageName();
-  eq CompilationUnit.getImportDecl().hostPackage() = packageName();
+  eq CompilationUnit.getChild().hostPackage() = packageName();
 
   inh String TypeDecl.hostPackage();
   inh String BodyDecl.hostPackage();
@@ -581,23 +576,14 @@ aspect NestedTypes {
   eq ClassDecl.getImplements().hostType() = hostType();
   eq InterfaceDecl.getSuperInterfaceId().hostType() = hostType();
   
-  eq Program.getCompilationUnit().hostType() = null;
+  eq Program.getChild().hostType() = null;
   eq CompilationUnit.getImportDecl().hostType() = null;
   
   inh TypeDecl BodyDecl.hostType();
   inh TypeDecl Expr.hostType();
+  inh TypeDecl Stmt.hostType();
   inh TypeDecl VariableDeclaration.hostType();
   inh TypeDecl ParameterDeclaration.hostType();
-
-  inh BodyDecl Stmt.hostBodyDecl();
-  eq Program.getCompilationUnit().hostBodyDecl() { throw new UnsupportedOperationException(); }
-  eq InstanceInitializer.getBlock().hostBodyDecl() = this;
-  eq StaticInitializer.getBlock().hostBodyDecl() = this;
-  eq MethodDecl.getBlock().hostBodyDecl() = this;
-  eq ConstructorDecl.getBlock().hostBodyDecl() = this;
-  eq ConstructorDecl.getConstructorInvocation().hostBodyDecl() = this;
-  eq FieldDeclaration.getInit().hostBodyDecl() = this;
- 
 
 }
 
@@ -612,10 +598,8 @@ aspect SuperClasses {
     if(isObject())
       return null;
     if(hasSuperClassAccess() && !isCircular() && getSuperClassAccess().type().isClassDecl())
-    	// begin vaidas
-      return getSuperClassAccess().type().getClassDecl();
-    return typeObject().getClassDecl();
-    // end vaidas
+      return (ClassDecl)getSuperClassAccess().type();
+    return (ClassDecl)typeObject();
   }
   
   public boolean PrimitiveType.hasSuperclass() {
@@ -693,7 +677,7 @@ aspect Circularity {
       while(a != null) {
         if(a.type().isCircular())
           return true;
-        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (TypeAccess)a.qualifier() : null;
+        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (Access)a.qualifier() : null;
       }
     }
     for(int i = 0; i < getNumImplements(); i++) {
@@ -701,7 +685,7 @@ aspect Circularity {
       while(a != null) {
         if(a.type().isCircular())
           return true;
-        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (TypeAccess)a.qualifier() : null;
+        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (Access)a.qualifier() : null;
       }
     }
     return false;
@@ -712,7 +696,7 @@ aspect Circularity {
       while(a != null) {
         if(a.type().isCircular())
           return true;
-        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (TypeAccess)a.qualifier() : null;
+        a = (a.isQualified() && a.qualifier().isTypeAccess()) ? (Access)a.qualifier() : null;
       }
     }
     return false;

@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 
 aspect DeclareBeforeUse {
@@ -19,18 +28,6 @@ aspect DeclareBeforeUse {
     return indexDecl <= indexUse;
   }
 
-  public int ASTNode.varChildIndex(Case c) {
-    ASTNode node = this;
-    while(node.getParent().getParent() != c) {
-      node = node.getParent();
-    }
-    return c.getStmtListNoTransform().getIndexOfChild(node);
-  }
-  public boolean Case.declaredBeforeUse(Variable decl, int indexUse) {
-    int indexDecl = ((ASTNode)decl).varChildIndex(this);
-    return indexDecl <= indexUse;
-  }
-  
   public int ASTNode.varChildIndex(TypeDecl t) {
     ASTNode node = this;
     while(node != null && node.getParent() != null && node.getParent().getParent() != t) {

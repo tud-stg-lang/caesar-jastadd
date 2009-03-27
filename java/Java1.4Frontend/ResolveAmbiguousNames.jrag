@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 
 aspect AccessTypes {
@@ -43,10 +52,8 @@ aspect AccessTypes {
 }
 
 aspect QualifiedNames {
-  // begin vaidas
-  syn boolean Expr.isLeftChildOfDot() = hasParentDot() && parentDot().getLeftNoTransform() == this;
-  syn boolean Expr.isRightChildOfDot() = hasParentDot() && parentDot().getRightNoTransform() == this;
-  // end vaidas  
+  syn boolean Expr.isLeftChildOfDot() = hasParentDot() && parentDot().getLeft() == this;
+  syn boolean Expr.isRightChildOfDot() = hasParentDot() && parentDot().getRight() == this;
   
   syn boolean Access.isQualified() = hasPrevExpr();
   eq AbstractDot.isQualified() = hasParentDot();
@@ -89,23 +96,22 @@ aspect QualifiedNames {
     return false;
   }
 
+  public Dot Dot.lastDot() {
+    Dot node = this;
+    while(node.getRightNoTransform() instanceof Dot)
+      node = (Dot)node.getRightNoTransform();
+    return node;
+  }
+
   public Dot Expr.qualifiesAccess(Access access) {
     Dot dot = new Dot(this, access);
-    dot.lastDot = dot;
     return dot;
   }
   
-  public Dot Dot.lastDot = null;
   public Dot Dot.qualifiesAccess(Access access) {
-    if(lastDot == null) {
-      Dot node = this;
-      while(node.getRightNoTransform() instanceof Dot)
-        node = (Dot)node.getRightNoTransform();
-      lastDot = node;
-    }
+    Dot lastDot = lastDot();
     Dot dot = new Dot(lastDot.getRightNoTransform(), access);
     lastDot.setRight(dot);
-    lastDot = dot;
     return this;
   }
   
@@ -128,10 +134,25 @@ aspect QualifiedNames {
     setRight(access);
   }
   public Access Dot.extractLast() {
-    return lastDot.getRightNoTransform();
+    return lastDot().getRightNoTransform();
   }
   public void Dot.replaceLast(Access access) {
-    lastDot.setRight(access);
+    lastDot().setRight(access);
+  }
+
+  public Access Access.addArrayDims(List list) {
+    Access a = this;
+    for(int i = 0; i < list.getNumChildNoTransform(); i++) {
+      Dims dims = (Dims)list.getChildNoTransform(i);
+      Opt opt = dims.getExprOpt();
+      if(opt.getNumChildNoTransform() == 1)
+        a = new ArrayTypeWithSizeAccess(a, (Expr)opt.getChildNoTransform(0));
+      else
+        a = new ArrayTypeAccess(a);
+      a.setStart(dims.start());
+      a.setEnd(dims.end());
+    }
+    return a;
   }
 
 }
@@ -146,14 +167,12 @@ aspect NameResolution {
     when(hasPackage(name()))
     to Access new PackageAccess(name());
     */
-    //when(!duringSyntacticClassification())
-    when(!duringSyntacticClassification() &&
-      (!lookupType(name()).isEmpty() || hasPackage(name())))
+    when(!duringSyntacticClassification())
     to Access{
       if(!lookupType(name()).isEmpty())
-        return new TypeAccess(name(), start());
+        return new TypeAccess(name(), start(), end());
       else
-        return new PackageAccess(name(), start());
+        return new PackageAccess(name(), start(), end());
     }
   }
 
@@ -167,26 +186,16 @@ aspect NameResolution {
     when(hasPackage(name()))
     to Access new PackageAccess(name());
     */
-    // This prevents strange errors with circular rewrites.
-    // At the beginning, only FieldDecls are in the AST. These will be rewritten
-    // to one or more FieldDeclarations. CaesarJ allows variables as qualifiers, so
-    // lookupVariable is called during rewrite (see below). This requires to check
-    // every body declaration in a class. However, FieldDecls will not be rewritten
-    // this time because inCircle is true. The lookup fails and we will always get
-    // a PackageAccess. Better delay the rewrite until we know for sure.
-    // I'm not sure if there is a cleaner solution, but this seems to work for now.
-    //when(!duringSyntacticClassification())
-    when(!duringSyntacticClassification() &&
-      (!lookupVariable(name()).isEmpty() || !lookupType(name()).isEmpty() || hasPackage(name())))
+    when(!duringSyntacticClassification())
     to Access {
       if(!lookupVariable(name()).isEmpty()) {
-        return new VarAccess(name(), start());
+        return new VarAccess(name(), start(), end());
       }
       else if(!lookupType(name()).isEmpty()) {
-        return new TypeAccess(name(), start());
+        return new TypeAccess(name(), start(), end());
       }
       else {
-        return new PackageAccess(name(), start());
+        return new PackageAccess(name(), start(), end());
       }
     }
   }
@@ -198,13 +207,14 @@ aspect NameResolution {
       PackageAccess left = (PackageAccess)leftSide();
       PackageAccess right = (PackageAccess)rightSide();
       left.setPackage(left.getPackage() + "." + right.getPackage());
+      left.setEnd(right.end());
       return qualifyTailWith(left);
     }
   }
         
   // combine PackageAccess + TypeAccess into one qualified TypeAccess
   rewrite Dot {
-    when(!duringSyntacticClassification() && leftSide().isPackageAccess() && !((Access)leftSide()).hasPrevExpr() && rightSide().isTypeAccess())
+    when(!duringSyntacticClassification() && leftSide().isPackageAccess() && !((Access)leftSide()).hasPrevExpr() && rightSide() instanceof TypeAccess)
     to Access {
       PackageAccess left = (PackageAccess)leftSide();
       TypeAccess right = (TypeAccess)rightSide();

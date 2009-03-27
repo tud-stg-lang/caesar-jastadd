@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect Enums {
 
   /* 
@@ -7,22 +16,13 @@ aspect Enums {
   syn boolean TypeDecl.isEnumDecl() = false;
   eq EnumDecl.isEnumDecl() = true;
   
-  syn boolean ClassInstanceExpr.isExactClassInstanceExpr() = true;
-  eq EnumInstanceExpr.isExactClassInstanceExpr() = false;
+  refine NameCheck public void ClassInstanceExpr.nameCheck() {
+    if(getAccess().type().isEnumDecl() && !enclosingBodyDecl().isEnumConstant())
+      error("enum types may not be instantiated explicitly");
+    else
+      refined();
+  }
   
-  rewrite ClassInstanceExpr {
-    when(isExactClassInstanceExpr() && getAccess().type().isEnumDecl())
-    to EnumInstanceExpr new EnumInstanceExpr(getAccess(), getArgList(), getTypeDeclOpt());
-  }
-
-  public void EnumInstanceExpr.nameCheck() {
-    if(!hostBodyDecl().isEnumConstant())
-      error("enum types may not be instatinated explicitly");
-    else 
-      super.nameCheck();
-  }
-  inh BodyDecl EnumInstanceExpr.hostBodyDecl();
-  eq EnumConstant.getInit().hostBodyDecl() = this;
   syn boolean BodyDecl.isEnumConstant() = false;
   eq EnumConstant.isEnumConstant() = true;
 
@@ -59,9 +59,11 @@ aspect Enums {
     
   syn lazy Opt EnumDecl.getSuperClassAccessOpt() {
     return new Opt(
-      new ParameterizedTypeAccess(
-        "java.lang",
-        "Enum",
+      new ParTypeAccess(
+        new TypeAccess(
+          "java.lang",
+          "Enum"
+        ),
         new List().add(createQualifiedAccess())
       )
     );
@@ -95,19 +97,19 @@ aspect Enums {
         );
         addBodyDecl(
           new ConstructorDecl(
-            new Modifiers(new List().add(new Modifier("private"))),
+            new Modifiers(new List().add(new Modifier("private")).add(new Modifier("synthetic"))),
             name(),
             parameterList,
             new List(),
             new Opt(
               new ExprStmt(
                 new SuperConstructorAccess(
+                  "super",
                   new List().add(
                     new VarAccess("p0")
                   ).add(
                     new VarAccess("p1")
-                  ),
-                  "super"
+                  )
                 )
               )
             ),
@@ -115,9 +117,46 @@ aspect Enums {
           )
         );
       }
+      else {
+        transformEnumConstructors();
+      }
       addValues(); // Add the values() and getValue(String s) methods
       return this;
     }
+  }
+
+  protected void ASTNode.transformEnumConstructors() {
+    for(int i = 0; i < getNumChildNoTransform(); i++) {
+      ASTNode child = getChildNoTransform(i);
+      if(child != null)
+        child.transformEnumConstructors();
+    }
+  }
+  protected void ConstructorDecl.transformEnumConstructors() {
+    // add implicit super constructor access since we are traversing
+    // without doing rewrites
+    if(!hasConstructorInvocation()) {
+      setConstructorInvocation(
+        new ExprStmt(
+          new SuperConstructorAccess("super", new List())
+        )
+      );
+    }
+    super.transformEnumConstructors();
+    getParameterList().insertChild(
+      new ParameterDeclaration(new TypeAccess("java.lang", "String"), "@p0"),
+      0
+    );
+    getParameterList().insertChild(
+      new ParameterDeclaration(new TypeAccess("int"), "@p1"),
+      1
+    );
+  }
+  // applied to both ConstructorAccess and SuperConstructorAccess
+  protected void ConstructorAccess.transformEnumConstructors() {
+    super.transformEnumConstructors();
+    getArgList().insertChild(new VarAccess("@p0"),0);
+    getArgList().insertChild(new VarAccess("@p1"),1);
   }
   
   /*
@@ -142,7 +181,7 @@ aspect Enums {
 
   syn lazy Opt EnumConstant.getInitOpt() {
     return new Opt(
-        new EnumInstanceExpr(
+        new ClassInstanceExpr(
           hostType().createQualifiedAccess(),
           createArgumentList(),
           createOptAnonymousDecl()
@@ -163,8 +202,7 @@ aspect Enums {
     argList.add(new StringLiteral(getID()));
     argList.add(new IntegerLiteral(Integer.toString(((List)getParent()).getIndexOfChild(this))));
     for(int i = 0; i < getNumArg(); i++)
-      argList.add(getArg(i));
-    setArgList(new List()); // TODO: get rid of this side-effect
+      argList.add(getArg(i).fullCopy());
     return argList;
   }
 
@@ -207,7 +245,7 @@ aspect Enums {
   eq EnumDecl.isFinal() {
     for(Iterator iter = enumConstants().iterator(); iter.hasNext(); ) {
       EnumConstant c = (EnumConstant)iter.next();
-      EnumInstanceExpr e = (EnumInstanceExpr)c.getInit();
+      ClassInstanceExpr e = (ClassInstanceExpr)c.getInit();
       if(e.hasTypeDecl())
         return false;
     }
@@ -241,19 +279,16 @@ aspect Enums {
       new Modifiers(new List().add(
         new Modifier("private")).add(
         new Modifier("static")).add(
-        new Modifier("final"))
+        new Modifier("final")).add(
+        new Modifier("synthetic"))
       ),
       arrayType().createQualifiedAccess(),
       "$VALUES",
       new Opt(
           new ArrayCreationExpr(
-            createQualifiedAccess(),
-            new List().add(
-              new Dims(
-                new Opt(
-                  new IntegerLiteral(Integer.toString(enumConstants().size()))
-                )
-              )
+            new ArrayTypeWithSizeAccess(
+              createQualifiedAccess(),
+              new IntegerLiteral(Integer.toString(enumConstants().size()))
             ),
             new Opt(
               new ArrayInit(
@@ -270,11 +305,11 @@ aspect Enums {
         new Modifiers(new List().add(
           new Modifier("public")).add(
           new Modifier("static")).add(
-          new Modifier("final"))
+          new Modifier("final")).add(
+          new Modifier("synthetic"))
         ),
         arrayType().createQualifiedAccess(),
         "values",
-        new List(),
         new List(),
         new List(),
         new Opt(
@@ -286,8 +321,8 @@ aspect Enums {
                     arrayType().createQualifiedAccess(),
                     values.createBoundFieldAccess().qualifiesAccess(
                       new MethodAccess(
-                        new List(),
-                        "clone"
+                        "clone",
+                        new List()
                       )
                     )
                   )
@@ -303,7 +338,8 @@ aspect Enums {
       new MethodDecl(
         new Modifiers(new List().add(
           new Modifier("public")).add(
-          new Modifier("static"))
+          new Modifier("static")).add(
+          new Modifier("synthetic"))
         ),
         createQualifiedAccess(),
         "valueOf",
@@ -315,7 +351,6 @@ aspect Enums {
           )
         ),
         new List(),
-        new List(),
         new Opt(
           new Block(
             new List().add(
@@ -323,20 +358,18 @@ aspect Enums {
                 new Opt(
                   new CastExpr(
                     createQualifiedAccess(),
-                    // TODO: Class is not yet working
-                    new NullLiteral("null")
-                    /*
                     lookupType("java.lang", "Enum").createQualifiedAccess().qualifiesAccess(
                       new MethodAccess(
+                        "valueOf",
                         new List().add(
+                          createQualifiedAccess().qualifiesAccess(new ClassAccess())
+                        ).add(
                           new VarAccess(
                             "s"
                           )
-                        ),
-                        "valueOf"
+                        )
                       )
                     )
-                    */
                   )
                 )
               )
@@ -425,15 +458,129 @@ aspect Enums {
   // generic traversal should traverse NTA as well
   // this should be done automatically by the JastAdd
   public int EnumConstant.getNumChild() {
-    return 6;
+    return 5;
   }
   public ASTNode EnumConstant.getChild(int i) {
     switch(i) {
-      case 4: return getTypeAccess();
-      case 5: return getInitOpt();
+      case 3: return getTypeAccess();
+      case 4: return getInitOpt();
       default: return ASTNode.getChild(this, i);
     }
   }
 
+  refine TypeCheck public void SwitchStmt.typeCheck() {
+     TypeDecl type = getExpr().type();
+    if((!type.isIntegralType() || type.isLong()) && !type.isEnumDecl())
+      error("Switch expression must be of char, byte, short, int, or enum type");
+  }
+
+  eq ConstCase.getValue().lookupVariable(String name)
+    = switchType().isEnumDecl() ? switchType().memberFields(name) : lookupVariable(name);
   
+  eq EnumConstant.isConstant() = true;
+  
+  refine TypeCheck public void ConstCase.typeCheck() {
+    if(switchType().isEnumDecl() && (!(getValue() instanceof VarAccess) || !(getValue().varDecl() instanceof EnumConstant)))
+      error("Unqualified enumeration constant required");
+    else
+      refined();
+  }
+  refine NameCheck eq ConstCase.constValue(Case c) {
+    if(switchType().isEnumDecl()) {
+      if(!(c instanceof ConstCase) || !getValue().isConstant())
+        return false;
+      return getValue().varDecl() == ((ConstCase)c).getValue().varDecl();
+    }
+    else
+      return refined(c);
+  }
+
+  public void EnumDecl.toString(StringBuffer s) {
+    getModifiers().toString(s);
+    s.append("enum " + name());
+    if(getNumImplements() > 0) {
+      s.append(" implements ");
+      getImplements(0).toString(s);
+      for(int i = 1; i < getNumImplements(); i++) {
+        s.append(", ");
+        getImplements(i).toString(s);
+      }
+    }
+    s.append(" {");
+    for(int i=0; i < getNumBodyDecl(); i++) {
+      BodyDecl d = getBodyDecl(i);
+      if(d instanceof EnumConstant) {
+        d.toString(s);
+        if(i + 1 < getNumBodyDecl() && !(getBodyDecl(i + 1) instanceof EnumConstant))
+          s.append(indent() + ";");
+      }
+      else if(d instanceof ConstructorDecl) {
+        ConstructorDecl c = (ConstructorDecl)d;
+        if(!c.isSynthetic()) {
+          s.append(indent());
+          c.getModifiers().toString(s);
+          s.append(c.name() + "(");
+          if(c.getNumParameter() > 2) {
+            c.getParameter(2).toString(s);
+            for(int j = 3; j < c.getNumParameter(); j++) {
+              s.append(", ");
+              c.getParameter(j).toString(s);
+            }
+          }
+          s.append(")");
+          if(c.getNumException() > 0) {
+            s.append(" throws ");
+            c.getException(0).toString(s);
+            for(int j = 1; j < c.getNumException(); j++) {
+              s.append(", ");
+              c.getException(j).toString(s);
+            }
+          }
+          s.append(" {");
+          for(int j = 0; j < c.getBlock().getNumStmt(); j++) {
+            c.getBlock().getStmt(j).toString(s);
+          }
+          s.append(indent());
+          s.append("}");
+        }
+      }
+      else if(d instanceof MethodDecl) {
+        MethodDecl m = (MethodDecl)d;
+        if(!m.isSynthetic())
+          m.toString(s);
+      }
+      else if(d instanceof FieldDeclaration) {
+        FieldDeclaration f = (FieldDeclaration)d;
+        if(!f.isSynthetic())
+          f.toString(s);
+      }
+      else
+        d.toString(s);
+    }
+    s.append(indent() + "}");
+  }
+
+  public void EnumConstant.toString(StringBuffer s) {
+    s.append(indent());
+    getModifiers().toString(s);
+    s.append(getID());
+    s.append("(");
+    if(getNumArg() > 0) {
+      getArg(0).toString(s);
+      for(int i = 1; i < getNumArg(); i++) {
+        s.append(", ");
+        getArg(i).toString(s);
+      }
+    }
+    s.append(")");
+    if(getNumBodyDecl() > 0) {
+      s.append(" {");
+      for(int i=0; i < getNumBodyDecl(); i++) {
+        BodyDecl d = getBodyDecl(i);
+        d.toString(s);
+      }
+      s.append(indent() + "}");
+    }
+    s.append(",\n");
+  }
 }

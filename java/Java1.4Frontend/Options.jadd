@@ -1,6 +1,22 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 
-aspect Options {
+aspect AddOptionsToProgram {
+  public Options ASTNode$State.options = new Options();
+  public Options ASTNode.options() {
+    return state().options;
+  }
+}
+
+public class Options {
   static class Option {
     public String name;
     public boolean hasValue;
@@ -11,53 +27,81 @@ aspect Options {
       this.isCollection = isCollection;
     }
   }
-  private static Map Program.options = new HashMap();
-  private static Map Program.optionDescriptions = new HashMap();
+  private Map options = new HashMap();
+  private Map optionDescriptions = new HashMap();
 
-  private static HashSet Program.files = new HashSet();
-  public static Collection Program.files() {
+  private HashSet files = new HashSet();
+  public Collection files() {
     return files;
   }
 
-  public static void Program.initOptions() {
+  public void initOptions() {
     options = new HashMap();
     optionDescriptions = new HashMap();
     files = new HashSet();
   }
 
-  public static void Program.addKeyOption(String name) {
+  public void addKeyOption(String name) {
     if(optionDescriptions.containsKey(name))
       throw new Error("Command line definition error: option description for " + name + " is multiply declared");
     optionDescriptions.put(name, new Option(name, false, false));
   }
   
-  public static void Program.addKeyValueOption(String name) {
+  public void addKeyValueOption(String name) {
     if(optionDescriptions.containsKey(name))
       throw new Error("Command line definition error: option description for " + name + " is multiply declared");
     optionDescriptions.put(name, new Option(name, true, false));
   }
   
-  public static void Program.addKeyCollectionOption(String name) {
+  public void addKeyCollectionOption(String name) {
     if(optionDescriptions.containsKey(name))
       throw new Error("Command line definition error: option description for " + name + " is multiply declared");
     optionDescriptions.put(name, new Option(name, true, true));
   }
  
-  public static void Program.addOptionDescription(String name, boolean value) {
+  public void addOptionDescription(String name, boolean value) {
     if(optionDescriptions.containsKey(name))
       throw new Error("Command line definition error: option description for " + name + " is multiply declared");
     optionDescriptions.put(name, new Option(name, value, false));
   }
-  public static void Program.addOptionDescription(String name, boolean value, boolean isCollection) {
+  public void addOptionDescription(String name, boolean value, boolean isCollection) {
     if(optionDescriptions.containsKey(name))
       throw new Error("Command line definition error: option description for " + name + " is multiply declared");
     optionDescriptions.put(name, new Option(name, value, isCollection));
   }
   
-  public static void Program.addOptions(String[] args) {
+  public void addOptions(String[] args) {
     for(int i = 0; i < args.length; i++) {
       String arg = args[i];
-      if(arg.startsWith("-")) {
+      if(arg.startsWith("@")) {
+        try {
+          String fileName = arg.substring(1,arg.length());
+          java.io.StreamTokenizer tokenizer = new java.io.StreamTokenizer(new java.io.FileReader(fileName));
+          tokenizer.resetSyntax();
+          tokenizer.whitespaceChars(' ',' ');
+          tokenizer.whitespaceChars('\t','\t');
+          tokenizer.whitespaceChars('\f','\f');
+          tokenizer.whitespaceChars('\n','\n');
+          tokenizer.whitespaceChars('\r','\r');
+          tokenizer.wordChars(33,255);
+          ArrayList list = new ArrayList();
+          int next = tokenizer.nextToken();
+          while(next != java.io.StreamTokenizer.TT_EOF) {
+            if(next == java.io.StreamTokenizer.TT_WORD) {
+              list.add(tokenizer.sval);
+            }
+            next = tokenizer.nextToken();
+          }
+          String[] newArgs = new String[list.size()];
+          int index = 0;
+          for(Iterator iter = list.iterator(); iter.hasNext(); index++) {
+            newArgs[index] = (String)iter.next();
+          }
+          addOptions(newArgs);
+        } catch (java.io.IOException e) {
+        }
+      }
+      else if(arg.startsWith("-")) {
         if(!optionDescriptions.containsKey(arg))
           throw new Error("Command line argument error: option " + arg + " is not defined");
         Option o = (Option)optionDescriptions.get(arg);
@@ -98,30 +142,30 @@ aspect Options {
       }
     }
   }
-  public static boolean Program.hasOption(String name) {
+  public boolean hasOption(String name) {
     return options.containsKey(name);
   }
-  public static void Program.setOption(String name) {
+  public void setOption(String name) {
     options.put(name, null);
   }
-  public static boolean Program.hasValueForOption(String name) {
+  public boolean hasValueForOption(String name) {
     return options.containsKey(name) && options.get(name) != null;
   }
-  public static String Program.getValueForOption(String name) {
+  public String getValueForOption(String name) {
     if(!hasValueForOption(name))
       throw new Error("Command line argument error: key " + name + " does not have a value");
     return (String)options.get(name);
   }
-  public static void Program.setValueForOption(String value, String option) {
+  public void setValueForOption(String value, String option) {
     options.put(option, value);
   }
-  public static Collection Program.getValueCollectionForOption(String name) {
+  public Collection getValueCollectionForOption(String name) {
     if(!hasValueForOption(name))
       throw new Error("Command line argument error: key " + name + " does not have a value");
     return (Collection)options.get(name);
   }
 
-  public static boolean Program.verbose() {
+  public boolean verbose() {
     return hasOption("-verbose");
   }
 }

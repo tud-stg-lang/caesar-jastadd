@@ -1,43 +1,27 @@
 ClassDecl class_declaration =
-		modifiers.m CLASS IDENTIFIER.id type_parameters.p super_opt.s interfaces_opt.i class_body.b 
-		{:  return new GenericClassDecl(m, id, s, i, b, p, new List(), new Opt());  :}
-	|	            CLASS IDENTIFIER.id type_parameters.p super_opt.s interfaces_opt.i class_body.b 
-		{:  return new GenericClassDecl(new Modifiers(new List()), id, s, i, b, p, new List(), new Opt());  :}
+	modifiers.m? CLASS IDENTIFIER type_parameters.p super.s? interfaces.i? class_body.b 
+		{:  return new GenericClassDecl(new Modifiers(m), IDENTIFIER, s, i, b, p);  :}
 	;
 
-Opt super_opt =
-  {: return new Opt(); :}
-  | super.s {: return s; :}
-  ;
-
-List interfaces_opt =
-    {: return new List(); :}
-  | interfaces.i {: return i; :}
-  ;
-
-List extends_interfaces_opt =
-                       {: return new List(); :}
-  | extends_interfaces {: return extends_interfaces; :}
-  ;
-  
 InterfaceDecl interface_declaration =
-		modifiers.m INTERFACE IDENTIFIER.id type_parameters.p extends_interfaces_opt.i interface_body.b 
-		{:  return new GenericInterfaceDecl(m, id, i, b, p, new List(), new Opt());  :}
-	|             INTERFACE IDENTIFIER.id type_parameters.p extends_interfaces_opt.i interface_body.b 
-		{:  return new GenericInterfaceDecl(new Modifiers(new List()), id, i, b, p, new List(), new Opt());  :}
+	modifiers.m? INTERFACE IDENTIFIER type_parameters.p extends_interfaces.i? interface_body.b 
+		{:  return new GenericInterfaceDecl(new Modifiers(m), IDENTIFIER, i, b, p);  :}
 	;
 
-Access class_or_interface_type =
-		name.t LT type_argument_list_1.l {:  return new ParTypeAccess(t, l);  :}
-  | class_or_interface_type.t DOT IDENTIFIER.id {: return t.qualifiesAccess(new ParseName(id)); :}
-  | class_or_interface_type.t DOT IDENTIFIER.id LT type_argument_list_1.l 
-    {: return new ParTypeAccess(t.qualifiesAccess(new ParseName(id)), l); :}
+Access class_or_interface =
+    name.n {: return n; :}
+  | class_or_interface.n LT type_argument_list_1.l DOT name.end {: return new ParTypeAccess(n, l).qualifiesAccess(end); :}
+  ;
+
+Access class_or_interface_type :=
+    class_or_interface.n {: return n; :}
+  | class_or_interface.n LT type_argument_list_1.l {: return new ParTypeAccess(n, l); :}
 	;
 Access array_type =
-    	name.t LT type_argument_list_1.l DOT name.n dims.d 
-    	{:  return new ArrayTypeAccess(new ParTypeAccess(t, l).qualifiesAccess(n), d.getNumChild());  :}
-	|	name.t LT type_argument_list_1.l dims.d 
-		{:  return new ArrayTypeAccess(new ParTypeAccess(t, l), d.getNumChild());  :}
+    class_or_interface.t LT type_argument_list_1.l DOT name.n dims.d 
+    {: return new ParTypeAccess(t, l).qualifiesAccess(n).addArrayDims(d); :}
+	|	class_or_interface.t LT type_argument_list_1.l dims.d 
+		{: return new ParTypeAccess(t, l).addArrayDims(d); :}
 	;
 
 List type_arguments =
@@ -68,30 +52,43 @@ Access wildcard_3 =
 	|	QUESTION SUPER reference_type_3.t    {: return new WildcardSuper(t); :}
 	;
 
-Opt subclass_body_opt =
-    {: return new Opt(); :}
-  | subclass_body {: return subclass_body; :}
-  ;
-
-Expr class_instance_creation_expression =
-	 	NEW type_arguments.a class_or_interface_type.t LPAREN argument_list_opt.l RPAREN subclass_body_opt.b
+Expr class_instance_creation_expression :=
+    NEW class_or_interface_type.t LPAREN argument_list.l? RPAREN subclass_body.b?
+    {: return new ClassInstanceExpr(t, l, b); :}
+  |	NEW type_arguments.a class_or_interface_type.t LPAREN argument_list.l? RPAREN subclass_body.b?
 		{:  return new ParClassInstanceExpr(t, l, b, a); :}
-    /*
-	|	primary.n DOT NEW IDENTIFIER.id type_arguments.a LPAREN argument_list_opt.l RPAREN subclass_body_opt.b
-        {:  return new NestedClassInstanceExpr(n, new ParTypeAccess(new ParseName(id), a), l, b ); :}	
-        */
-	|	primary.n DOT NEW type_arguments.ca IDENTIFIER.id LPAREN argument_list_opt.l RPAREN class_body_opt.b
-		{:  return n.qualifiesAccess(new ParClassInstanceExpr(new ParseName(id), l, b, ca)); :}
-    /*
-	|	primary.n DOT NEW type_arguments.ca IDENTIFIER.id type_arguments.ta LPAREN argument_list_opt.l RPAREN class_body_opt.b
-		{:  return new ParNestedClassInstanceExpr(n, new ParTypeAccess(new ParseName(id), ta), l, b, ca); :}
-	|	name.n DOT NEW IDENTIFIER.id type_arguments.a LPAREN argument_list_opt.l RPAREN subclass_body_opt.b
-		{:  return new NestedClassInstanceExpr(n, new ParTypeAccess(new ParseName(id), a), l, b);  :}
-	|	name.n DOT NEW type_arguments.ca IDENTIFIER.id LPAREN argument_list_opt.l RPAREN class_body_opt.b
-		{:  return new ParNestedClassInstanceExpr(n, new ParseName(id), l, b, ca);  :}
-	|	name.n DOT NEW type_arguments.ca IDENTIFIER.id type_arguments.ta LPAREN argument_list_opt.l RPAREN class_body_opt.b
-		{:  return new ParNestedClassInstanceExpr(n, new ParTypeAccess(new ParseName(id), ta), l, b, ca);  :}
-    */
+	|	primary.n DOT NEW simple_name.id LPAREN argument_list.l? RPAREN subclass_body.b?
+    {:  ClassInstanceExpr e = new ClassInstanceExpr(id, l, b); 
+        e.setStart(NEW.getStart());
+        e.setEnd(RPAREN.getEnd());
+        return n.qualifiesAccess(e);
+    :}
+	|	primary.n DOT NEW simple_name.id type_arguments.a LPAREN argument_list.l? RPAREN subclass_body.b?
+    {:  ClassInstanceExpr e = new ClassInstanceExpr(new ParTypeAccess(id, a), l, b); 
+        e.setStart(NEW.getStart());
+        e.setEnd(RPAREN.getEnd());
+        return n.qualifiesAccess(e);
+    :}
+	|	primary.n DOT NEW type_arguments.ca simple_name.id LPAREN argument_list.l? RPAREN subclass_body.b?
+		{:  return n.qualifiesAccess(new ParClassInstanceExpr(id, l, b, ca)); :}
+	|	primary.n DOT NEW type_arguments.ca simple_name.id type_arguments.ta LPAREN argument_list.l? RPAREN subclass_body.b?
+		{:  return n.qualifiesAccess(new ParClassInstanceExpr(new ParTypeAccess(id, ta), l, b, ca)); :}
+	|	name.n DOT NEW simple_name.id LPAREN argument_list.l? RPAREN subclass_body.b?
+    {:  ClassInstanceExpr e = new ClassInstanceExpr(id, l, b); 
+        e.setStart(NEW.getStart());
+        e.setEnd(RPAREN.getEnd());
+        return n.qualifiesAccess(e);
+    :}
+	|	name.n DOT NEW simple_name.id type_arguments.a LPAREN argument_list.l? RPAREN subclass_body.b?
+    {:  ClassInstanceExpr e = new ClassInstanceExpr(new ParTypeAccess(id, a), l, b); 
+        e.setStart(NEW.getStart());
+        e.setEnd(RPAREN.getEnd());
+        return n.qualifiesAccess(e);
+    :}
+	|	name.n DOT NEW type_arguments.ca simple_name.id LPAREN argument_list.l? RPAREN subclass_body.b?
+		{:  return n.qualifiesAccess(new ParClassInstanceExpr(id, l, b, ca)); :}
+	|	name.n DOT NEW type_arguments.ca simple_name.id type_arguments.ta LPAREN argument_list.l? RPAREN subclass_body.b?
+		{:  return n.qualifiesAccess(new ParClassInstanceExpr(new ParTypeAccess(id, ta), l, b, ca)); :}
 	;
 
 List type_argument_list =
@@ -136,27 +133,24 @@ Access type_argument_3 =
   
 Access reference_type_1 =
 		reference_type.t GT {:  return t;  :}
-	|	name.t LT type_argument_list_2.l {:  return new ParTypeAccess(t, l);  :}
+	|	class_or_interface.t LT type_argument_list_2.l {:  return new ParTypeAccess(t, l);  :}
 	;
 	
 Access reference_type_2 =
 		reference_type.t RSHIFT {:  return t;  :}
-	|	name.t LT type_argument_list_3.l {:  return new ParTypeAccess(t, l);  :}
+	|	class_or_interface.t LT type_argument_list_3.l {:  return new ParTypeAccess(t, l);  :}
 	;
 	
 Access reference_type_3 =
 		reference_type.t URSHIFT {:  return t;  :}
 	;
 Expr cast_expression =
-		LPAREN name.n LT type_argument_list_1.a RPAREN unary_expression_not_plus_minus.e 
-		{:  return new CastExpr(new ParTypeAccess(n, a), e);  :}
-	|	LPAREN name.n LT type_argument_list_1.a dims.d RPAREN unary_expression_not_plus_minus.e 
-		{:  return new CastExpr(new ArrayTypeAccess(new ParTypeAccess(n, a), d.getNumChild()), e);  :}
-	|	LPAREN name.n LT type_argument_list_1.a DOT class_or_interface_type.t RPAREN unary_expression_not_plus_minus.e 
-		{:  return new CastExpr(new ParTypeAccess(n, a).qualifiesAccess(t), e);  :}
-	|	LPAREN name.n LT type_argument_list_1.a DOT class_or_interface_type.t dims.d RPAREN unary_expression_not_plus_minus.e 
-		{:  return new CastExpr(new ArrayTypeAccess(new ParTypeAccess(n, a).qualifiesAccess(t), d.getNumChild()), e);  :}
+		LPAREN name.n LT type_argument_list_1.a dims.d? RPAREN unary_expression_not_plus_minus.e 
+		{:  return new CastExpr(new ParTypeAccess(n, a).addArrayDims(d), e);  :}
+	|	LPAREN name.n LT type_argument_list_1.a DOT class_or_interface_type.t dims.d? RPAREN unary_expression_not_plus_minus.e 
+		{:  return new CastExpr(new ParTypeAccess(n, a).qualifiesAccess(t).addArrayDims(d), e);  :}
   ;
+
 List type_parameters =
 		LT type_parameter_list_1.l {:  return l;  :}
 	;
@@ -172,13 +166,13 @@ List type_parameter_list_1 =
 	;
 	
 TypeVariable type_parameter =
-		IDENTIFIER.v              {:  return new TypeVariable(new Modifiers(), v, new List(), new List());  :}
-	|	IDENTIFIER.v type_bound.l {:  return new TypeVariable(new Modifiers(), v, new List(), l); :}
+		IDENTIFIER              {:  return new TypeVariable(new Modifiers(), IDENTIFIER, new List(), new List());  :}
+	|	IDENTIFIER type_bound.l {:  return new TypeVariable(new Modifiers(), IDENTIFIER, new List(), l); :}
 	;
 	
 TypeVariable type_parameter_1 =
-		IDENTIFIER.v GT             {:  return new TypeVariable(new Modifiers(), v, new List(), new List());  :}
-  |	IDENTIFIER.v type_bound_1.l {:  return new TypeVariable(new Modifiers(), v, new List(), l);  :}
+		IDENTIFIER GT             {:  return new TypeVariable(new Modifiers(), IDENTIFIER, new List(), new List());  :}
+  |	IDENTIFIER type_bound_1.l {:  return new TypeVariable(new Modifiers(), IDENTIFIER, new List(), l);  :}
 	;
 	
 List type_bound =
@@ -208,121 +202,4 @@ Access additional_bound =
 Access additional_bound_1 =
 		AND reference_type_1.t {:  return t;  :}
 	;
-
-Opt class_body_opt = {: return new Opt(); :}
-    |  class_body.b {:  return new Opt(b);  :};
-
-
-
-
-
-
-
-
-
-
-
-
-
-Expr postfix_expression_nn =
-    primary.p                                  {: return p; :}
-  | postincrement_expression.e                 {: return e; :}
-  | postdecrement_expression.e                 {: return e; :}
-  ;
-Expr unary_expression_nn =
-    preincrement_expression.e                  {: return e; :}
-  | predecrement_expression.e                  {: return e; :}
-  | PLUS unary_expression.e                    {: return new PlusExpr(e); :}
-  | MINUS unary_expression.e                   {: return new MinusExpr(e); :}
-  | unary_expression_not_plus_minus_nn.e          {: return e; :}
-  ;
-Expr unary_expression_not_plus_minus_nn =
-    postfix_expression_nn.e                       {: return e; :}
-  | COMP unary_expression.e                    {: return new BitNotExpr(e); :}
-  | NOT unary_expression.e                     {: return new LogNotExpr(e); :}
-  | cast_expression.e                          {: return e; :}
-  ;
-Expr multiplicative_expression_nn =
-    unary_expression_nn.e                                     {: return e; :}
-  | name.e1 MULT unary_expression.e2  {: return new MulExpr(e1, e2); :}
-  | multiplicative_expression_nn.e1 MULT unary_expression.e2  {: return new MulExpr(e1, e2); :}
-  | name.e1 DIV unary_expression.e2   {: return new DivExpr(e1, e2); :}
-  | multiplicative_expression_nn.e1 DIV unary_expression.e2   {: return new DivExpr(e1, e2); :}
-  | name.e1 MOD unary_expression.e2   {: return new ModExpr(e1, e2); :}
-  | multiplicative_expression_nn.e1 MOD unary_expression.e2   {: return new ModExpr(e1, e2); :}
-  ;
-Expr additive_expression_nn =
-    multiplicative_expression_nn.e                                {: return e; :}
-  | name.e1 PLUS multiplicative_expression.e2   {: return new AddExpr(e1, e2); :}
-  | additive_expression_nn.e1 PLUS multiplicative_expression.e2   {: return new AddExpr(e1, e2); :}
-  | name.e1 MINUS multiplicative_expression.e2  {: return new SubExpr(e1, e2); :}
-  | additive_expression_nn.e1 MINUS multiplicative_expression.e2  {: return new SubExpr(e1, e2); :}
-  ;
-Expr shift_expression_nn =
-    additive_expression_nn.e                               {: return e; :}
-  | name.e1 LSHIFT additive_expression.e2   {: return new LShiftExpr(e1, e2); :}
-  | shift_expression_nn.e1 LSHIFT additive_expression.e2   {: return new LShiftExpr(e1, e2); :}
-  | name.e1 RSHIFT additive_expression.e2   {: return new RShiftExpr(e1, e2); :}
-  | shift_expression_nn.e1 RSHIFT additive_expression.e2   {: return new RShiftExpr(e1, e2); :}
-  | name.e1 URSHIFT additive_expression.e2  {: return new URShiftExpr(e1, e2); :}
-  | shift_expression_nn.e1 URSHIFT additive_expression.e2  {: return new URShiftExpr(e1, e2); :}
-  ;
-Expr relational_expression_nn =
-    shift_expression_nn.e                                  {: return e; :}
-  | name.e1 LT shift_expression.e2     {: return new LTExpr(e1, e2); :}
-  | shift_expression_nn.e1 LT shift_expression.e2     {: return new LTExpr(e1, e2); :}
-  | name.e1 GT shift_expression.e2     {: return new GTExpr(e1, e2); :}
-  | shift_expression_nn.e1 GT shift_expression.e2     {: return new GTExpr(e1, e2); :}
-  | name.e1 LTEQ shift_expression.e2   {: return new LEExpr(e1, e2); :}
-  | relational_expression_nn.e1 LTEQ shift_expression.e2   {: return new LEExpr(e1, e2); :}
-  | name.e1 GTEQ shift_expression.e2   {: return new GEExpr(e1, e2); :}
-  | relational_expression_nn.e1 GTEQ shift_expression.e2   {: return new GEExpr(e1, e2); :}
-  | name.e INSTANCEOF reference_type.t {: return new InstanceOfExpr(e, t); :}
-  | relational_expression_nn.e INSTANCEOF reference_type.t {: return new InstanceOfExpr(e, t); :}
-  ;
-Expr equality_expression_nn =
-    relational_expression_nn.e                               {: return e; :}
-  | name.e1 EQEQ relational_expression.e2  {: return new EQExpr(e1, e2); :}
-  | equality_expression_nn.e1 EQEQ relational_expression.e2  {: return new EQExpr(e1, e2); :}
-  | name.e1 NOTEQ relational_expression.e2 {: return new NEExpr(e1, e2); :}
-  | equality_expression_nn.e1 NOTEQ relational_expression.e2 {: return new NEExpr(e1, e2); :}
-  ;
-Expr and_expression_nn =
-    equality_expression_nn.e                               {: return e; :}
-  | name.e1 AND equality_expression.e2        {: return new AndBitwiseExpr(e1, e2); :}
-  | and_expression_nn.e1 AND equality_expression.e2        {: return new AndBitwiseExpr(e1, e2); :}
-  ;
-Expr exclusive_or_expression_nn =
-    and_expression_nn.e                                    {: return e; :}
-  | name.e1 XOR and_expression.e2    {: return new XorBitwiseExpr(e1, e2); :}
-  | exclusive_or_expression_nn.e1 XOR and_expression.e2    {: return new XorBitwiseExpr(e1, e2); :}
-  ;
-Expr inclusive_or_expression_nn =
-    exclusive_or_expression_nn.e                                {: return e; :}
-  | name.e1 OR exclusive_or_expression.e2 {: return new OrBitwiseExpr(e1, e2); :}
-  | inclusive_or_expression_nn.e1 OR exclusive_or_expression.e2 {: return new OrBitwiseExpr(e1, e2); :}
-  ;
-Expr conditional_and_expression_nn =
-    inclusive_or_expression_nn.e                                       {: return e; :}
-  | name.e1 ANDAND inclusive_or_expression.e2 {: return new AndLogicalExpr(e1, e2); :}
-  | conditional_and_expression_nn.e1 ANDAND inclusive_or_expression.e2 {: return new AndLogicalExpr(e1, e2); :}
-  ;
-Expr conditional_or_expression_nn =
-    conditional_and_expression_nn.e                                    {: return e; :}
-  | name.e1 OROR conditional_and_expression.e2 {: return new OrLogicalExpr(e1, e2); :}
-  | conditional_or_expression_nn.e1 OROR conditional_and_expression.e2 {: return new OrLogicalExpr(e1, e2); :}
-  ;
-Expr conditional_expression_nn =
-    conditional_or_expression_nn.c                                                        {: return c; :}
-  | name.c QUESTION expression.e1 COLON conditional_expression.e2 {: return new ConditionalExpr(c, e1, e2); :}
-  | conditional_or_expression_nn.c QUESTION expression.e1 COLON conditional_expression.e2 {: return new ConditionalExpr(c, e1, e2); :}
-  ;
-Expr assignment_expression_nn =
-    conditional_expression_nn.c {: return c; :}
-  | assignment.a {: return a; :}
-  ;
-
-Expr expression_nn =
-    assignment_expression_nn
-  ;
 

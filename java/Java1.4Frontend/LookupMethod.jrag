@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 import java.util.ArrayList;
 
@@ -9,16 +18,19 @@ aspect LookupMethod {
   inh Expr Access.nestedScope();
   eq AbstractDot.getRight().nestedScope() = isQualified() ? nestedScope() : this;
   eq AbstractDot.getLeft().nestedScope() = isQualified() ? nestedScope() : this;
-  eq Program.getCompilationUnit().nestedScope() { throw new UnsupportedOperationException(); }
+  eq Program.getChild().nestedScope() { throw new UnsupportedOperationException(); }
 
   inh Collection Expr.lookupMethod(String name);
+  inh Collection Stmt.lookupMethod(String name);
+  inh Collection BodyDecl.lookupMethod(String name);
   inh lazy Collection TypeDecl.lookupMethod(String name);
   
   eq MethodAccess.getArg().lookupMethod(String name) = unqualifiedScope().lookupMethod(name);
   eq ConstructorAccess.getArg().lookupMethod(String name) = unqualifiedScope().lookupMethod(name);
   eq ArrayAccess.getExpr().lookupMethod(String name) = unqualifiedScope().lookupMethod(name);
+  eq ArrayTypeWithSizeAccess.getExpr().lookupMethod(String name) = unqualifiedScope().lookupMethod(name);
 
-  eq Program.getCompilationUnit().lookupMethod(String name) = Collections.EMPTY_LIST;
+  eq Program.getChild().lookupMethod(String name) = Collections.EMPTY_LIST;
   eq TypeDecl.getBodyDecl(int i).lookupMethod(String name) = unqualifiedLookupMethod(name);
 
   syn lazy Collection TypeDecl.unqualifiedLookupMethod(String name) {
@@ -31,11 +43,13 @@ aspect LookupMethod {
 
   // in explicit constructor invocation
   eq ConstructorDecl.getConstructorInvocation().lookupMethod(String name) {
-    Collection c = hostType().memberMethods(name);
-    if(!c.isEmpty()) return removeInstanceMethods(c);
-    if(hostType().isNestedType())
-      return hostType().lookupMethod(name);
-    return Collections.EMPTY_LIST;
+    Collection c = new ArrayList();
+    for(Iterator iter = lookupMethod(name).iterator(); iter.hasNext(); ) {
+      MethodDecl m = (MethodDecl)iter.next();
+      if(!hostType().memberMethods(name).contains(m) || m.isStatic())
+        c.add(m);
+    }
+    return c;
   }
   public static Collection ASTNode.removeInstanceMethods(Collection c) {
     c = new LinkedList(c);
@@ -87,9 +101,11 @@ aspect LookupMethod {
 
     // 8.4.6.4 - only return the first method in case of multply inherited abstract methods
     boolean allAbstract = true;
-    for(Iterator iter = decls.iterator(); iter.hasNext() && allAbstract; )
-      if(!((MethodDecl)iter.next()).isAbstract())
+    for(Iterator iter = decls.iterator(); iter.hasNext() && allAbstract; ) {
+      MethodDecl m = (MethodDecl)iter.next();
+      if(!m.isAbstract() && !m.hostType().isObject())
         allAbstract = false;
+    }
     if(decls.size() > 1 && allAbstract)
       return (MethodDecl)decls.iterator().next();
     return unknownMethod();
@@ -109,9 +125,7 @@ aspect MethodDecl {
   syn String MethodDecl.name() = getID();
 
   // 8.4.2
-  syn lazy MethodSignature MethodDecl.signature() = MethodSignature.factory(signatureString());
-
-  syn String MethodDecl.signatureString() {
+  syn lazy String MethodDecl.signature() {
     StringBuffer s = new StringBuffer();
     s.append(name() + "(");
     for(int i = 0; i < getNumParameter(); i++) {
@@ -121,30 +135,8 @@ aspect MethodDecl {
     s.append(")");
     return s.toString();
   }
-  class MethodSignature {
-    static private HashMap signatures = new HashMap();
-    
-    static MethodSignature factory(String signature) {
-      if(signatures.containsKey(signature))
-        return (MethodSignature)signatures.get(signature);
-      MethodSignature m = new MethodSignature(signature);
-      signatures.put(signature, m);
-      return m;
-    }
-    private String str;
-    private MethodSignature(String s) {
-      str = s;
-    }
-    public String toString() {
-      return str;
-    }
-  }
 
-  // 8.4.2 Method Signature  
-  syn TypeDecl MethodDecl.getParamType(int i, MethodAccess ma) {
-	  return getParameter(i).type();	  
-  }
-  
+  // 8.4.2 Method Signature
   syn boolean MethodDecl.sameSignature(MethodDecl m) = signature().equals(m.signature());
   
   syn lazy boolean MethodDecl.moreSpecificThan(MethodDecl m) {
@@ -163,7 +155,7 @@ aspect MethodDecl {
     if(!name().equals(decl.name()))
       return false;
     for(int i = 0; i < getNumArg(); i++) {
-      if(!getArg(i).type().instanceOf(decl.getParamType(i, this)))
+      if(!getArg(i).type().instanceOf(decl.getParameter(i).type()))
         return false;
     }
     return true;
@@ -220,9 +212,22 @@ aspect MemberMethods {
 
 
   public Iterator TypeDecl.localMethodsIterator() {
-    return localMethodsSignatureMap().values().iterator();
+    return new Iterator() {
+      private Iterator outer = localMethodsSignatureMap().values().iterator();
+      private Iterator inner = null;
+      public boolean hasNext() {
+        if((inner == null || !inner.hasNext()) && outer.hasNext())
+          inner = ((SimpleSet)outer.next()).iterator();
+        return inner == null ? false : inner.hasNext();
+      }
+      public Object next() {
+        return inner.next();
+      }
+      public void remove() { throw new UnsupportedOperationException(); }
+    };
+    //return localMethodsSignatureMap().values().iterator();
   }
-  syn SimpleSet TypeDecl.localMethodsSignature(MethodSignature signature) {
+  syn SimpleSet TypeDecl.localMethodsSignature(String signature) {
     SimpleSet set = (SimpleSet)localMethodsSignatureMap().get(signature);
     if(set != null) return set;
     return SimpleSet.emptySet;
@@ -255,7 +260,7 @@ aspect MemberMethods {
       public void remove() { throw new UnsupportedOperationException(); }
     };
   }
-  syn SimpleSet ClassDecl.interfacesMethodsSignature(MethodSignature signature) {
+  syn SimpleSet ClassDecl.interfacesMethodsSignature(String signature) {
     SimpleSet set = (SimpleSet)interfacesMethodsSignatureMap().get(signature);
     if(set != null) return set;
     return SimpleSet.emptySet;
@@ -290,7 +295,7 @@ aspect MemberMethods {
     };
   }
 
-  syn SimpleSet TypeDecl.methodsSignature(MethodSignature signature) {
+  syn SimpleSet TypeDecl.methodsSignature(String signature) {
     SimpleSet set = (SimpleSet)methodsSignatureMap().get(signature);
     if(set != null) return set;
     return SimpleSet.emptySet;
@@ -353,9 +358,9 @@ aspect MemberMethods {
 aspect AncestorMethods {
   // methods with the same signature declared in ancestors
   // this is used when checking correct overriding, hiding, and implementation of abstract methods
-  syn lazy SimpleSet TypeDecl.ancestorMethods(MethodSignature signature) = SimpleSet.emptySet;
+  syn lazy SimpleSet TypeDecl.ancestorMethods(String signature) = SimpleSet.emptySet;
 
-  eq ClassDecl.ancestorMethods(MethodSignature signature) {
+  eq ClassDecl.ancestorMethods(String signature) {
     SimpleSet set = SimpleSet.emptySet;
     if(hasSuperclass()) {
       for(Iterator iter = superclass().localMethodsSignature(signature).iterator(); iter.hasNext(); ) {
@@ -389,7 +394,7 @@ aspect AncestorMethods {
     }
     return set;
   }
-  eq InterfaceDecl.ancestorMethods(MethodSignature signature) {
+  eq InterfaceDecl.ancestorMethods(String signature) {
     SimpleSet set = SimpleSet.emptySet;
     for(Iterator outerIter = superinterfacesIterator(); outerIter.hasNext(); ) {
       TypeDecl typeDecl = (TypeDecl)outerIter.next();

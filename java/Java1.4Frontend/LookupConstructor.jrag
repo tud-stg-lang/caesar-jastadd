@@ -1,9 +1,18 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 import java.util.ArrayList;
 
 aspect ConstructScope {
   inh Collection ConstructorAccess.lookupConstructor();
-  eq Program.getCompilationUnit().lookupConstructor() = Collections.EMPTY_LIST;
+  eq Program.getChild().lookupConstructor() = Collections.EMPTY_LIST;
   eq TypeDecl.getBodyDecl().lookupConstructor() = constructors();
   eq AbstractDot.getRight().lookupConstructor() = getLeft().type().constructors();
 
@@ -12,7 +21,7 @@ aspect ConstructScope {
   syn Collection TypeDecl.lookupSuperConstructor() = Collections.EMPTY_LIST;
   eq ClassDecl.lookupSuperConstructor() = hasSuperclass() ? superclass().constructors() : Collections.EMPTY_LIST;
   eq InterfaceDecl.lookupSuperConstructor() = typeObject().constructors();
-  eq Program.getCompilationUnit().lookupSuperConstructor() = Collections.EMPTY_LIST;
+  eq Program.getChild().lookupSuperConstructor() = Collections.EMPTY_LIST;
   eq AbstractDot.getRight().lookupSuperConstructor() = getLeft().type().lookupSuperConstructor();
 
   inh TypeDecl ClassInstanceExpr.typeObject();
@@ -94,11 +103,12 @@ aspect ConstructorLookup {
         c.add(getBodyDecl(i));
       }
     }
+    /*
     if(c.isEmpty() && isClassDecl()) {
       Modifiers m = new Modifiers();
       if(isPublic()) m.addModifier(new Modifier("public"));
-      if(isProtected()) m.addModifier(new Modifier("protected"));
-      if(isPrivate()) m.addModifier(new Modifier("private"));
+      else if(isProtected()) m.addModifier(new Modifier("protected"));
+      else if(isPrivate()) m.addModifier(new Modifier("private"));
       addBodyDecl(
           new ConstructorDecl(
             m,
@@ -111,9 +121,9 @@ aspect ConstructorLookup {
       );
       c.add(getBodyDecl(getNumBodyDecl()-1));
     }
+    */
     return c;
   }
-  
 }
 
 aspect ConstructorDecl {
@@ -165,7 +175,37 @@ aspect ConstructorDecl {
   }
 }
 aspect ImplicitConstructor {
-  syn lazy boolean ClassDecl.noConstructor() {
+  syn boolean List.requiresDefaultConstructor() {
+    if(getParent() instanceof ClassDecl) {
+      ClassDecl c = (ClassDecl)getParent();
+      return c.getBodyDeclList() == this && !(c instanceof AnonymousDecl) && c.noConstructor();
+    }
+    return false;
+  }
+    
+  rewrite List {
+    when(requiresDefaultConstructor())
+    to List {
+      ClassDecl c = (ClassDecl)getParent();
+      Modifiers m = new Modifiers();
+      if(c.isPublic()) m.addModifier(new Modifier("public"));
+      else if(c.isProtected()) m.addModifier(new Modifier("protected"));
+      else if(c.isPrivate()) m.addModifier(new Modifier("private"));
+      c.addBodyDecl(
+          new ConstructorDecl(
+            m,
+            c.name(),
+            new List(),
+            new List(),
+            new Opt(),
+            new Block()
+          )
+      );
+      return this;
+    }
+  }
+
+  syn boolean ClassDecl.noConstructor() {
     for(int i = 0; i < getNumBodyDecl(); i++)
       if(getBodyDecl(i) instanceof ConstructorDecl)
         return false;
@@ -178,7 +218,7 @@ aspect ImplicitConstructor {
     to ConstructorDecl {
       setConstructorInvocation(
         new ExprStmt(
-          new SuperConstructorAccess(new List(), "super")
+          new SuperConstructorAccess("super", new List())
           )
         );
       return this;

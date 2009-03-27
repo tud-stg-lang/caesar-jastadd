@@ -1,89 +1,43 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import AST.*;
 
 import java.util.*;
 import java.io.*;
-import parser.*;
 
-class JavaPrettyPrinter {
+class JavaPrettyPrinter extends Frontend {
   public static void main(String args[]) {
     if(!compile(args))
       System.exit(1);
   }
-  
+
   public static boolean compile(String args[]) {
-    Program program = new Program();
-    program.initOptions();    
-    program.addKeyValueOption("-classpath");
-    program.addKeyValueOption("-sourcepath");
-    program.addKeyValueOption("-bootclasspath");
-    program.addKeyValueOption("-extdirs");
-    program.addKeyValueOption("-d");
-    program.addKeyOption("-verbose");
-    program.addKeyOption("-version");
-    program.addKeyOption("-help");
-    program.addKeyOption("-g");
-
-    program.addOptions(args);
-    Collection files = program.files();
-
-    if(program.hasOption("-version")) {
-      printVersion();
-      return false;
-    }
-    if(program.hasOption("-help") || files.isEmpty()) {
-      printUsage();
-      return false;
-    }
-
-    for(Iterator iter = files.iterator(); iter.hasNext(); ) {
-      String name = (String)iter.next();
-      program.addSourceFile(name);
-    }
-
-    try {
-      for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
-        CompilationUnit unit = (CompilationUnit)iter.next();
-        if(unit.fromSource()) {
-          Collection errors = new LinkedList();
-          unit.errorCheck(errors);
-          if(!errors.isEmpty()) {
-            System.out.println("Errors:");
-            for(Iterator iter2 = errors.iterator(); iter2.hasNext(); ) {
-              String s = (String)iter2.next();
-              System.out.println(s);
-            }
-            return false;
+    return new JavaPrettyPrinter().process(
+        args,
+        new BytecodeParser(),
+        new JavaParser() {
+          public CompilationUnit parse(InputStream is, String fileName) throws IOException, beaver.Parser.Exception {
+            return new parser.JavaParser().parse(is, fileName);
           }
         }
-      }
-    } catch (Error e) {
-      System.err.println(e.getMessage());
-      return false;
-    }
-
-    if(Program.verbose())
-      System.out.println("Pretty printing source code");
-    System.out.println(program.toString());
-    return true;
-  }
-
-  protected static void printUsage() {
-    printVersion();
-    System.out.println(
-      "\nJavaPrettyPrinter\n\n" +
-      "Usage: java JavaPrettyPrinter <options> <source files>\n" +
-      "  -verbose                  Output messages about what the compiler is doing\n" +
-      "  -classpath <path>         Specify where to find user class files\n" +
-      "  -sourcepath <path>        Specify where to find input source files\n" + 
-      "  -bootclasspath <path>     Override location of bootstrap class files\n" + 
-      "  -extdirs <dirs>           Override location of installed extensions\n" +
-      "  -d <directory>            Specify where to place generated class files\n" +
-      "  -help                     Print a synopsis of standard options\n" +
-      "  -version                  Print version information\n"
     );
   }
 
-  protected static void printVersion() {
-    System.out.println("Java1.4Frontend (http://jastadd.cs.lth.se) Version R20060729");
+  protected void processErrors(Collection errors, CompilationUnit unit) {
+    super.processErrors(errors, unit);
+    System.out.println(unit);
   }
+  protected void processNoErrors(CompilationUnit unit) {
+    System.out.println(unit);
+  }
+
+  protected String name() { return "JavaPrettyPrinter"; }
+  protected String version() { return "R20071015"; }
 }

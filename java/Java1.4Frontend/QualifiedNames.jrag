@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.*;
 
 aspect Names {
@@ -13,15 +22,25 @@ aspect Names {
   
   syn String PackageAccess.name() = getPackage();
   
-  syn String TypeAccess.packageName() = getPackage();
+  syn String Expr.packageName() = "";
+  eq TypeAccess.packageName() = getPackage();
   
-  syn String PackageAccess.packageName() {
+  eq PackageAccess.packageName() {
     StringBuffer s = new StringBuffer();
-    if(hasPrevExpr() && prevExpr().isPackageAccess()) {
-      s.append(((PackageAccess)prevExpr()).packageName());
+    if(hasPrevExpr()) {
+      s.append(prevExpr().packageName());
       s.append(".");
     }
     s.append(getPackage());
+    return s.toString();
+  }
+  eq PackageOrTypeAccess.packageName() {
+    StringBuffer s = new StringBuffer();
+    if(hasPrevExpr()) {
+      s.append(prevExpr().packageName());
+      s.append(".");
+    }
+    s.append(name());
     return s.toString();
   }
 
@@ -42,13 +61,15 @@ aspect Names {
   }
   syn String Expr.typeName() = "";
   eq AbstractDot.typeName() = lastAccess().typeName();
-  eq TypeAccess.typeName() = isQualified() ? (qualifier().typeName() + "." + nameWithPackage()) : nameWithPackage();
+  eq TypeAccess.typeName() = isQualified() ? (qualifier().typeName() + "." + name()) : nameWithPackage();
 }
 
 aspect TypeName {
   syn String TypeDecl.name() = getID();
 
   syn lazy String TypeDecl.fullName() {
+    if(isNestedType())
+      return enclosingType().fullName() + "." + name();
     String packageName = packageName();
     if(packageName.equals(""))
       return name();
@@ -56,6 +77,8 @@ aspect TypeName {
   }
 
   syn lazy String TypeDecl.typeName() {
+    if(isNestedType())
+      return enclosingType().typeName() + "." + name();
     String packageName = packageName();
     if(packageName.equals("") || packageName.equals(PRIMITIVE_PACKAGE_NAME))
       return name();
@@ -64,13 +87,9 @@ aspect TypeName {
   eq ArrayDecl.typeName() = componentType().typeName() + "[]";
 
   inh lazy String TypeDecl.packageName();
-  eq CompilationUnit.getTypeDecl().packageName() = packageName();
-  eq CompilationUnit.getImportDecl().packageName() = packageName();
+  eq CompilationUnit.getChild().packageName() = packageName();
 
-  eq TypeDecl.getBodyDecl().packageName() = packageName().equals("") ?
-    name() : packageName() + "." + name();
-
-  syn lazy String CompilationUnit.packageName() = getPackageDecl();
+  syn lazy String CompilationUnit.packageName() {return getPackageDecl();}
 }
 
 aspect CreateQualifiedAccesses {

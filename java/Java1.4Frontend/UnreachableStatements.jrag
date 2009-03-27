@@ -1,9 +1,18 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect UnreachableStatements {
 
   void ASTNode.checkUnreachableStmt() {
   }
   void Stmt.checkUnreachableStmt() {
-    if(!reachable())
+    if(!reachable() && reportUnreachable())
       error("statement is unreachable");
   }
   void StaticInitializer.checkUnreachableStmt() {
@@ -17,7 +26,6 @@ aspect UnreachableStatements {
 
   inh boolean Stmt.reachable();
   inh boolean Block.reachable();
-  inh boolean Case.reachable();
   syn lazy boolean Stmt.canCompleteNormally() = true;
   
   eq ConstructorDecl.getConstructorInvocation().reachable() = true;
@@ -49,26 +57,21 @@ aspect UnreachableStatements {
   
   eq ExprStmt.canCompleteNormally() = reachable();
 
-  syn boolean SwitchStmt.lastStmtCanCompleteNormally() {
-    for(int i = getNumCase() - 1; i >= 0; i--)
-      if(getCase(i).getNumStmt() > 0)
-        return getCase(i).getStmt(getCase(i).getNumStmt() - 1).canCompleteNormally();
-    return false;
-  }
+  syn boolean SwitchStmt.lastStmtCanCompleteNormally() = getBlock().canCompleteNormally();
 
   syn boolean SwitchStmt.noStmts() {
-    for(int i = 0; i < getNumCase(); i++)
-      if(getCase(i).getNumStmt() > 0)
+    for(int i = 0; i < getBlock().getNumStmt(); i++)
+      if(!(getBlock().getStmt(i) instanceof Case))
         return false;
     return true;
   }
 
   syn boolean SwitchStmt.noStmtsAfterLastLabel() = 
-    getCase(getNumCase() - 1).getNumStmt() == 0;
+    getBlock().getNumStmt() > 0 && getBlock().getStmt(getBlock().getNumStmt()-1) instanceof Case;
 
   syn boolean SwitchStmt.noDefaultLabel() {
-    for(int i = 0; i < getNumCase(); i++)
-      if(getCase(i) instanceof DefaultCase)
+    for(int i = 0; i < getBlock().getNumStmt(); i++)
+      if(getBlock().getStmt(i) instanceof DefaultCase)
         return false;
     return true;
   }
@@ -76,9 +79,9 @@ aspect UnreachableStatements {
   eq SwitchStmt.canCompleteNormally() =
     lastStmtCanCompleteNormally() || noStmts() || noStmtsAfterLastLabel() || noDefaultLabel() || reachableBreak();
 
-  eq SwitchStmt.getCase().reachable() = reachable();
-  eq Case.getStmt().reachable() = childIndex == 0 ? reachable() : getStmt(childIndex-1).canCompleteNormally();
-
+  eq SwitchStmt.getBlock().reachable() = reachable();
+  syn boolean Case.reachable() = getParent().getParent() instanceof Block && ((Block)getParent().getParent()).reachable();
+  
   eq WhileStmt.canCompleteNormally() = reachable() && (!getCondition().isConstant() || !getCondition().isTrue()) || reachableBreak();
   eq WhileStmt.getStmt().reachable() = reachable() && !getCondition().isFalse();
 
@@ -137,4 +140,21 @@ aspect UnreachableStatements {
     (hasElse() && getElse().canCompleteNormally()));
   eq IfStmt.getThen().reachable() = reachable();
   eq IfStmt.getElse().reachable() = reachable();
+
+
+  inh boolean Stmt.reportUnreachable();
+  eq Block.getStmt(int i).reportUnreachable() = i == 0 ? reachable() : getStmt(i-1).reachable();
+  eq IfStmt.getThen().reportUnreachable() = reachable();
+  eq IfStmt.getElse().reportUnreachable() = reachable();
+  eq ForStmt.getStmt().reportUnreachable() = reachable();
+  eq DoStmt.getStmt().reportUnreachable() = reachable();
+  eq WhileStmt.getStmt().reportUnreachable() = reachable();
+  eq TryStmt.getBlock().reportUnreachable() = reachable();
+  eq TryStmt.getCatchClause().reportUnreachable() = reachable();
+  eq TryStmt.getFinally().reportUnreachable() = reachable();
+  eq SynchronizedStmt.getBlock().reportUnreachable() = reachable();
+  eq SwitchStmt.getBlock().reportUnreachable() = reachable();
+  eq TypeDecl.getChild().reportUnreachable() = true;
+  eq Program.getCompilationUnit().reportUnreachable() = true;
+
 }

@@ -1,8 +1,14 @@
-aspect Arrays {
-  syn lazy List TypeDecl.getDynamicTypeList() = new List();
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
 
+aspect Arrays {
   syn lazy int TypeDecl.dimension() = 0;
-  //eq ArrayDecl.dimension() = getDimension();
   eq ArrayDecl.dimension() = componentType().dimension() + 1;
   
   // TypeDecl.elementType() - the ground type that the array is based on
@@ -10,17 +16,12 @@ aspect Arrays {
   eq ArrayDecl.elementType() = componentType().elementType();
 
   // TypeDecl.componentType() -  the elements in an array has this type
-  eq Program.getCompilationUnit().componentType() = unknownType();
-  eq TypeDecl.getDynamicType().componentType() = this;
+  eq Program.getChild().componentType() = unknownType();
+  eq TypeDecl.arrayType().componentType() = this;
   inh lazy TypeDecl TypeDecl.componentType();
 
-  // TypeDecl.arrayType() - the type that has components of type this
-  //public TypeDecl TypeDecl.arrayType() {
-  syn lazy TypeDecl TypeDecl.arrayType() {
-    // TODO: do this in a nicer way. The arrayType() must return the same declaration every time even if caching is not allowed
-    //if(computedArray) return valueArray;
+  syn nta TypeDecl TypeDecl.arrayType() {
     String name = name() + "[]";
-
     TypeDecl typeDecl =
       new ArrayDecl(
         new Modifiers(new List().add(new Modifier("public"))),
@@ -40,20 +41,12 @@ aspect Arrays {
             "clone",
             new List(),
             new List(),
-            new List(),
             new Opt(new Block())
           )
         )
       );
-    addDynamicType(typeDecl);
-    typeDecl.isFinal = true;
-    valueArray = typeDecl;
-    computedArray = true;
     return typeDecl;
   }
-  private boolean TypeDecl.computedArray = false;
-  private TypeDecl TypeDecl.valueArray;
-  
   inh TypeDecl TypeDecl.typeCloneable();
   inh TypeDecl TypeDecl.typeSerializable();
   
@@ -64,6 +57,6 @@ aspect Arrays {
   syn lazy String ArrayTypeAccess.getID() = getAccess().type().name();
 
   public Access ArrayDecl.createQualifiedAccess() {
-    return new ArrayTypeAccess(elementType().createQualifiedAccess(), dimension());
+    return new ArrayTypeAccess(componentType().createQualifiedAccess());
   }
 }

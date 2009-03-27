@@ -12,15 +12,12 @@ BodyDecl class_member_declaration =
 
 // a comment
 AnnotationDecl annotation_type_declaration =
-  modifiers.m AT INTERFACE IDENTIFIER.id annotation_type_body.b 
-  {:  return new AnnotationDecl(m, id, b); :}
-  | AT INTERFACE IDENTIFIER.id annotation_type_body.b 
-  {:  return new AnnotationDecl(new Modifiers(new List()), id, b); :}
+  modifiers.m? AT INTERFACE IDENTIFIER annotation_type_body.b 
+  {:  return new AnnotationDecl(new Modifiers(m), IDENTIFIER, b); :}
   ;
 
 List annotation_type_body =
-    LBRACE                                        RBRACE {: return new List(); :}
-  | LBRACE annotation_type_element_declarations.i RBRACE {: return i; :}
+  LBRACE annotation_type_element_declarations.i? RBRACE {: return i; :}
   ;
 
 List annotation_type_element_declarations =
@@ -28,21 +25,14 @@ List annotation_type_element_declarations =
   |  annotation_type_element_declarations.l annotation_type_element_declaration.i {:  return l.add(i);  :};
 
 BodyDecl annotation_type_element_declaration =
-    modifiers.m type.t IDENTIFIER.id LPAREN RPAREN default_value_opt SEMICOLON
-         {: return new AnnotationMethodDecl(m, t, id, new List(), new List(), new List(), new Opt(), default_value_opt); :}
-  |             type.t IDENTIFIER.id LPAREN RPAREN default_value_opt SEMICOLON
-         {: return new AnnotationMethodDecl(new Modifiers(new List()), t, id, new List(), new List(), new List(), new Opt(), default_value_opt); :}
+    modifiers.m? type.t IDENTIFIER LPAREN RPAREN default_value? SEMICOLON
+    {: return new AnnotationMethodDecl(new Modifiers(m), t, IDENTIFIER, new List(), new List(), new Opt(), default_value); :}
   | constant_declaration
   | class_declaration {: return new MemberClassDecl(class_declaration); :}
   | interface_declaration {: return new MemberInterfaceDecl(interface_declaration); :}
   | enum_declaration {: return new MemberClassDecl(enum_declaration); :}
   | annotation_type_declaration {: return new MemberInterfaceDecl(annotation_type_declaration); :}
   | SEMICOLON {: return new StaticInitializer(new Block()); :}
-  ;
-
-Opt default_value_opt =
-                  {: return new Opt(); :}
-  | default_value {: return new Opt(default_value); :}
   ;
 
 ElementValue default_value =
@@ -61,12 +51,7 @@ Annotation annotation =
   ;
 
 Modifier normal_annotation =
-  AT type LPAREN element_value_pairs_opt RPAREN {: return new Annotation("annotation", type, element_value_pairs_opt); :}
-  ;
-
-List element_value_pairs_opt =
-    {: return new List(); :}
-  | element_value_pairs {: return element_value_pairs; :}
+  AT type LPAREN element_value_pairs? RPAREN {: return new Annotation("annotation", type, element_value_pairs); :}
   ;
 
 List element_value_pairs =
@@ -85,13 +70,7 @@ ElementValue element_value =
   ;
 
 ElementArrayValue element_value_array_initializer =
-  LBRACE element_values_opt RBRACE {: return new ElementArrayValue(element_values_opt); :}
-  | LBRACE element_values_opt COMMA RBRACE {: return new ElementArrayValue(element_values_opt); :}
-  ;
-
-List element_values_opt =
-    {: return new List(); :}
-  | element_values {: return element_values; :}
+  LBRACE element_values? COMMA? RBRACE {: return new ElementArrayValue(element_values); :}
   ;
 
 List element_values =
@@ -109,12 +88,6 @@ Modifier single_element_annotation =
   
 
 CompilationUnit compilation_unit =
-    modifiers.a package_declaration.p import_declarations.i type_declarations.t 
-      {: return new AnnotatedCompilationUnit(p.getID(), i, t, a); :}
-  | modifiers.a package_declaration.p                       type_declarations.t
-      {: return new AnnotatedCompilationUnit(p.getID(), new List(), t, a); :}
-  | modifiers.a package_declaration.p import_declarations.i                     
-      {: return new AnnotatedCompilationUnit(p.getID(), i, new List(), a); :}
-  | modifiers.a package_declaration.p                                           
-      {: return new AnnotatedCompilationUnit(p.getID(), new List(), new List(), a); :}
+  modifiers.a package_declaration.p import_declarations.i? type_declarations.t?
+    {: return new AnnotatedCompilationUnit(p.getID(), i, t, new Modifiers(a)); :}
   ;

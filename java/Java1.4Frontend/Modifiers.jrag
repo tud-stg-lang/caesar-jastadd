@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect Modifiers {
   void ASTNode.checkModifiers() {
   }
@@ -42,11 +51,12 @@ aspect Modifiers {
           c.add(m);
       }
     }
-    
+
     for(Iterator iter = localMethodsIterator(); iter.hasNext(); ) {
       MethodDecl m = (MethodDecl)iter.next();
-      if(m.isAbstract())
+      if(m.isAbstract()) {
         c.add(m);
+      }
     }
     return c;
   }
@@ -151,15 +161,15 @@ aspect Modifiers {
       if(isSynchronized())
         error("interface method " + signature() + " in " +
             hostType().typeName() +  " may not be synchronized");
-      if(isFinal())
-        error("interface method " + signature() + " in " +
-            hostType().typeName() +  " may not be final");
       if(isProtected())
         error("interface method " + signature() + " in " +
             hostType().typeName() +  " may not be protected");
       if(isPrivate())
         error("interface method " + signature() + " in " +
             hostType().typeName() +  " may not be private");
+      else if(isFinal())
+        error("interface method " + signature() + " in " +
+            hostType().typeName() +  " may not be final");
     }
   }
 
@@ -178,11 +188,13 @@ aspect Modifiers {
   }
    
   public void MemberDecl.checkModifiers() {
-    super.checkModifiers();
-    if(isStatic() && hostType().isInnerClass() && !isConstant())
-      error("*** Inner classes may not declare static members, unless they are compile-time constant fields");
+    if(!isSynthetic()) {
+      super.checkModifiers();
+      if(isStatic() && hostType().isInnerClass() && !isConstant())
+        error("*** Inner classes may not declare static members, unless they are compile-time constant fields");
+    }
   }
-  
+
   syn lazy boolean TypeDecl.isPublic() = getModifiers().isPublic() || isMemberType() && enclosingType().isInterfaceDecl();
   //eq InterfaceDecl.isPublic() = !isProtected() && !isPrivate();
   syn boolean TypeDecl.isPrivate() = getModifiers().isPrivate();
@@ -197,6 +209,13 @@ aspect Modifiers {
 
   syn boolean TypeDecl.isSynthetic() = getModifiers().isSynthetic();
   
+  syn boolean MemberDecl.isSynthetic() = false;
+  eq MethodDecl.isSynthetic() = getModifiers().isSynthetic();
+  eq FieldDeclaration.isSynthetic() = getModifiers().isSynthetic();
+  syn boolean ConstructorDecl.isSynthetic() = getModifiers().isSynthetic();
+
+  syn boolean VariableDeclaration.isSynthetic() = getModifiers().isSynthetic();
+  syn boolean ParameterDeclaration.isSynthetic() = getModifiers().isSynthetic();
 
   syn boolean MemberDecl.isStatic(); 
   
@@ -224,7 +243,7 @@ aspect Modifiers {
   syn boolean FieldDeclaration.isTransient() = getModifiers().isTransient();
   syn boolean FieldDeclaration.isVolatile() = getModifiers().isVolatile();
 
-  eq MemberTypeDecl.isStatic() = getTypeDecl().isStatic();
+  eq MemberTypeDecl.isStatic() = typeDecl().isStatic();
   
   // 8.1.1 & 9.1.1
   eq TypeDecl.getModifiers().mayBePublic() = true;
@@ -266,17 +285,17 @@ aspect Modifiers {
 
   eq ParameterDeclaration.getModifiers().mayBeFinal() = true;
    
-  eq Program.getCompilationUnit().mayBePublic() = false;
-  eq Program.getCompilationUnit().mayBeProtected() = false;
-  eq Program.getCompilationUnit().mayBePrivate() = false;
-  eq Program.getCompilationUnit().mayBeStatic() = false;
-  eq Program.getCompilationUnit().mayBeFinal() = false;
-  eq Program.getCompilationUnit().mayBeAbstract() = false;
-  eq Program.getCompilationUnit().mayBeVolatile() = false;
-  eq Program.getCompilationUnit().mayBeTransient() = false;
-  eq Program.getCompilationUnit().mayBeStrictfp() = false;
-  eq Program.getCompilationUnit().mayBeSynchronized() = false;
-  eq Program.getCompilationUnit().mayBeNative() = false;
+  eq Program.getChild().mayBePublic() = false;
+  eq Program.getChild().mayBeProtected() = false;
+  eq Program.getChild().mayBePrivate() = false;
+  eq Program.getChild().mayBeStatic() = false;
+  eq Program.getChild().mayBeFinal() = false;
+  eq Program.getChild().mayBeAbstract() = false;
+  eq Program.getChild().mayBeVolatile() = false;
+  eq Program.getChild().mayBeTransient() = false;
+  eq Program.getChild().mayBeStrictfp() = false;
+  eq Program.getChild().mayBeSynchronized() = false;
+  eq Program.getChild().mayBeNative() = false;
   eq TypeDecl.getBodyDecl().mayBePublic() = false;
   eq TypeDecl.getBodyDecl().mayBeProtected() = false;
   eq TypeDecl.getBodyDecl().mayBePrivate() = false;
@@ -333,6 +352,8 @@ aspect Modifiers {
     if(isNative() && !mayBeNative())
       error("modifier native not allowed in this context");
   }
+
+  inh TypeDecl Modifiers.hostType();
   
   inh boolean Modifiers.mayBePublic();
   inh boolean Modifiers.mayBePrivate();

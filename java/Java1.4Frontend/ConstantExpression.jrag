@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect ConstantExpression {
   class Constant {
     static class ConstantInt extends Constant {
@@ -8,6 +17,7 @@ aspect ConstantExpression {
       float floatValue() { return value; }
       double doubleValue() { return value; }
       String stringValue() { return new Integer(value).toString(); }
+      Literal buildLiteral() { return new IntegerLiteral(stringValue()); }
     }
     static class ConstantLong extends Constant {
       private long value;
@@ -17,6 +27,7 @@ aspect ConstantExpression {
       float floatValue() { return value; }
       double doubleValue() { return value; }
       String stringValue() { return new Long(value).toString(); }
+      Literal buildLiteral() { return new LongLiteral(stringValue()); }
     }
     static class ConstantFloat extends Constant {
       private float value;
@@ -26,6 +37,7 @@ aspect ConstantExpression {
       float floatValue() { return value; }
       double doubleValue() { return value; }
       String stringValue() { return new Float(value).toString(); }
+      Literal buildLiteral() { return new FloatingPointLiteral(stringValue()); }
     }
     static class ConstantDouble extends Constant {
       private double value;
@@ -35,6 +47,7 @@ aspect ConstantExpression {
       float floatValue() { return (float)value; }
       double doubleValue() { return value; }
       String stringValue() { return new Double(value).toString(); }
+      Literal buildLiteral() { return new DoubleLiteral(stringValue()); }
     }
     static class ConstantChar extends Constant {
       private char value;
@@ -44,17 +57,20 @@ aspect ConstantExpression {
       float floatValue() { return value; }
       double doubleValue() { return value; }
       String stringValue() { return new Character(value).toString(); }
+      Literal buildLiteral() { return new CharacterLiteral(stringValue()); }
     }
     static class ConstantBoolean extends Constant {
       private boolean value;
       public ConstantBoolean(boolean b) { this.value = b; }
       boolean booleanValue() { return value; }
       String stringValue() { return new Boolean(value).toString(); }
+      Literal buildLiteral() { return new BooleanLiteral(stringValue()); }
     }
     static class ConstantString extends Constant {
       private String value;
       public ConstantString(String s) { this.value = s; }
       String stringValue() { return value; }
+      Literal buildLiteral() { return new StringLiteral(stringValue()); }
     }
 
     int intValue() { throw new UnsupportedOperationException(); }
@@ -63,6 +79,7 @@ aspect ConstantExpression {
     double doubleValue() { throw new UnsupportedOperationException(); }
     boolean booleanValue() { throw new UnsupportedOperationException(getClass().getName()); }
     String stringValue() { throw new UnsupportedOperationException(); }
+    Literal buildLiteral() { throw new UnsupportedOperationException(); }
       
     protected Constant() {
     }
@@ -88,7 +105,7 @@ aspect ConstantExpression {
       " not supported for type " + getClass().getName()); 
   }
 
-  eq VarAccess.constant() = decl().getInit().constant();
+  eq VarAccess.constant() = type().cast(decl().getInit().constant());
   eq AbstractDot.constant() = lastAccess().constant();
   eq CastExpr.constant() = type().cast(getExpr().constant());
   eq ParExpr.constant() = getExpr().constant();
@@ -112,7 +129,7 @@ aspect ConstantExpression {
   eq XorBitwiseExpr.constant() = type().xorBitwise(getLeftOperand().constant(), getRightOperand().constant());
   eq OrBitwiseExpr.constant() = type().orBitwise(getLeftOperand().constant(), getRightOperand().constant());
 
-  eq ConditionalExpr.constant() = type().questionColon(getCondition().constant(), getTrueExpr().constant(),getFalseExpr().constant());
+  syn lazy Constant ConditionalExpr.constant() = type().questionColon(getCondition().constant(), getTrueExpr().constant(),getFalseExpr().constant());
   
 
   syn lazy boolean FloatingPointLiteral.isZero() {
@@ -143,19 +160,30 @@ aspect ConstantExpression {
   static long Literal.parseLong(String s) {
     long x = 0L;
     s = s.toLowerCase();
-    int radix = 10;
     boolean neg = false;
+    if(s.startsWith("-")) {
+      s = s.substring(1);
+      neg = true;
+    }
     if(s.startsWith("0x")) {
-      radix = 16;
       s = s.substring(2);
       if(s.length() > 16) {
         for(int i = 0; i < s.length()-16; i++)
           if(s.charAt(i) != '0')
             throw new NumberFormatException("");
       }
+      for (int i = 0; i < s.length(); i++) {
+        int c = s.charAt(i);
+        if (c >= 'a' && c <= 'f')
+          c = c - 'a' + 10;
+        else if(c >= '0' && c <= '9')
+          c = c - '0';
+        else
+          throw new NumberFormatException("");
+        x = x * 16 + c;
+      }
     }
     else if(s.startsWith("0")) {
-      radix = 8;
       s = s.substring(1);
       // Octals larger than 01777777777777777777777L are not valid
       if(s.length() > 21) {
@@ -163,39 +191,41 @@ aspect ConstantExpression {
           if(i == s.length() - 21 - 1) {
             if(s.charAt(i) != '0' && s.charAt(i) != '1')
               throw new NumberFormatException("");
-          } 
+          }
           else {
             if(s.charAt(i) != '0')
               throw new NumberFormatException("");
           }
       }
-    }
-    else if(s.startsWith("-")) {
-      s = s.substring(1);
-      neg = true;
-    }
-    long oldx = 0;
-    for (int i = 0; i < s.length(); i++) {
-      int c = s.charAt(i);
-      if (c < '0' || c > '9') {
-        c = c - 'a' + 10;
-      }
-      else {
-        c = c - '0';
-      }
-      x *= radix;
-      x += c;
-      if(x < oldx && radix == 10) {
-        boolean negMinValue = i == (s.length()-1) && neg && x == Long.MIN_VALUE;
-        if(!negMinValue)
+      for (int i = 0; i < s.length(); i++) {
+        int c = s.charAt(i);
+        if(c >= '0' && c <= '7')
+          c = c - '0';
+        else
           throw new NumberFormatException("");
+        x = x * 8 + c;
       }
-      oldx = x;
     }
-    if(radix == 10 && x == Long.MIN_VALUE)
-      return x;
-    if(radix == 10 && x < 0) {
-      throw new NumberFormatException("");
+    else {
+      long oldx = 0;
+      for (int i = 0; i < s.length(); i++) {
+        int c = s.charAt(i);
+        if(c >= '0' && c <= '9')
+          c = c - '0';
+        else
+          throw new NumberFormatException("");
+        x = x * 10 + c;
+        if(x < oldx) {
+          boolean negMinValue = i == (s.length()-1) && neg && x == Long.MIN_VALUE;
+          if(!negMinValue)
+            throw new NumberFormatException("");
+        }
+        oldx = x;
+      }
+      if(x == Long.MIN_VALUE)
+        return x;
+      if(x < 0)
+        throw new NumberFormatException("");
     }
     return neg ? -x : x;
   }
@@ -227,6 +257,9 @@ aspect ConstantExpression {
     try {
       l = Literal.parseLong(getLITERAL());
     } catch (NumberFormatException e) {
+      Constant c = Constant.create(0L);
+      c.error = true;
+      return c;
     }
     Constant c = Constant.create((int)l);
     if(isDecimal() && l != (int)l)
@@ -443,8 +476,10 @@ aspect ConstantExpression {
   // isConstant()
   
   syn boolean MemberDecl.isConstant() = false;
-  eq FieldDeclaration.isConstant() = isFinal() && hasInit() && getInit().isConstant() && (type().isPrimitive() || type().isString());
-  syn lazy boolean Expr.isConstant() = false;
+  eq FieldDeclaration.isConstant() = isFinal() && hasInit() && getInit().isConstant() && (type() instanceof PrimitiveType || type().isString());
+
+
+  syn boolean Expr.isConstant() = false;
   eq Literal.isConstant() = true;
   eq NullLiteral.isConstant() = false;
   eq CastExpr.isConstant() = getExpr().isConstant() &&
@@ -453,17 +488,21 @@ aspect ConstantExpression {
   eq MinusExpr.isConstant() = getOperand().isConstant();
   eq BitNotExpr.isConstant() = getOperand().isConstant();
   eq LogNotExpr.isConstant() = getOperand().isConstant();
-  eq Binary.isConstant() = getLeftOperand().isConstant() && getRightOperand().isConstant();
+  syn lazy boolean Binary.isConstant() circular [false] = getLeftOperand().isConstant() && getRightOperand().isConstant();
   eq InstanceOfExpr.isConstant() = false;
-  eq ConditionalExpr.isConstant() = getCondition().isConstant() && getTrueExpr().isConstant() && getFalseExpr().isConstant();
+  syn lazy boolean ConditionalExpr.isConstant() = getCondition().isConstant() && getTrueExpr().isConstant() && getFalseExpr().isConstant();
   eq ParExpr.isConstant() = getExpr().isConstant();
   eq AbstractDot.isConstant() = lastAccess().isConstant();
 
   eq DivExpr.isConstant() = getLeftOperand().isConstant() && getRightOperand().isConstant() && !(getRightOperand().type().isInt() && getRightOperand().constant().intValue() == 0);
   eq ModExpr.isConstant() = getLeftOperand().isConstant() && getRightOperand().isConstant() && !(getRightOperand().type().isInt() && getRightOperand().constant().intValue() == 0);
   
-  eq VarAccess.isConstant() {
+  syn lazy boolean VarAccess.isConstant() circular [false] {
     Variable v = decl();
+    if(v instanceof FieldDeclaration) {
+      FieldDeclaration f = (FieldDeclaration)v;
+      return f.isConstant() && (!isQualified() || (isQualified() && qualifier().isTypeAccess()));
+    }
     boolean result = v.isFinal() && v.hasInit() && v.getInit().isConstant() && (v.type().isPrimitive() || v.type().isString());
     return result && (!isQualified() || (isQualified() && qualifier().isTypeAccess()));
   }
@@ -488,9 +527,6 @@ aspect ConstantExpression {
     return unknownType();
   }
 
-  syn char Expr.constantCharValue() = 0;
-  eq CharacterLiteral.constantCharValue() = getLITERAL().charAt(0);
-  
   eq LogNotExpr.constant() = Constant.create(!getOperand().constant().booleanValue());
   eq EQExpr.constant() = Constant.create(binaryNumericPromotedType().eqIsTrue(left(), right()));
   eq NEExpr.constant() = Constant.create(!binaryNumericPromotedType().eqIsTrue(left(), right()));

@@ -11,10 +11,7 @@ BodyDecl class_member_declaration =
   ;
 
 EnumDecl enum_declaration =
-    modifiers ENUM IDENTIFIER interfaces enum_body {: return new EnumDecl(modifiers, IDENTIFIER, interfaces, enum_body); :}
-  |           ENUM IDENTIFIER interfaces enum_body {: return new EnumDecl(new Modifiers(new List()), IDENTIFIER, interfaces, enum_body); :}
-  | modifiers ENUM IDENTIFIER            enum_body {: return new EnumDecl(modifiers, IDENTIFIER, new List(), enum_body); :}
-  |           ENUM IDENTIFIER            enum_body {: return new EnumDecl(new Modifiers(new List()), IDENTIFIER, new List(), enum_body); :}
+  modifiers.m? ENUM IDENTIFIER.id interfaces.i? enum_body.b {: return new EnumDecl(new Modifiers(m), id, i, b); :}
   ;
 
 List enum_body =
@@ -24,10 +21,10 @@ List enum_body =
   | LBRACE enum_constants COMMA RBRACE {: return enum_constants; :}
   | LBRACE enum_body_declarations RBRACE {: return enum_body_declarations; :}
   | LBRACE enum_constants.c enum_body_declarations.d RBRACE
-    {: for(int i = 0; i < d.getNumChild(); i++) c.add(d.getChildNoTransform(i)); return c; :}
+    {: for(int i = 0; i < d.getNumChildNoTransform(); i++) c.add(d.getChildNoTransform(i)); return c; :}
   | LBRACE COMMA enum_body_declarations RBRACE {: return enum_body_declarations; :}
   | LBRACE enum_constants.c COMMA enum_body_declarations.d RBRACE
-    {: for(int i = 0; i < d.getNumChild(); i++) c.add(d.getChildNoTransform(i)); return c; :}
+    {: for(int i = 0; i < d.getNumChildNoTransform(); i++) c.add(d.getChildNoTransform(i)); return c; :}
   ;
 
 List enum_constants =
@@ -36,22 +33,8 @@ List enum_constants =
   ;
 
 BodyDecl enum_constant =
-                IDENTIFIER 
-    {: return new EnumConstant(new Modifiers(new List()), IDENTIFIER, new List(), new List()); :}
-  | annotations IDENTIFIER
-    {: return new EnumConstant(new Modifiers(annotations), IDENTIFIER, new List(), new List()); :}
-  |             IDENTIFIER arguments
-    {: return new EnumConstant(new Modifiers(new List()), IDENTIFIER, arguments, new List()); :}
-  | annotations IDENTIFIER arguments
-    {: return new EnumConstant(new Modifiers(annotations), IDENTIFIER, arguments, new List()); :}
-  |             IDENTIFIER           class_body
-    {: return new EnumConstant(new Modifiers(new List()), IDENTIFIER, new List(), class_body); :}
-  | annotations IDENTIFIER           class_body 
-    {: return new EnumConstant(new Modifiers(annotations), IDENTIFIER, new List(), class_body); :}
-  |             IDENTIFIER arguments class_body
-    {: return new EnumConstant(new Modifiers(new List()), IDENTIFIER, arguments, class_body); :}
-  | annotations IDENTIFIER arguments class_body 
-    {: return new EnumConstant(new Modifiers(annotations), IDENTIFIER, arguments, class_body); :}
+  annotations? IDENTIFIER.id arguments? class_body? 
+    {: return new EnumConstant(new Modifiers(annotations), id, arguments, class_body); :}
   ;
 
 List arguments =
@@ -64,10 +47,5 @@ List annotations =
   ;
 
 List enum_body_declarations =
-  SEMICOLON class_body_declarations_opt {: return class_body_declarations_opt; :}
-  ;
-
-List class_body_declarations_opt =
-  {: return new List(); :}
-  | class_body_declarations.d {: return d; :}
+  SEMICOLON class_body_declarations? {: return class_body_declarations; :}
   ;

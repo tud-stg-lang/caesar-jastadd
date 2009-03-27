@@ -1,14 +1,24 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect SyntacticClassification {
   // 6.5.1 Syntactic Classification of Name According to Context
 
   // Replace the parsed name with a name reclassified according to context
   // This is done upon first access to a name node
   rewrite ParseName {
-    to Access nameType().reclassify(name(), start);
+    to Access nameType().reclassify(name(), start, end);
   }
 
   // The syntactic classification context
-  inh NameType ParseName.nameType();
+  inh NameType Expr.nameType();
+  inh NameType BodyDecl.nameType();
   
   // NameType is basically an Enum for the different kinds of names
   // The factory method reclassify builds name nodes of a particular kind
@@ -18,25 +28,25 @@ aspect SyntacticClassification {
     }
     public static final NameType NO_NAME = new NameType();
     public static final NameType PACKAGE_NAME = new NameType() {
-      public Access reclassify(String name, int start) { return new PackageAccess(name, start); }
+      public Access reclassify(String name, int start, int end) { return new PackageAccess(name, start, end); }
     };
     public static final NameType TYPE_NAME = new NameType() {
-      public Access reclassify(String name, int start) { return new TypeAccess(name, start); }
+      public Access reclassify(String name, int start, int end) { return new TypeAccess(name, start, end); }
     };
     public static final NameType PACKAGE_OR_TYPE_NAME = new NameType() {
-      public Access reclassify(String name, int start) { return new PackageOrTypeAccess(name, start); }
+      public Access reclassify(String name, int start, int end) { return new PackageOrTypeAccess(name, start, end); }
     };
     public static final NameType AMBIGUOUS_NAME = new NameType() {
-      public Access reclassify(String name, int start) { return new AmbiguousAccess(name, start); }
+      public Access reclassify(String name, int start, int end) { return new AmbiguousAccess(name, start, end); }
     };
     public static final NameType METHOD_NAME = new NameType();
     public static final NameType ARRAY_TYPE_NAME = new NameType();
     public static final NameType ARRAY_READ_NAME = new NameType();
     public static final NameType EXPRESSION_NAME = new NameType() {
-      public Access reclassify(String name, int start) { return new VarAccess(name, start); }
+      public Access reclassify(String name, int start, int end) { return new VarAccess(name, start, end); }
     };
 
-    public Access reclassify(String name, int start) {
+    public Access reclassify(String name, int start, int end) {
       throw new Error("Can not reclassify ParseName node " + name);
     }
   }
@@ -51,7 +61,7 @@ aspect SyntacticClassification {
 
   // Equations for the syntactic classification context
   
-  eq Program.getCompilationUnit().nameType() = NameType.NO_NAME;
+  eq Program.getChild().nameType() = NameType.NO_NAME;
 
   // Package name
   
@@ -105,16 +115,16 @@ aspect SyntacticClassification {
   // Extras
   eq Block.getStmt().nameType() = NameType.EXPRESSION_NAME;
   eq ConstructorDecl.getConstructorInvocation().nameType() = NameType.EXPRESSION_NAME;
-  eq Case.getStmt().nameType() = NameType.EXPRESSION_NAME;
   eq TypeDecl.getBodyDecl().nameType() = NameType.EXPRESSION_NAME;
 
   eq MethodAccess.getArg().nameType() = NameType.EXPRESSION_NAME;
   eq ConstructorAccess.getArg().nameType() = NameType.EXPRESSION_NAME;
   eq ArrayAccess.getExpr().nameType() = NameType.EXPRESSION_NAME;
+  eq ArrayTypeWithSizeAccess.getExpr().nameType() = NameType.EXPRESSION_NAME;
 
   eq ClassInstanceExpr.getAccess().nameType() = NameType.TYPE_NAME;
   eq ClassInstanceExpr.getTypeDecl().nameType() = NameType.TYPE_NAME;
-  eq ClassInstanceExpr.getArg().nameType() = NameType.AMBIGUOUS_NAME;
+  eq ClassInstanceExpr.getArg().nameType() = NameType.EXPRESSION_NAME;
 
   eq ConstructorAccess.predNameType() = NameType.AMBIGUOUS_NAME;
   eq ArrayTypeAccess.predNameType() = NameType.AMBIGUOUS_NAME;

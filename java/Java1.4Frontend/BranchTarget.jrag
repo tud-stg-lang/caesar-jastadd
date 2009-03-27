@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
@@ -91,6 +100,8 @@ aspect BranchTarget {
         set.add(o);
       if(o instanceof BreakStmt && !targetOf((BreakStmt)o))
         set.add(o);
+      if(o instanceof ReturnStmt)
+        set.add(o);
     }
     return set;
   }
@@ -159,7 +170,7 @@ aspect BranchTarget {
   inh lazy LabeledStmt ContinueStmt.lookupLabel(String name);
   inh lazy LabeledStmt LabeledStmt.lookupLabel(String name);
   eq LabeledStmt.getStmt().lookupLabel(String name) = name.equals(getLabel()) ? this : lookupLabel(name);
-  eq TypeDecl.getBodyDecl().lookupLabel(String name) = null;
+  eq Program.getChild().lookupLabel(String name) = null;
   
   // compute the list of finally blocks that are reached on the way to the target
   eq BreakStmt.finallyList() {
