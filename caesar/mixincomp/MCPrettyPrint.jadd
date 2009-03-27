@@ -3,8 +3,7 @@
 aspect MCPrettyPrint {
 
 	public void CjClassDecl.toString(StringBuffer s) {
-	    s.append(indent());
-		getModifiers().toString(s);
+	    getModifiers().toString(s);
 		s.append("cclass " + name());
 		if(getNumSuperClasses() > 0) {
 			s.append(" extends ");

@@ -5,6 +5,8 @@ aspect DTSubstitution {
 	inh lazy int ParameterDeclaration.getParamIndex();
 	eq MethodDecl.getParameter(int idx).getParamIndex() = idx;
 	eq ConstructorDecl.getParameter(int idx).getParamIndex() = idx;
+	// not really needed but required by JastAdd
+	eq CatchClause.getParameter().getParamIndex() = 0;
 	
 	public int DepTypeAbsVar.getParamIndex() {
 	   if (var instanceof ParameterDeclaration) {

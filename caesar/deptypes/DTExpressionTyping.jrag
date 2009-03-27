@@ -43,10 +43,11 @@ aspect DTExpressionTyping {
 	// delegate to the computation of dependent type
 	refine TypeAnalysis eq TypeAccess.type() = typeDeclFor(depType());
 	refine TypeAnalysis eq VarAccess.type() = typeDeclFor(depType());
-	refine TypeAnalysis eq MethodAccess.type() = typeDeclFor(depType());
 	refine TypeAnalysis eq ConstructorAccess.type() = typeDeclFor(depType());
 	refine TypeAnalysis eq ThisAccess.type() = typeDeclFor(depType());
 	refine TypeAnalysis eq ClassInstanceExpr.type() = typeDeclFor(depType());
+	// TODO: analyze interaction with generics
+	refine Generics eq MethodAccess.type() = typeDeclFor(depType());
 	
 	public TypeDecl Expr.typeDeclFor(DependentType depType) {
 		if (depType.isAbsolute()) {

@@ -6,7 +6,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.caesarj.ast.*;
+import org.caesarj.ast.BytecodeParser;
+import org.caesarj.ast.CompilationUnit;
+import org.caesarj.ast.JavaParser;
+import org.caesarj.ast.Options;
+import org.caesarj.ast.Problem;
+import org.caesarj.ast.Program;
 import org.caesarj.util.ProgressTracker;
 import org.caesarj.util.VerboseProgress;
 
@@ -135,10 +140,9 @@ public class CaesarCompiler {
 				return false;
 			}
 		}
-		/* TODO: Must be back
+		
 		program.initCjSourceFiles();
-		*/
-
+		
 		for (Iterator iter = files.iterator(); iter.hasNext();) {
 			String name = (String) iter.next();
 			File file = new File(name);
@@ -164,8 +168,7 @@ public class CaesarCompiler {
 		progressTracker.startPhase("typeCheck",	"Checking for errors...", 0.5);
 		
 		try {
-			/* TODO: Must be back */
-			//program.insertExternalizedVC();
+			program.insertExternalizedVC();
 			
 			double step = 1.0 / countSourceCUs();
 			for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {

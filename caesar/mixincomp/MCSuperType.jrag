@@ -41,8 +41,8 @@ aspect MCSuperType {
 	
 	public ClassDecl CjClassDecl.superclass() {
 	    if (hasSuperClassAccess() && !isCircular() && getSuperClassAccess().type().isClassDecl())
-	    	return (ClassDecl)getSuperClassAccess().type(); // TODO: use getClassDecl
-	    return (ClassDecl)typeCjObject(); // TODO: use getClassDecl
+	    	return getSuperClassAccess().type().getClassDecl();
+	    return typeCjObject().getClassDecl(); 
 	}
 		
 	syn lazy Opt CjClassDecl.getSuperTypeOpt() {
@@ -126,6 +126,11 @@ aspect MCSuperType {
 	// CjSuperType returns placeholder $$super which must be replaced by classloader
 	eq CjSuperType.constantPoolName() {
 		return "$$super";
+	}
+	
+	// Avoid definition of erasure() for Generics
+	eq CjSuperType.erasure() {
+		return this;
 	}
 	
 	// no bytecode for CjSuperType

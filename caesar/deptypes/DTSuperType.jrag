@@ -55,7 +55,7 @@ aspect DTSuperType {
 	 * 
 	 */
 	
-	refine CreateBCode public TypeDecl MethodAccess.superAccessorTarget() {
+	refine InnerClasses public TypeDecl MethodAccess.superAccessorTarget() {
 	    TypeDecl targetDecl = prevExpr().type().absoluteType();
 	    TypeDecl enclosing = hostType();
 	    do {
@@ -64,7 +64,7 @@ aspect DTSuperType {
 	    return enclosing;
 	}
 	
-	refine Java2Transformations public boolean MethodAccess.needsSuperAccessor() {
+	refine Transformations public boolean MethodAccess.needsSuperAccessor() {
 		return (!decl().isStatic() && isQualified() && prevExpr().isSuperAccess() && 
 				  !hostType().instanceOf(prevExpr().type().absoluteType()));
 	}

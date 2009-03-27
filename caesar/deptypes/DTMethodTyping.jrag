@@ -31,7 +31,7 @@ aspect DTMethodTyping {
 	// A dependent type is characterized by its top furtherbound (notably for method signature strings)
 	eq DependentTypeDecl.erasure() {
     	if (!this.isVirtualClassDecl()) { 
-    		return super.erasure(); 
+    		return absoluteType().erasure(); 
     	}    	
 		CjVirtualClassDecl vc = this.getVirtualClassDecl();
 		return vc.getTopFurtherbound();
