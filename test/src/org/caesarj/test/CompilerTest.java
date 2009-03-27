@@ -14,8 +14,6 @@ import junit.framework.TestCase;
 import org.caesarj.compiler.CaesarCompiler;
 import org.caesarj.util.VerboseProgress;
 
-import parser.JavaParser.SourceError;
-
 public abstract class CompilerTest extends TestCase {
 	
 	// choose test output level 
@@ -85,9 +83,9 @@ public abstract class CompilerTest extends TestCase {
 	        	CaesarCompiler.addSourceFile(f.getAbsolutePath());
 			}
 		} 
-		catch (SourceError e) {
+		catch (Exception e) {
 			throw new AssertionFailedError("Compilation failed: " + e);
-		}
+		} 
 	}
 	
 	protected void typeCheck() {

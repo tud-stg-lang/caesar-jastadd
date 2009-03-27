@@ -6,12 +6,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.caesarj.ast.CompilationUnit;
-import org.caesarj.ast.Program;
+import org.caesarj.ast.*;
 import org.caesarj.util.ProgressTracker;
 import org.caesarj.util.VerboseProgress;
-
-import parser.JavaParser;
 
 public class CaesarCompiler {
 	static protected Program program = null;
@@ -20,20 +17,28 @@ public class CaesarCompiler {
 	
 	public static void initialize() {
 		program = new Program();
+		Options options = program.options();
 		errors = new LinkedList<String>();
 		progressTracker = new ProgressTracker();
-		Program.initOptions();
-		Program.addKeyValueOption("-classpath");
-		Program.addKeyValueOption("-sourcepath");
-		Program.addKeyValueOption("-bootclasspath");
-		Program.addKeyValueOption("-extdirs");
-		Program.addKeyValueOption("-d");
-		Program.addKeyOption("-logcompiler");
-		Program.addKeyOption("-verbose");
-		Program.addKeyOption("-version");
-		Program.addKeyOption("-help");
-		Program.addKeyOption("-g");
-		Program.addKeyOption("-checkonly");
+		options.initOptions();
+		options.addKeyValueOption("-classpath");
+		options.addKeyValueOption("-sourcepath");
+		options.addKeyValueOption("-bootclasspath");
+		options.addKeyValueOption("-extdirs");
+		options.addKeyValueOption("-d");
+		options.addKeyOption("-logcompiler");
+		options.addKeyOption("-verbose");
+		options.addKeyOption("-version");
+		options.addKeyOption("-help");
+		options.addKeyOption("-g");
+		options.addKeyOption("-checkonly");
+		
+		program.initBytecodeReader(new BytecodeParser());
+		program.initJavaParser(new JavaParser() {
+          public CompilationUnit parse(java.io.InputStream is, String fileName) throws java.io.IOException, beaver.Parser.Exception {
+            return new parser.JavaParser().parse(is, fileName);
+          }
+        });		
 	}
 	
 	public static void cleanUp() {
@@ -43,15 +48,15 @@ public class CaesarCompiler {
 	}
 	
 	public static void addOptions(String args[]) {
-		Program.addOptions(args);
+		program.options().addOptions(args);
 	}
 	
 	public static void setOption(String name) {
-		Program.setOption(name);
+		program.options().setOption(name);
 	}
 	
 	public static void setValueForOption(String value, String option) {
-		Program.setValueForOption(value, option);
+		program.options().setValueForOption(value, option);
 	}
 	
 	/**
@@ -87,13 +92,13 @@ public class CaesarCompiler {
 	 * Pretty printing of parsed AST
 	 */
 	public static String getParsedCode() {
-		try {
-			return program.toString();			
-		} 
+		return program.toString();			
+		/* 
 		catch (JavaParser.SourceError e) {
 			errors.add(e.getMessage());
 			return e.getMessage();
-		}	
+		}
+		*/	
 	}
 	
 	/**
@@ -105,11 +110,11 @@ public class CaesarCompiler {
 		
 		progressTracker.startPhase("collectSrc", "Collecting source files...", 0.05);
 		
-		Collection files = program.files();
+		Collection files = program.options().files();
 		
 		if (files.isEmpty()) {
-			if (program.hasValueForOption("-sourcepath")) {
-				String spath = program.getValueForOption("-sourcepath");
+			if (program.options().hasValueForOption("-sourcepath")) {
+				String spath = program.options().getValueForOption("-sourcepath");
 				if (spath.charAt(spath.length()-1) != File.separatorChar)
 					spath += File.separator;
 				File spathFile = new File(spath);
@@ -130,14 +135,15 @@ public class CaesarCompiler {
 				return false;
 			}
 		}
-		
+		/* TODO: Must be back
 		program.initCjSourceFiles();
+		*/
 
 		for (Iterator iter = files.iterator(); iter.hasNext();) {
 			String name = (String) iter.next();
 			File file = new File(name);
-			if ((!file.exists()) && (program.hasValueForOption("-sourcepath"))) {
-				String spath = program.getValueForOption("-sourcepath");
+			if ((!file.exists()) && (program.options().hasValueForOption("-sourcepath"))) {
+				String spath = program.options().getValueForOption("-sourcepath");
 				if (spath.charAt(spath.length()-1) != File.separatorChar)
 					spath += File.separator;
 				File newFile = new File(spath+name);
@@ -158,26 +164,36 @@ public class CaesarCompiler {
 		progressTracker.startPhase("typeCheck",	"Checking for errors...", 0.5);
 		
 		try {
-			program.insertExternalizedVC();
+			/* TODO: Must be back */
+			//program.insertExternalizedVC();
 			
 			double step = 1.0 / countSourceCUs();
 			for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
 				CompilationUnit cu = (CompilationUnit)iter.next();
 				if (cu.fromSource()) {
 					progressTracker.advanceProgress("Checking for errors: " + cu.relativeName(), step);
-					cu.collectErrors();					
-					errors.addAll(cu.getErrors());
+					cu.collectErrors();	
+					for (Object e: cu.getErrors()) {
+						if (e instanceof Problem) {
+							errors.add(((Problem)e).toString());
+						}
+						else {
+							errors.add((String)e);
+						}						
+					}
 				}
 			}			
 			
 			if (!errors.isEmpty()) {
 				return false;
 			}
-		} 
+		}
+		/* TODO: find out how to parser errors are handled
 		catch (JavaParser.SourceError e) {
 			errors.add(e.getMessage());
 			return false;
-		} 
+		}
+		*/ 
 		finally {
 			progressTracker.endPhase("typeCheck");
 		}
@@ -189,13 +205,12 @@ public class CaesarCompiler {
 		// estimated to take 45% of compilation time
 		progressTracker.startPhase("genBytecode", "Generating bytecode....", 0.45);
 		
-		program.java2Transformation();
-		
 		double step = 1.0 / countSourceCUs();
         for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
         	CompilationUnit cu = (CompilationUnit)iter.next();
         	if (cu.fromSource()) {
 	        	progressTracker.advanceProgress("Generating bytecode: " + cu.relativeName(), step);
+	        	cu.transformation();
 	      		cu.generateClassfile();
         	}
     	}
@@ -279,17 +294,17 @@ public class CaesarCompiler {
 	 */
 	public static boolean compile() {
 		
-		if (program.hasOption("-version")) {
+		if (program.options().hasOption("-version")) {
 			printVersion();
 			return false;
 		}
 		
-		if (program.hasOption("-help")) {
+		if (program.options().hasOption("-help")) {
 			printUsage();
 			return false;
 		}
 		
-		if (program.verbose()) {
+		if (program.options().verbose()) {
 			progressTracker.addProgressListener(new VerboseProgress());
 		}
 		
@@ -305,7 +320,7 @@ public class CaesarCompiler {
 			return false;
 		}
 		
-		if (!program.hasOption("-checkonly")) {
+		if (!program.options().hasOption("-checkonly")) {
 			generateBytecode();
 		}
 		return true;
