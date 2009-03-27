@@ -93,11 +93,20 @@ aspect Transformations {
       replace(this).with(decl().createAccessor(methodQualifierType()).createBoundAccess(getArgList()));
       return;
     }
-    else if(!m.isStatic() && isQualified() && prevExpr().isSuperAccess() && !hostType().instanceOf(prevExpr().type())) {
+    // begin vaidas
+    else if (needsSuperAccessor()) {
+    // end vaidas
       decl().createSuperAccessor(superAccessorTarget());
     }
     super.transformation();
   }
+  
+  // begin vaidas
+  public boolean MethodAccess.needsSuperAccessor() {
+	  return (!decl().isStatic() && isQualified() && prevExpr().isSuperAccess() && 
+			  !hostType().instanceOf(prevExpr().type()));
+  }
+  // end vaidas
 
   // remote collection / demand driven creation of accessor
   public void VarAccess.transformation() {
