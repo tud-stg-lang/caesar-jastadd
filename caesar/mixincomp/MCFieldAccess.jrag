@@ -62,7 +62,7 @@ aspect MCFieldAccess {
 				new DirectTypeAccess(getTypeAccess().type()),
 				"get$" + hostType().uniqueName() + "$" + getID(),
 				new List(),
-				new List(), new List(), new Opt(new Block(new List().add(
+				new List(), new Opt(new Block(new List().add(
 						new ReturnStmt(new VarAccess(name()))
 				))));
 	}
@@ -74,8 +74,8 @@ aspect MCFieldAccess {
 				new TypeAccess("void"),
 				"set$" + hostType().uniqueName() + "$" + getID(),
 				new List().add(new ParameterDeclaration(
-						new Modifiers(), new DirectTypeAccess(getTypeAccess().type()), name(), new List())),
-				new List(), new List(), new Opt(new Block(new List().add(
+						new Modifiers(), new DirectTypeAccess(getTypeAccess().type()), name())),
+				new List(), new Opt(new Block(new List().add(
 						new ExprStmt(new AssignSimpleExpr(
 								new Dot(new ThisAccess(), new VarAccess(name())),
 								new VarAccess(name())))
@@ -94,7 +94,7 @@ aspect MCFieldAccess {
 	
 	// returns field's getter accessor if exists 
 	public MethodDecl FieldDeclaration.getGetter() {
-		MethodSignature sig = MethodSignature.factory("get$" + hostType().uniqueName() + "$" + name() + "()");
+		String sig = "get$" + hostType().uniqueName() + "$" + name() + "()";
 		if (hostType().isCjClassDecl()) {
 			CjClassDecl c = hostType().getCjClassDecl();
 			return c.getAccessorMethod(sig);
@@ -103,7 +103,7 @@ aspect MCFieldAccess {
 	}
 	// returns field's setter accessor if exists 
 	public MethodDecl FieldDeclaration.getSetter() {
-		MethodSignature sig = MethodSignature.factory("set$" + hostType().uniqueName() + "$" + name() + "(" + type().signatureString() + ")");
+		String sig = "set$" + hostType().uniqueName() + "$" + name() + "(" + type().signature() + ")";
 		if (hostType().isCjClassDecl()) {
 			CjClassDecl c = hostType().getCjClassDecl();
 			return c.getAccessorMethod(sig);
@@ -113,10 +113,10 @@ aspect MCFieldAccess {
 	
 	// erasure() is required for generics
 	// used in FieldDeclaration.getSetter() only
-	syn String TypeDecl.signatureString() = erasure().typeName();
+	syn String TypeDecl.signature() = erasure().typeName();
 	
 	// returns accessor method for given signature if exists
-	public MethodDecl CjClassDecl.getAccessorMethod(MethodSignature sig){
+	public MethodDecl CjClassDecl.getAccessorMethod(String sig){
 		for (int i=0; i<getNumAccessorMethods(); i++) {
 			MethodDecl m = getAccessorMethods(i);
 			if (m.signature().equals(sig))
@@ -142,20 +142,20 @@ aspect MCFieldAccess {
 	}
     
 	// Tweak byte code to call accessor methods instead of getfield/putfield
-	refine CodeGeneration public void VarAccess.emitStore(CodeGeneration gen) {
+	refine GenericsCodegen public void VarAccess.emitStore(CodeGeneration gen) {
 		Variable v = decl();
 		if(!isInsideAccessor() && v.getSetter() != null)
 			v.getSetter().emitInvokeMethod(gen, fieldQualifierType());
 		else
-			CodeGeneration.VarAccess.emitStore(gen);
+			GenericsCodegen.VarAccess.emitStore(gen);
 	}
-	refine CreateBCode public void VarAccess.createBCode(CodeGeneration gen) {
+	refine GenericsCodegen public void VarAccess.createBCode(CodeGeneration gen) {
 		Variable v = decl();
 		if(!isInsideAccessor() && v.getGetter() != null) {
 			createLoadQualifier(gen);
 			v.getGetter().emitInvokeMethod(gen, fieldQualifierType());
 		}
 		else
-			CreateBCode.VarAccess.createBCode(gen);
+			GenericsCodegen.VarAccess.createBCode(gen);
 	}
 }

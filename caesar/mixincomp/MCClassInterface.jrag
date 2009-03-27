@@ -71,7 +71,6 @@ aspect MCClassInterface {
 					new DirectTypeAccess(getTypeAccess().type()),
 					name(),
 					resolveParameterTypes(getParameterList()),
-					(List)getEmptyBracketList().fullCopy(),
 					(List)getExceptionList().fullCopy(),
 					new Opt()
 			));
@@ -106,8 +105,8 @@ aspect MCClassInterface {
 	}
 	
 	// avoid overriding interface methods with private or protected modifiers
-	refine Flags eq MethodDecl.flags() {
-		int flags = Flags.MethodDecl.flags();
+	refine VariableArityParametersCodegen eq MethodDecl.flags() {
+		int flags = VariableArityParametersCodegen.MethodDecl.flags();
 		if (hostType().isCjClassDecl()) {
 			return flags & (~Modifiers.ACC_FINAL) & (~Modifiers.ACC_PRIVATE) & (~Modifiers.ACC_PROTECTED) | (Modifiers.ACC_PUBLIC);
 		}
@@ -119,7 +118,7 @@ aspect MCClassInterface {
 	syn lazy TypeDecl TypeDecl.typeForCasting() = this;
     eq CjClassDecl.typeForCasting() = getCjInterface();
     
-    refine AutoBoxing public void ReferenceType.java5EmitCastTo(CodeGeneration gen, TypeDecl type) {
+    refine AutoBoxingCodegen public void ReferenceType.emitCastTo(CodeGeneration gen, TypeDecl type) {
         if (type != this && isPrimitive() && type.isPrimitive()) {
             emitUnboxingOperation(gen);
             unboxed().emitCastTo(gen, type);

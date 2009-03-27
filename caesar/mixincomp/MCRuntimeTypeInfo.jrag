@@ -22,8 +22,9 @@ aspect MCRuntimeTypeInfo {
 			return new Dot(
 				new TypeAccess("org.caesarj.runtime", "RuntimeClass"),
 				new MethodAccess(
-					new List().add(new Dot(getType(), new ClassAccess())),
-					"forClassUnsafe"));
+				    "forClassUnsafe", 
+					new List().add(new Dot(getType(), new ClassAccess()))
+					));
 		}
 	} 
 	

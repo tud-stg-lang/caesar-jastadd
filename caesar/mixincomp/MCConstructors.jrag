@@ -19,7 +19,7 @@ aspect MCConstructors {
 	public Dot ClassInstanceExpr.transformToInitMethod() { 
 	 	List args = new List().add(new NullLiteral());
 		ClassInstanceExpr prefix = new CjClassInstanceExpr(getAccess(), args, new Opt());
-		InitMethodAccess initCall = new InitMethodAccess(getArgList(), Program.CJ_INIT_NAME); 
+		InitMethodAccess initCall = new InitMethodAccess(Program.CJ_INIT_NAME, getArgList()); 
 		return new Dot(prefix, initCall);	
 	}
 			
@@ -66,42 +66,25 @@ aspect MCConstructors {
 	
 	eq InitMethodAccess.type() = prevExpr().type();
 	
+	// Equivalent ClassInstanceExpr.createBCode 
+    // but avoid passing outer object
 	public void CjClassInstanceExpr.createBCode(CodeGeneration gen) {
-	    type().emitNew(gen);
-	    type().emitDup(gen);
-	
-	    for (int i = 0; i < getNumArg(); ++i) {
-	      getArg(i).createBCode(gen);
-	      getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
-	    }
-	    
-	    // load values of local variables in this class that are accessed from the instantiated anonymous class
-	    for(Iterator iter = type().enclosingVariables().iterator(); iter.hasNext(); ) {
-	      Variable v = (Variable)iter.next();
-	      if(v instanceof VariableDeclaration) {
-	        VariableDeclaration decl = (VariableDeclaration)v;
-	        if(decl.hostType() == hostType())
-	          decl.type().emitLoadLocal(gen, decl.localNum());
-	        else
-	          emitLoadLocalInNestedClass(gen, decl);
-	      }
-	      else if(v instanceof ParameterDeclaration) {
-	        ParameterDeclaration decl = (ParameterDeclaration)v;
-	        if(decl.hostType() == hostType())
-	          decl.type().emitLoadLocal(gen, decl.localNum());
-	        else
-	          emitLoadLocalInNestedClass(gen, decl);
-	      }
-	    }
-	
-	    if(decl().isPrivate() && type() != hostType()) {
-	      gen.emit(Bytecode.ACONST_NULL);
-	      decl().emitInvokeConstructorAccessor(gen);
-	    }
-	    else {
-	      decl().emitInvokeConstructor(gen);
-	    }
-	}
+    	type().emitNew(gen);
+    	type().emitDup(gen);
+    
+    	for (int i = 0; i < getNumArg(); ++i) {
+      		getArg(i).createBCode(gen);
+      		getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
+    	}
+
+    	if(decl().isPrivate() && type() != hostType()) {
+     		gen.emit(Bytecode.ACONST_NULL);
+      		decl().createAccessor().emitInvokeConstructor(gen);
+    	}
+    	else {
+      		decl().emitInvokeConstructor(gen);
+    	}
+  	}	
 		
 	/**********************************************************************************
      * 
@@ -143,14 +126,13 @@ aspect MCConstructors {
 	                       			new DirectTypeAccess(typeCjObject()),
 	                       			Program.CJ_INIT_NAME,
 	                       			getParameterList(),
-	                       			new List(),
 	                       			getExceptionList(),
 	                       			new Opt(new Block(stmts)));
 	        return decl;
 	    }
 	}
 	
-	syn lazy ConstructorDecl CjClassDecl.getRealConstructor() {
+	syn lazy Opt CjClassDecl.getRealConstructorOpt() {
 		Modifiers m = new Modifiers();
         m.addModifier(new Modifier("public"));
 		// generate true constructor
@@ -160,7 +142,7 @@ aspect MCConstructors {
 				"$cj$out"));
 				
 		List superArgs = new List().add(new VarAccess("$cj$out"));
-		Stmt superCall = new ExprStmt(new SuperConstructorAccess(superArgs, "super"));		 
+		Stmt superCall = new ExprStmt(new SuperConstructorAccess("super", superArgs));		 
 		
 		ConstructorDecl decl = new CjConstructorDecl(
 						              m,
@@ -170,7 +152,7 @@ aspect MCConstructors {
 						              new Opt(superCall),
 						              new Block());
         decl.isGeneratedConstr = true;
-        return decl;
+        return new Opt(decl);
 	}
 	
 	// inherited attributes for the real constructor
@@ -183,6 +165,14 @@ aspect MCConstructors {
       return c;
     }
     
+    // ensuring that default constructor is not created for cclasses
+    refine LookupConstructor eq List.requiresDefaultConstructor() {
+      if (getParent() instanceof CjClassDecl) {
+        return false;
+      }
+      return LookupConstructor.List.requiresDefaultConstructor();      
+    }
+    
     /**********************************************************************************
      * 
      *  Final field assignment checks    
@@ -192,7 +182,8 @@ aspect MCConstructors {
     // switch off checking of final field assignment in generated constructors 
 	refine DefiniteAssignment eq ConstructorDecl.isDAafter(Variable v) = true;
 	
-	eq CjInitMethodDecl.fieldInitializationAllowed() = isInitMethod();
+	// TODO: This must be back after corresponding refactoring in VarAccess.definiteAssignment
+	//eq CjInitMethodDecl.fieldInitializationAllowed() = isInitMethod();
 	
 	eq CjInitMethodDecl.isDAafter(Variable v) = getBlock().isDAafter(v) && getBlock().checkReturnDA(v);
 	eq CjInitMethodDecl.getBlock().isDAbefore(Variable v) = isDAbefore(v);

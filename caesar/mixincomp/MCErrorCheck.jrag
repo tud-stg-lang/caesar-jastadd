@@ -85,7 +85,7 @@ aspect MCErrorCheck {
 	
 	// returns ancestor methods from all superclasses
 	// used while typechecking if overridden correctly
-	eq CjClassDecl.ancestorMethods(MethodSignature signature) {
+	eq CjClassDecl.ancestorMethods(String signature) {
     	// fetch local methods from superclasses 
         SimpleSet set = SimpleSet.emptySet;
         for (Iterator parentIter = getSortedDirectParents().iterator(); parentIter.hasNext();) {
@@ -136,7 +136,7 @@ aspect MCErrorCheck {
 		}
 
 		for(Iterator itSigs = methodsSignatureMap().keySet().iterator(); itSigs.hasNext(); ) {
-			MethodSignature sig = (MethodSignature) itSigs.next();
+			String sig = (String) itSigs.next();
 			MethodDecl lastMethod = null;
 			MethodDecl m;
 			
@@ -145,9 +145,11 @@ aspect MCErrorCheck {
 				typeCheckMethodReturns(m, lastMethod);
 			}
 
+			/* TODO: this in not the right place for this check
 			if (localMethodsSignatureMap().get(sig) != null) {	// only check for methods declared here
 				typeCheckDependentParamTypes(sig);
 			}
+			*/
 		}
 		
 		// Note: If additional checks need be performed, remember to refactor the above null-check / return statement.
@@ -159,6 +161,7 @@ aspect MCErrorCheck {
 	 * 
 	 * @param sig	Signature to check.
 	 */	
+	/* TODO: this in not the right place for this method
 	private void CjClassDecl.typeCheckDependentParamTypes(MethodSignature sig) {
 		// Start with locally declared method:
 		MethodDecl lastMethod = (MethodDecl) localMethodsSignatureMap().get(sig);
@@ -178,7 +181,7 @@ aspect MCErrorCheck {
 			thisRawSigString = thisMethod.rawSignatureString();
 			lastRawSigString = lastMethod.rawSignatureString();
 			if (lastRawSigString != null && !lastRawSigString.equals(thisRawSigString)) {
-				error("Method " + thisMethod.signatureString()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the method declarations must match. Mismatch between "+thisRawSigString + " and " +lastRawSigString);
+				error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the method declarations must match. Mismatch between "+thisRawSigString + " and " +lastRawSigString);
 			}
 			
 			// (b) check that beyond syntactical equivalence, the dependent parameter types are bound to the same value: 
@@ -193,14 +196,14 @@ aspect MCErrorCheck {
 				lastDepType = ((ParameterDeclaration) lastParamList.getChild(i)).getTypeAccess().depType();
 				
 				if (lastDepType != null && !DependentTypeDecl.areEquivalent(this, thisDepType, lastDepType)) {
-					error("Method " + thisMethod.signatureString()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the dependent parameters must refer to the same value.");
+					error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the dependent parameters must refer to the same value.");
 				}
 				
 				lastDepType = thisDepType;
 			}
 		}
 	}
-
+    */
 
     /**
      * Checks that for a given pair of methods their return types match.
@@ -217,6 +220,7 @@ aspect MCErrorCheck {
 		
 		if (mType != lastType) {
 			// check common root method return type:
+			/* TODO: This is not a right place for this check
 			if (mType.isVirtualClassDecl() && lastType.isVirtualClassDecl()) {
 				// mType is a DependentType and needs to be casted to its absolute (VirtualClass) type:
 				CjVirtualClassDecl mVirtualClass = ((DependentTypeDecl) mType).getVirtualClassDecl();
@@ -224,6 +228,7 @@ aspect MCErrorCheck {
 				if (mVirtualClass.getTopFurtherbound() == lastVirtualClass.getTopFurtherbound())
 					return;
 			}
+			*/
 			// make pretty error message:
 			String returnTypes;
 			if (mType.name().equals(lastType.name())) {
@@ -231,7 +236,7 @@ aspect MCErrorCheck {
 			} else {
 				returnTypes = mType.name()+" and "+lastType.name();
 			}
-			error("the return types do not match: applicable methods found for " +m.signatureString()+ " in " +this.fullName()+ " with return types " +returnTypes);
+			error("the return types do not match: applicable methods found for " +m.signature()+ " in " +this.fullName()+ " with return types " +returnTypes);
 		}
 		
 	}

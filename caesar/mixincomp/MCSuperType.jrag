@@ -41,8 +41,8 @@ aspect MCSuperType {
 	
 	public ClassDecl CjClassDecl.superclass() {
 	    if (hasSuperClassAccess() && !isCircular() && getSuperClassAccess().type().isClassDecl())
-	    	return getSuperClassAccess().type().getClassDecl();
-	    return typeCjObject().getClassDecl();
+	    	return (ClassDecl)getSuperClassAccess().type(); // TODO: use getClassDecl
+	    return (ClassDecl)typeCjObject(); // TODO: use getClassDecl
 	}
 		
 	syn lazy Opt CjClassDecl.getSuperTypeOpt() {
@@ -90,7 +90,7 @@ aspect MCSuperType {
 	// look for specifield field in superclasses list
 	// if two superclasses have fields with equal names - returns them all 
 	// this will cause an error message "several fields named ..."
-	eq CjSuperType.fields(String name) {
+	eq CjSuperType.localFields(String name) {
 		SimpleSet fields = SimpleSet.emptySet; 
 	    for (Iterator t_iter = getSource().mixinList().iterator(); t_iter.hasNext(); ) {
 	    	TypeDecl typeDecl = (TypeDecl)t_iter.next();

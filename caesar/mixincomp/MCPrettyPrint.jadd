@@ -3,6 +3,7 @@
 aspect MCPrettyPrint {
 
 	public void CjClassDecl.toString(StringBuffer s) {
+	    s.append(indent());
 		getModifiers().toString(s);
 		s.append("cclass " + name());
 		if(getNumSuperClasses() > 0) {
@@ -24,6 +25,7 @@ aspect MCPrettyPrint {
 		}
 		s.append(" {\n");
 		if(getNumSuperClasses() > 1) {
+			s.append(indent()); 
 			s.append("\tmixin list : ");
 			for (Iterator it = mixinList().iterator(); it.hasNext(); ) {
 				ClassDecl mixinClass = (ClassDecl)it.next();
@@ -31,13 +33,10 @@ aspect MCPrettyPrint {
 			}
 			s.append("\n");
 		}
-		indent++;
 		for(int i=0; i < getNumBodyDecl(); i++) {
 			getBodyDecl(i).toString(s);
 		}
-		indent--;
 		s.append(indent() + "}\n");
-		s.append(getCjInterface().toString()+ "\n");
 	}
 	
 	public void CjSuperType.toString(StringBuffer s) {

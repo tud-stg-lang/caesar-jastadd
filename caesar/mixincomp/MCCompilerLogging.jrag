@@ -1,21 +1,28 @@
 aspect MCCompilerLogging {
 	
-	public static boolean Program.logCompiler() {
-	    return hasOption("-verbose") || hasOption("-logcompiler");
+	public boolean Program.logCompiler() {
+	    return options().hasOption("-verbose") || options().hasOption("-logcompiler");
 	}
 	
+	public Program ASTNode.getProgram() {
+       ASTNode node = this;
+       while (node != null && !(node instanceof Program))
+          node = node.getParent();
+       return (Program)node;
+    }
+    	
 	public void CompilationUnit.collectErrors() {
-		if (Program.logCompiler()) {
+		if (getProgram().logCompiler()) {
 			System.out.println("Checking file " + relativeName() + " for errors");			
 		}
 		super.collectErrors();
-		if (Program.logCompiler()) {
+		if (getProgram().logCompiler()) {
 			System.out.println("" + errors.size() + " errors found");			
 		}		
-    }
+    }    
 	
 	public void TypeDecl.collectErrors() {
-		if (Program.logCompiler()) {
+		if (getProgram().logCompiler()) {
 			System.out.println("Checking declaration " + typeName() + " for errors");
 		}
 		super.collectErrors();
