@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect ConstantPoolNames {
 
   syn lazy String TypeDecl.typeDescriptor() {
@@ -20,6 +29,7 @@ aspect ConstantPoolNames {
       dim.append("[");
     return dim.toString() + elementType().typeDescriptor(); 
   }
+  eq UnknownType.typeDescriptor() { throw new Error("Trying to make a typeDescriptor() of Unknown"); }
 
   syn lazy String MethodDecl.descName() {
     StringBuffer b = new StringBuffer();
@@ -27,44 +37,10 @@ aspect ConstantPoolNames {
     for (int i=0; i<getNumParameter(); i++)
       b.append(getParameter(i).type().typeDescriptor());
     b.append(")");
-    /*
-    if(type().isUnknown()) {
-      getTypeAccess().dumpTree(2);
+    if(type().elementType().isUnknown()) {
+      System.out.println(getTypeAccess().dumpTree());
       throw new Error("Error generating descName for " + signature() + ", did not expect unknown return type");
     }
-    */
-    b.append(type().typeDescriptor());
-    return b.toString();
-  }
-
-  syn lazy String FieldDeclaration.accessorDescName() {
-    StringBuffer b = new StringBuffer();
-    b.append("(");
-    if(!isStatic())
-      b.append(hostType().typeDescriptor());
-    b.append(")");
-    b.append(type().typeDescriptor());
-    return b.toString();
-  }
-  
-  syn lazy String FieldDeclaration.accessorWriteDescName() {
-    StringBuffer b = new StringBuffer();
-    b.append("(");
-    if(!isStatic())
-      b.append(hostType().typeDescriptor());
-    b.append(type().typeDescriptor());
-    b.append(")V");
-    return b.toString();
-  }
-  
-  syn lazy String MethodDecl.accessorDescName() {
-    StringBuffer b = new StringBuffer();
-    b.append("(");
-    if(!isStatic())
-      b.append(hostType().typeDescriptor());
-    for (int i=0; i<getNumParameter(); i++)
-      b.append(getParameter(i).type().typeDescriptor());
-    b.append(")");
     b.append(type().typeDescriptor());
     return b.toString();
   }
@@ -73,44 +49,14 @@ aspect ConstantPoolNames {
     StringBuffer b = new StringBuffer();
     b.append("(");
     // this$0
-    TypeDecl typeDecl = hostType();
-    if(typeDecl.needsEnclosing())
-      b.append(typeDecl.enclosingType().typeDescriptor());
-    if(typeDecl.needsSuperEnclosing()) {
-      TypeDecl superClass = ((ClassDecl)typeDecl).superclass();
-      b.append(superClass.enclosingType().typeDescriptor());
-    }
+    if(needsEnclosing())
+      b.append(enclosing().typeDescriptor());
+    if(needsSuperEnclosing())
+      b.append(superEnclosing().typeDescriptor());
     // args
     for (int i=0; i<getNumParameter(); i++)
       b.append(getParameter(i).type().typeDescriptor());
-    // this$val
-    for(Iterator iter = typeDecl.enclosingVariables().iterator(); iter.hasNext(); )
-      b.append(((Variable)iter.next()).type().typeDescriptor());
     b.append(")V");
-    return b.toString();
-  }
-
-  syn lazy String ConstructorDecl.accessorDescName() {
-    StringBuffer b = new StringBuffer();
-    b.append("(");
-    // this$0
-    TypeDecl typeDecl = hostType();
-    if(typeDecl.needsEnclosing())
-      b.append(typeDecl.enclosingType().typeDescriptor());
-    if(typeDecl.needsSuperEnclosing()) {
-      TypeDecl superClass = ((ClassDecl)typeDecl).superclass();
-      b.append(superClass.enclosingType().typeDescriptor());
-    }
-    // args
-    for (int i=0; i<getNumParameter(); i++)
-      b.append(getParameter(i).type().typeDescriptor());
-    // this$val
-    for(Iterator iter = typeDecl.enclosingVariables().iterator(); iter.hasNext(); )
-      b.append(((Variable)iter.next()).type().typeDescriptor());
-    // anonymous class to handle private constructors
-    b.append(anonymousJavaName);
-    b.append(")");
-    b.append("V");
     return b.toString();
   }
 
@@ -120,8 +66,8 @@ aspect ConstantPoolNames {
   eq CompilationUnit.getImportDecl(int index).destinationPath() = destinationPath();
 
   syn lazy String CompilationUnit.destinationPath() {
-    if(Program.hasValueForOption("-d")) {
-      return Program.getValueForOption("-d");
+    if(options().hasValueForOption("-d")) {
+      return options().getValueForOption("-d");
     }
     else {
       if(fromSource()) {
@@ -135,14 +81,13 @@ aspect ConstantPoolNames {
         // fortsätt genom att ta bort sista delen i paketnamnet och gör om proceduren
         // sluta när namnet är mindre är 3 eller mindre
         
-        String sourceName = relativeName();         // ex AST/Defines_AST_hello
+        String sourceName = pathName(); //relativeName();         // ex AST/Defines_AST_hello
         // extract source path including package directories
         String sourcePath = null;
         if(sourceName.lastIndexOf(java.io.File.separator) == -1)
           sourcePath = ".";
         else
           sourcePath = sourceName.substring(0, sourceName.lastIndexOf(java.io.File.separator));
-        
         String sourcePathPattern = sourcePath.replace(java.io.File.separatorChar, '.');
         String[] parts = packageName().split("\\.");
         int num = parts.length;

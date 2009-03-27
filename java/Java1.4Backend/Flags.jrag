@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 aspect Flags {
   public static final int Modifiers.ACC_PUBLIC       = 0x0001; // class field method
   public static final int Modifiers.ACC_PRIVATE      = 0x0002; //       field method
@@ -11,6 +20,7 @@ aspect Flags {
   public static final int Modifiers.ACC_NATIVE       = 0x0100; //             method
   public static final int Modifiers.ACC_INTERFACE    = 0x0200; // class
   public static final int Modifiers.ACC_ABSTRACT     = 0x0400; // class       method
+  public static final int Modifiers.ACC_SYNTHETIC    = 0x1000; //       field method
   public static final int Modifiers.ACC_STRICT       = 0x0800; //             method
 
 
@@ -37,7 +47,7 @@ aspect Flags {
     if(isSynchronized()) res |= Modifiers.ACC_SYNCHRONIZED;
     if(isNative()) res |= Modifiers.ACC_NATIVE;
     if(isAbstract()) res |= Modifiers.ACC_ABSTRACT;
-    if(isStrictfp()) res |= Modifiers.ACC_STRICT;
+    if(isStrictfp() || (hostType().isStrictfp() && !hostType().isInterfaceDecl())) res |= Modifiers.ACC_STRICT;
     return res;
   }
 

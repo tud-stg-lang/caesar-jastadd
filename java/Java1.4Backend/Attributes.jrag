@@ -1,3 +1,12 @@
+/*
+ * The JastAdd Extensible Java Compiler (http://jastadd.org) is covered
+ * by the modified BSD License. You should have received a copy of the
+ * modified BSD license with this compiler.
+ * 
+ * Copyright (c) 2005-2008, Torbjorn Ekman
+ * All rights reserved.
+ */
+
 import java.io.*;
 aspect Attributes {
      
@@ -41,8 +50,7 @@ aspect Attributes {
   class ConstantValueAttribute extends Attribute {
     public ConstantValueAttribute(ConstantPool p, FieldDeclaration f) {
       super(p, "ConstantValue");
-      //int constantvalue_index = constantvalue_index = f.getInit().type().addConstant(p, f.getInit().constant());
-      int constantvalue_index = f.getInit().type().addConstant(p, f.getInit().constant());
+      int constantvalue_index = f.type().addConstant(p, f.getInit().constant());
       u2(constantvalue_index);
     }
   }
@@ -58,35 +66,20 @@ aspect Attributes {
   public int DoubleType.addConstant(ConstantPool p, Constant c)   { return p.addConstant(c.doubleValue()); }
     
   class InnerClassesAttribute extends Attribute {
-	public InnerClassesAttribute(TypeDecl typeDecl) {
-		super(typeDecl.constantPool(), "InnerClasses");
-		ConstantPool c = typeDecl.constantPool();
-		Collection list = typeDecl.innerClassesAttributeEntries();
-		u2(list.size());
-		for(Iterator iter = list.iterator(); iter.hasNext(); ) {
-			TypeDecl type = (TypeDecl)iter.next();
-			u2(c.addClass(type.constantPoolName())); // inner_class_info_index
-
-			// YANG Baustelle
-			/* Status:
-			 * If we use OLD, of 182 tests in binary.* (2008-10-20), 54 fail (0 errors). Using NEW, several tests 
-			 * run through (notably some of the vc.basics.*), yielding only 42 failures, but 8 errors (NullPointerExceptions)!
-			 * 
-			 * "If C is not a member, the value of the outer_class_info_index item must be zero. Otherwise, 
-			 * the value of the outer_class_info_index item must be a valid index into the constant_pool table, 
-			 * and the entry at that index must be a CONSTANT_Class_info (�4.4.1) structure representing the 
-			 * class or interface of which C is a member."
-			 * ( http://java.sun.com/docs/books/jvms/second_edition/html/ClassFile.doc.html#79996 )
-			 */
-//			u2(type.isMemberType() ? 0 : c.addClass(type.enclosingType().constantPoolName())); 	// outer_class_info_index // "OLD"
-			u2(type.isMemberType() ? c.addClass(type.enclosingType().constantPoolName()) : 0); 	// outer_class_info_index // "NEW" (proposed)
-
-			u2(type.isAnonymous() ? 0 : c.addUtf8(type.name())); // inner_name_index
-			u2(type.isInterfaceDecl() ? (type.flags() | Modifiers.ACC_INTERFACE) : type.flags()); // inner_class_access_flags
-		}
-	}
+    public InnerClassesAttribute(TypeDecl typeDecl) {
+      super(typeDecl.constantPool(), "InnerClasses");
+      ConstantPool c = typeDecl.constantPool();
+      Collection list = typeDecl.innerClassesAttributeEntries();
+      u2(list.size());
+      for(Iterator iter = list.iterator(); iter.hasNext(); ) {
+        TypeDecl type = (TypeDecl)iter.next();
+        u2(c.addClass(type.constantPoolName())); // inner_class_info_index
+        u2(type.isMemberType() ? c.addClass(type.enclosingType().constantPoolName()) : 0); // outer_class_info_index
+        u2(type.isAnonymous() ? 0 : c.addUtf8(type.name())); // inner_name_index
+        u2(type.isInterfaceDecl() ? (type.flags() | Modifiers.ACC_INTERFACE) : type.flags()); // inner_class_access_flags
+      }
+    }
   }
-  
   syn lazy Collection TypeDecl.innerClassesAttributeEntries() {
     HashSet list = new HashSet();
     if(isNestedType())
@@ -151,7 +144,7 @@ aspect Attributes {
       }
     }
   }
-  
+
   interface ExceptionHolder {
     public int getNumException();
     public Access getException(int i);
@@ -167,10 +160,6 @@ aspect Attributes {
         u2(gen.constantPool().addClass(m.getException(i).type().constantPoolName()));
     }
   }
-
-  inh CompilationUnit TypeDecl.compilationUnit();
-  eq CompilationUnit.getTypeDecl(int i).compilationUnit() = this;
-  eq CompilationUnit.getImportDecl(int i).compilationUnit() = this;
 
   syn lazy Collection TypeDecl.attributes() {
     Collection c = new ArrayList();
@@ -190,7 +179,6 @@ aspect Attributes {
     }
     return c;
   }
-  
   syn lazy Collection BodyDecl.attributes() = new ArrayList();
   eq FieldDeclaration.attributes() {
     ArrayList l = new ArrayList();
@@ -200,12 +188,9 @@ aspect Attributes {
   }
   eq MethodDecl.attributes() {
     ArrayList l = new ArrayList();
+    l.add(new ExceptionsAttribute(bytecodes(hostType().constantPool()), this));
     if(isAbstract() || isNative()) return l;
     l.add(new CodeAttribute(bytecodes(hostType().constantPool()), this));
-    // Only write ExceptionAttribute if there actually are some exceptions.
-    // Otherwise the Eclipse disassembler cannot read the resulting class file.
-    if(getNumException() > 0)
-      l.add(new ExceptionsAttribute(bytecodes(hostType().constantPool()), this));
     if(getModifiers().isSynthetic())
       l.add(new SyntheticAttribute(hostType().constantPool()));
     return l;
@@ -213,8 +198,7 @@ aspect Attributes {
   eq ConstructorDecl.attributes() {
     ArrayList l = new ArrayList();
     l.add(new CodeAttribute(bytecodes(hostType().constantPool()), null));
-    if(getNumException() > 0)
-      l.add(new ExceptionsAttribute(bytecodes(hostType().constantPool()), this));
+    l.add(new ExceptionsAttribute(bytecodes(hostType().constantPool()), this));
     if(getModifiers().isSynthetic())
       l.add(new SyntheticAttribute(hostType().constantPool()));
     return l;
