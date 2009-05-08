@@ -126,7 +126,10 @@ aspect VCExternalizedClasses {
   // clear all cached computations in the node and its children
   public void ASTNode.flushCacheDeep() {
 	  for (int i = 0; i < getNumChild(); i++) {
-		  getChildNoTransform(i).flushCacheDeep();
+		  ASTNode child = getChildNoTransform(i);
+		  if (child != null) {
+		      child.flushCacheDeep();
+		  }
 	  }
 	  flushCache();	  
   }
