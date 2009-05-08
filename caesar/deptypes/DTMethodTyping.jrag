@@ -27,14 +27,18 @@ aspect DTMethodTyping {
 	    	return ma.unknownType();
 	    }	   
 	}
-			
+	
+	// Type erasure approximating dependent types by absolute types		
+	eq DependentTypeDecl.weakErasure() = absoluteType().erasure();
+	
 	// A dependent type is characterized by its top furtherbound (notably for method signature strings)
 	eq DependentTypeDecl.erasure() {
-    	if (!this.isVirtualClassDecl()) { 
-    		return absoluteType().erasure(); 
-    	}    	
-		CjVirtualClassDecl vc = this.getVirtualClassDecl();
-		return vc.getTopFurtherbound();
+	    if (isVirtualClassDecl()) {
+	    	return getVirtualClassDecl().getTopFurtherbound().erasure();
+	    }
+	    else {
+	    	return absoluteType().erasure();
+	    }
 	}
 	
 	// In constrast to signatureString() does not use erasure for dependent types
