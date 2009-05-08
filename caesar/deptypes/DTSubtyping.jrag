@@ -1,10 +1,23 @@
 aspect DTSubtyping {
-	
-	/*************************
+
+    /*************************
 	 * 
 	 * Equivalence relation for dependent types
 	 * 
 	 */
+	 
+	public boolean TypeDecl.equivalentTo(TypeDecl decl) {
+		return equals(decl);
+	} 
+	
+	public boolean DependentTypeDecl.equivalentTo(TypeDecl decl) {
+	    if (decl.isDependentType()) {
+	    	return areEquivalent(thist, depType(), decl.depType());
+	    }
+	    else {
+			return equals(decl);
+		}
+	} 
 	
 	public static boolean DependentTypeDecl.areEquivalent(TypeDecl thist, DependentType type1, DependentType type2) {
 		// types are equivalent if their normal forms are equal
