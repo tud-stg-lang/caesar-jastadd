@@ -307,6 +307,10 @@ aspect GenericsTypeAnalysis {
 }
 
 aspect GenericsErasure {
+  // begin vaidas
+  syn TypeDecl TypeDecl.weakErasure() = erasure();
+  // end vaidas
+
   syn lazy TypeDecl TypeDecl.erasure() {
     if(isAnonymous() || isLocalClass())
       return this;

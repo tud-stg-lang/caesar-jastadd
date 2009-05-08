@@ -151,17 +151,23 @@ aspect GenericsCodegen {
     TypeDecl typeDecl = refined();
     if(typeDecl == null)
       return null;
-    typeDecl = typeDecl.erasure();
+    // begin Vaidas
+    typeDecl = typeDecl.weakErasure();
+    // end Vaidas
     MethodDecl m = decl().sourceMethodDecl();
     Collection methods = typeDecl.memberMethods(m.name());
     if(!methods.contains(decl()) && !methods.contains(m))
       return m.hostType();
-    return typeDecl.erasure();
+    // begin Vaidas
+    return typeDecl.weakErasure();
+    // end Vaidas
   }
 
   refine InnerClasses protected TypeDecl VarAccess.fieldQualifierType() {
     TypeDecl typeDecl = refined();
-    return typeDecl == null ? null : typeDecl.erasure();
+    // begin Vaidas
+    return typeDecl == null ? null : typeDecl.weakErasure();
+    // end Vaidas
   }
 
   public void ConstructorDeclSubstituted.emitInvokeConstructor(CodeGeneration gen) {
