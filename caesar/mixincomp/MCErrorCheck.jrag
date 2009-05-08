@@ -140,19 +140,19 @@ aspect MCErrorCheck {
 			MethodDecl lastMethod = null;
 			MethodDecl m;
 			
-			for(Iterator itAM = ancestorMethods(sig).iterator(); itAM.hasNext(); lastMethod = m) {
+			Iterator itAM = new NestedIterator(
+				localMethodsSignature(sig).iterator(),
+				ancestorMethods(sig).iterator());
+						
+			while (itAM.hasNext()) {
 				m = (MethodDecl)itAM.next();
-				typeCheckMethodReturns(m, lastMethod);
+				if (lastMethod != null) {
+				    typeCheckMethodReturns(m, lastMethod);
+				    typeCheckMethodParamTypes(m, lastMethod);
+				}
+				lastMethod = m;
 			}
-
-			/* TODO: this in not the right place for this check
-			if (localMethodsSignatureMap().get(sig) != null) {	// only check for methods declared here
-				typeCheckDependentParamTypes(sig);
-			}
-			*/
 		}
-		
-		// Note: If additional checks need be performed, remember to refactor the above null-check / return statement.
 	}
 	
 	/**
@@ -161,50 +161,36 @@ aspect MCErrorCheck {
 	 * 
 	 * @param sig	Signature to check.
 	 */	
-	/* TODO: this in not the right place for this method
-	private void CjClassDecl.typeCheckDependentParamTypes(MethodSignature sig) {
-		// Start with locally declared method:
-		MethodDecl lastMethod = (MethodDecl) localMethodsSignatureMap().get(sig);
-		MethodDecl thisMethod;
-		
+	private void CjClassDecl.typeCheckMethodParamTypes(MethodDecl lastMethod, MethodDecl thisMethod) {
 		// Initialize subcomponents of method declaration which need to be compared:
-		String thisRawSigString, lastRawSigString = null;
 		List lastParamList = lastMethod.getParameterList();
-		List thisParamList;
-		
-		// Iterate over ancestor methods sharing this signature:
-		for(Iterator itAM = ancestorMethods(sig).iterator(); itAM.hasNext(); lastMethod = thisMethod) {
-			thisMethod = (MethodDecl)itAM.next();
-			thisParamList = thisMethod.getParameterList();
+		List thisParamList = thisMethod.getParameterList();
 			
-			// (a) check that the parameters are syntactically equivalently declared: 
-			thisRawSigString = thisMethod.rawSignatureString();
-			lastRawSigString = lastMethod.rawSignatureString();
-			if (lastRawSigString != null && !lastRawSigString.equals(thisRawSigString)) {
-				error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the method declarations must match. Mismatch between "+thisRawSigString + " and " +lastRawSigString);
-			}
+		// (a) check that the parameters are syntactically equivalently declared: 
+		String thisRawSigString = thisMethod.rawSignatureString();
+		String lastRawSigString = lastMethod.rawSignatureString();
 			
-			// (b) check that beyond syntactical equivalence, the dependent parameter types are bound to the same value: 
-			// TODO assert same number of parameters?
-			DependentType        thisDepType,   lastDepType   = null;
-			ParameterDeclaration thisParamDecl, lastParamDecl;
-			// Iterate over parameters:
-			for (int i = 0; i < thisParamList.getNumChild(); i++) {
-				// TODO assert that the AST children are of correct type (necessary?)
-				// get respective i'th parameters of the two same-signature methods to compare:
-				thisDepType = ((ParameterDeclaration) thisParamList.getChild(i)).getTypeAccess().depType();
-				lastDepType = ((ParameterDeclaration) lastParamList.getChild(i)).getTypeAccess().depType();
-				
-				if (lastDepType != null && !DependentTypeDecl.areEquivalent(this, thisDepType, lastDepType)) {
-					error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the dependent parameters must refer to the same value.");
-				}
-				
-				lastDepType = thisDepType;
-			}
+		if (lastRawSigString != null && !lastRawSigString.equals(thisRawSigString)) {
+			error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the method declarations must match. Mismatch between "+thisRawSigString + " and " +lastRawSigString);
 		}
+			
+		// (b) check that beyond syntactical equivalence, the dependent parameter types are bound to the same value: 
+		// TODO assert same number of parameters?
+		// Iterate over parameters:
+		for (int i = 0; i < thisParamList.getNumChild(); i++) {
+			// TODO assert that the AST children are of correct type (necessary?)
+			// get respective i'th parameters of the two same-signature methods to compare:
+			TypeDecl thisType = ((ParameterDeclaration) thisParamList.getChild(i)).getTypeAccess().type();
+			TypeDecl lastType = ((ParameterDeclaration) lastParamList.getChild(i)).getTypeAccess().type();
+			
+			if (!thisType.equivalentTo(lastType)) {
+			    error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". " + 
+			    "Dependent parameter types sharing a common top furtherbound are considered equal, " + 
+			    "however the dependent parameters must refer to the same value.");
+			}
+		}		
 	}
-    */
-
+    
     /**
      * Checks that for a given pair of methods their return types match.
      * 
@@ -212,23 +198,10 @@ aspect MCErrorCheck {
      * @param lastMethod
      */
     private void CjClassDecl.typeCheckMethodReturns(MethodDecl m, MethodDecl lastMethod) {
-		if(lastMethod == null)
-			return; // skip first entry (nothing to compare to)
-
-    	TypeDecl mType = m.type();
+		TypeDecl mType = m.type();
 		TypeDecl lastType = lastMethod.type();
 		
-		if (mType != lastType) {
-			// check common root method return type:
-			/* TODO: This is not a right place for this check
-			if (mType.isVirtualClassDecl() && lastType.isVirtualClassDecl()) {
-				// mType is a DependentType and needs to be casted to its absolute (VirtualClass) type:
-				CjVirtualClassDecl mVirtualClass = ((DependentTypeDecl) mType).getVirtualClassDecl();
-				CjVirtualClassDecl lastVirtualClass = ((DependentTypeDecl) lastType).getVirtualClassDecl();
-				if (mVirtualClass.getTopFurtherbound() == lastVirtualClass.getTopFurtherbound())
-					return;
-			}
-			*/
+		if (!mType.equivalentTo(lastType)) {
 			// make pretty error message:
 			String returnTypes;
 			if (mType.name().equals(lastType.name())) {
