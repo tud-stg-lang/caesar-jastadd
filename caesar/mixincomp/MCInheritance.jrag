@@ -43,7 +43,7 @@ aspect MCInheritance {
 
 	syn boolean TypeDecl.isSupertypeOfCjClassDecl(CjClassDecl type) = false;
 	
-	eq UnknownType.isSupertypeOfCjClassDecl(CjClassDecl type) = true;
+	eq UnknownType.isSupertypeOfCjClassDecl(CjClassDecl type) = false;
 
 	eq InterfaceDecl.isSupertypeOfCjClassDecl(CjClassDecl type) {
 		if (isSupertypeOfClassDecl(type)) 
