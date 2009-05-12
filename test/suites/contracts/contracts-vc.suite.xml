@@ -68,5 +68,31 @@
         </test>
         
 	</compile-run>
+	
+	<compile id="vc004"
+			 	 description="fulfilled required virtual classes">
+		<code>
+			public abstract cclass A {
+			    public abstract cclass Y { }	
+			}
+			
+			public abstract cclass E extends A {
+				public cclass X extends Y {}
+			}
+			
+			public abstract cclass F extends A {
+				public abstract cclass Y {
+					public abstract void m();
+				}
+			}
+			
+			public cclass B requires E & F {
+				public cclass X {
+					public void n() { m(); }
+				}
+			}
+        </code>
+        
+	</compile>
 		
 </testsuite>
