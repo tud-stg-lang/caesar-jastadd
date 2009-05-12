@@ -119,4 +119,27 @@
 		</test>
 	</compile-run>
 	
+	<compile-run id="toplevel005"
+				 description="providing extended interfaces">
+		<code>
+			public abstract cclass A {		
+			}
+			
+			public abstract cclass B extends A {	
+			}
+			
+			public cclass C requires B {	
+			}
+			
+			public cclass D extends B {	
+			}
+			
+			public cclass E extends C & D { }
+		</code>
+		
+		<test>
+			E e = new E(); // check if E is complete
+		</test>
+	</compile-run>
+	
 </testsuite>
