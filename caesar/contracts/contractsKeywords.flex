@@ -1,0 +1,1 @@
+  "requires"					 { return sym(Terminals.REQUIRES); }

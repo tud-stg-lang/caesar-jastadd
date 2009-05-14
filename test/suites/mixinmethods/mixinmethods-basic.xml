@@ -1,0 +1,68 @@
+<testsuite name="Basic tests for mixin methods"
+	package="mixinmethods.basic">
+
+	<compile-check-error id="mixinMethods001"
+						 error="Overriding base version with non-mixin method is not allowed."
+			 			 description="Implicit overriding is disallowed">
+		<code>
+			public cclass A {
+				public String m(){ return "versionA"; }
+			}
+
+			public cclass B {
+				public String m(){ return "versionB"; }
+			}
+
+			public cclass C extends B &amp; A {}
+
+        </code>
+	</compile-check-error>
+	
+	<compile-run id="mixinmethods002"
+			 description="Explicit overriding is of course still possible.">
+		<code>
+			public cclass A {
+				public String m(){ return "versionA"; }
+			}
+
+			public cclass B {
+				public String m(){ return "versionB"; }
+			}
+
+			public cclass C extends B &amp; A {
+				public String m(){ return "versionC"; }
+			}
+
+        </code>
+		
+		<test>
+			C c = new C();
+			
+			assertEquals("versionC", c.m());
+		</test>		 
+			 
+	</compile-run>
+	
+	<compile-run id="mixinmethods003"
+			 description="Mixin methods can override base versions.">
+		<code>
+			public cclass A {
+				public String m(){ return "versionA"; }
+			}
+
+			public cclass B {
+				mixin public String m(){ return "mixin versionB"; }
+			}
+
+			public cclass C extends B &amp; A {}
+
+        </code>
+		
+		<test>
+			C c = new C();
+			
+			assertEquals("mixin versionB", c.m());
+		</test>		 
+			 
+	</compile-run>
+</testsuite>

@@ -86,7 +86,7 @@
 				}
 			}
 			
-			public cclass B requires E & F {
+			public cclass B requires E &amp; F {
 				public cclass X {
 					public void n() { m(); }
 				}

@@ -1,49 +1,34 @@
 CompilationUnit compilation_unit =
-    encl_cclass_declaration.p import_declarations.i type_declarations.t {: return new ExternCompUnit(p, i, t); :}
-  | encl_cclass_declaration.p                       type_declarations.t {: return new ExternCompUnit(p, new List(), t); :}
-  | encl_cclass_declaration.p import_declarations.i                     {: return new ExternCompUnit(p, i, new List()); :}
-  | encl_cclass_declaration.p                                           {: return new ExternCompUnit(p, new List(), new List()); :}
+    encl_cclass_declaration.p import_declarations.i? type_declarations.t? 
+                                               {: return new ExternCompUnit("<undefined>", i, t,p); :}
   ;
   
 Access encl_cclass_declaration =
-    CCLASS name.n SEMICOLON              {: return n; :}
+    CCLASS name.n SEMICOLON                    {: return n; :}
   ;  
 
 ClassDecl class_declaration =
-    cclass_declaration.c                 {: return c; :}
+    cclass_declaration.c                       {: return c; :}
   ;
 
 CjClassDecl cclass_declaration =
-  	modifiers_list.m CCLASS IDENTIFIER.id mixin.s interfaces_list.i requirements.r class_body.b	                                                
-                                                		{: return new CjContractClassDecl(m, id, s, i, b, r); :}        
-  ;
-  
-Modifiers modifiers_list =
-														{: return new Modifiers(); :}
-  | modifiers.l											{: return l; :}
-  ;
+  	modifiers.m? CCLASS IDENTIFIER mixin.s? interfaces.i? requirements.r? class_body.b	                                                
+                                                		{: return new CjContractClassDecl(new Modifiers(m), IDENTIFIER, s, i, b, r); :}        
+  ;  
 
 List mixin =
-												 		{: return new List(); :}
-  | EXTENDS mixin_type_list.i                  			{: return i; :} 
+    EXTENDS mixin_type_list.i                  {: return i; :}
   ;
-
 List mixin_type_list =
-    mixin_type.t                               			{: return new List().add(t); :}
-  | mixin_type_list.l AND mixin_type.t         			{: return l.add(t); :}
+    mixin_type.t                               {: return new List().add(t); :}
+  | mixin_type_list.l AND mixin_type.t         {: return l.add(t); :}
   ;
 Access mixin_type =
-	name.n                                     			{: return n; :}
-  ;
-
-List interfaces_list =
-												 		{: return new List(); :}
-  | interfaces.l										{: return l; :}
-  ;
+    name.n                                     {: return n; :}
+  ;  
 	
 List requirements =
-		 										 		{: return new List(); :}	
-  | REQUIRES requirements_type_list.i          			{: return i; :} 
+  	REQUIRES requirements_type_list.i          			{: return i; :} 
   ;
 List requirements_type_list =
     requirements_type.t                                	{: return new List().add(t); :}

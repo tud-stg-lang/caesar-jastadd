@@ -134,7 +134,7 @@
 			public cclass D extends B {	
 			}
 			
-			public cclass E extends C & D { }
+			public cclass E extends C &amp; D { }
 		</code>
 		
 		<test>
