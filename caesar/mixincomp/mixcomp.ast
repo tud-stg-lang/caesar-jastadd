@@ -6,7 +6,7 @@ CjSuperType : CjClassDecl ::= <Source:CjClassDecl>;
 
 CjAccessorMethodDecl : MethodDecl;
 
-CjInitMethodDecl : MethodDecl;
+CjInitMethodDecl : MethodDecl ::= <OriginalID:String>;
 
 DirectTypeAccess : Access ::= <Target:TypeDecl>; 
 

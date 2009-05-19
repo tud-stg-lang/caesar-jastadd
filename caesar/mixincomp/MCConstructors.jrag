@@ -127,7 +127,8 @@ aspect MCConstructors {
 	                       			Program.CJ_INIT_NAME,
 	                       			getParameterList(),
 	                       			getExceptionList(),
-	                       			new Opt(new Block(stmts)));
+	                       			new Opt(new Block(stmts)),
+	                       			getID());
 	        return decl;
 	    }
 	}
@@ -226,6 +227,19 @@ aspect MCConstructors {
 	    }
 	    //System.err.println("Reached TypeDecl when searching for DU for variable");
 	    return isDUbefore(v);
+	}
+	
+	/**********************************************************************************
+     * 
+     *  Other functionality of init methods 
+     *
+     */
+	
+	public void CjInitMethodDecl.nameCheck() {
+	    super.nameCheck();
+	    // 8.8
+	    if(!hostType().name().equals(getOriginalID()))
+	      error("constructor " + name() +" does not have the same name as the simple name of the host class " + hostType().name());
 	}
 	
 }
