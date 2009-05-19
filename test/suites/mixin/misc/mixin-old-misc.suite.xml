@@ -89,7 +89,7 @@
     </compile>
     
     !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc007" description="Test accessor from inlined cclass">
+    <compile-run id="mixinmisc007" description="Test method accessor from inlined cclass">
 		<test>		
 			new ClassA().m();
 		</test>
@@ -111,7 +111,27 @@
     </compile-run>
     
     !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc008" description="Test superaccessor from inlined cclass">
+    <compile-run id="mixinmisc007a" description="Test field accessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+			public cclass ClassA {
+				protected String msg = "run7a";
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println(msg);
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc008" description="Test method superaccessor from inlined cclass">
 		<test>		
 			new ClassA().m();
 		</test>
@@ -126,6 +146,28 @@
 					final Runnable inlined = new Runnable() {
 						public void run() {
 							System.out.println(ClassA.super.getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc008a" description="Test field superaccessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public cclass ClassB {
+        	    protected String msg = "run8a";        		
+        	}
+			public cclass ClassA extends ClassB {
+				public void m() {
+					final Runnable inlined = new Runnable() {
+						public void run() {
+							System.out.println(ClassA.super.msg);
 						}
 			        };
 			        new Thread(inlined).start();
