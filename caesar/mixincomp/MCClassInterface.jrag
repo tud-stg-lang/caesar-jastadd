@@ -129,4 +129,12 @@ aspect MCClassInterface {
            }
         }
     }
+    
+    // overridden to update the CjInterface when a method is added 
+    public MethodDecl CjClassDecl.addMemberMethod(MethodDecl m) {
+    	m = super.addMemberMethod(m);
+    	List body = getCjInterface().getBodyDeclList();
+    	m.addToCjInterfaceBody(body);
+    	return m;
+    }
 }

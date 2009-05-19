@@ -38,4 +38,14 @@ aspect MCOuterAccess {
 			gen.emitCheckCast(enclosingType().typeForCasting());
 		}
 	}
+	
+	refine InnerClasses eq MethodAccess.requiresAccessor() {
+       MethodDecl m = decl();
+       if (m.hostType().isCjClassDecl()) {
+           return false;
+       }
+       else { 
+           return refined();
+       }
+  }
 }
