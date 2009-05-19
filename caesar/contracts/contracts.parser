@@ -13,7 +13,7 @@ ClassDecl class_declaration =
 
 CjClassDecl cclass_declaration =
   	modifiers.m? CCLASS IDENTIFIER mixin.s? interfaces.i? requirements.r? class_body.b	                                                
-                                                		{: return new CjContractClassDecl(new Modifiers(m), IDENTIFIER, s, i, b, r); :}        
+                                                		{: return new CjContractClassDecl(new Modifiers(m), IDENTIFIER, s, b, i, r); :}        
   ;  
 
 List mixin =

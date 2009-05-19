@@ -1,9 +1,2 @@
-CjContractClassDecl : CjVirtualClassDecl ::=  Modifiers <ID:String> /[SuperClassAccess:Access]/ 
-	/[CjInterface:InterfaceDecl]/ /[SuperType:CjSuperType]/ /AccessorMethods:MethodDecl*/
-    /[RealConstructor:ConstructorDecl]/ SuperClasses:Access* 
-   
-    ExplicitImplements:Access* 
-    
-    BodyDecl* /ImplicitClass:MemberTypeDecl*/ /[FactoryMethod:FactoryMethodDecl]/
-     
+CjContractClassDecl : CjVirtualClassDecl ::=  ExplicitImplements:Access* 
 	RequiredClasses:Access* /Implements:Access*/;
