@@ -91,6 +91,14 @@ aspect DefiniteAssignment {
   syn boolean VariableDeclaration.isBlankFinal() = isFinal() && (!hasInit() || !getInit().isConstant());
   syn boolean VariableDeclaration.isValue() = isFinal() && hasInit() && getInit().isConstant();
   
+  // begin vaidas
+  syn boolean BodyDecl.fieldInitializationAllowed() = false;
+  eq ConstructorDecl.fieldInitializationAllowed() = true;
+  eq InstanceInitializer.fieldInitializationAllowed() = true;
+  eq StaticInitializer.fieldInitializationAllowed() = true;
+  eq FieldDeclaration.fieldInitializationAllowed() = true;
+  // end vaidas
+  
   public void VarAccess.definiteAssignment() {
     if(isSource()) {
       if(decl() instanceof VariableDeclaration) {
@@ -157,7 +165,9 @@ aspect DefiniteAssignment {
             error("initialized field " + f.name() + " can not be assigned");
           else {
             BodyDecl bodyDecl = enclosingBodyDecl();
-            if(!(bodyDecl instanceof ConstructorDecl) && !(bodyDecl instanceof InstanceInitializer) && !(bodyDecl instanceof StaticInitializer) && !(bodyDecl instanceof FieldDeclaration))
+            // begin vaidas
+            if(!bodyDecl.fieldInitializationAllowed())
+            // end vaidas            
               error("final field " + f.name() + " may only be assigned in constructors and initializers");
             else if(!isDUbefore(f))
               error("Final field " + f.name() + " may only be assigned once");

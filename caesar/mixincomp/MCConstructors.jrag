@@ -182,8 +182,8 @@ aspect MCConstructors {
     // switch off checking of final field assignment in generated constructors 
 	refine DefiniteAssignment eq ConstructorDecl.isDAafter(Variable v) = true;
 	
-	// TODO: This must be back after corresponding refactoring in VarAccess.definiteAssignment
-	//eq CjInitMethodDecl.fieldInitializationAllowed() = isInitMethod();
+	// Treat an init method in the same way as a constructor with respect to field initialization
+	eq CjInitMethodDecl.fieldInitializationAllowed() = isInitMethod();
 	
 	eq CjInitMethodDecl.isDAafter(Variable v) = getBlock().isDAafter(v) && getBlock().checkReturnDA(v);
 	eq CjInitMethodDecl.getBlock().isDAbefore(Variable v) = isDAbefore(v);
