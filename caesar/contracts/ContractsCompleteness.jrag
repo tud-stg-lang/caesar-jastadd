@@ -131,7 +131,16 @@ aspect ContractsCompleteness {
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
-				c.addAll(((CjContractClassDecl)td).getProvided());
+				CjContractClassDecl cd = (CjContractClassDecl)td;
+				
+				c.addAll(cd.getProvided());
+				
+				// Provided abstract classes do not provide anything but
+				// nonetheless extend the contracts of their superclasses
+				// This means these contracts are provided as well.
+				if(cd.isAbstract()){
+					c.addAll(cd.getSupertypesOf());
+				}
 			}
 		}
 		
@@ -260,6 +269,10 @@ aspect ContractsCompleteness {
 	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
 	 ******/
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
+		// Avoid endless recursion
+		if(isCircular())
+			return Collections.EMPTY_LIST;
+		
 		// Get all implicit parents
 		Collection parents = getDirectFurtherbounds();
 		
@@ -275,6 +288,13 @@ aspect ContractsCompleteness {
 					reqs.add(cd);
 				}
 			}
+		}
+		
+		// Call recursively for explicit parents
+		for(Iterator itr = getExplicitParents().iterator(); itr.hasNext();){
+			Object cd = itr.next();
+			if(cd instanceof CjContractClassDecl)
+				reqs.addAll(((CjContractClassDecl) cd).getReqsForVirtCls());
 		}
 		
 		return reqs;
