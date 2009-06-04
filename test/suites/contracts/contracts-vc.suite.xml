@@ -95,4 +95,36 @@
         
 	</compile>
 		
+		
+	<compile id="vc005" description="unimplemented methods via requirements should be ignored for concreteness">
+		<code>
+			public abstract cclass ShapeFamily {
+				public abstract cclass Shape {}
+			}
+			
+			public abstract cclass DecoratedShapeFamily extends ShapeFamily {
+				public cclass DecoratedShape extends Shape {
+					public abstract void makeDecoration();
+				}
+			}
+			
+			public abstract cclass DrawableShapeFamily extends ShapeFamily {
+				public abstract void show();
+			
+				public abstract cclass Shape {
+					public abstract void draw();
+				}
+			}	
+			
+			public cclass DecoratedDrawableShapeFamily extends DrawableShapeFamily requires DecoratedShapeFamily {
+				public void show() {
+					DecoratedShape s = new DecoratedShape();
+					s.makeDecoration();
+					s.draw();
+				}
+			}
+		</code>
+	
+	</compile>
+	
 </testsuite>
