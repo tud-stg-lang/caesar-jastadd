@@ -90,7 +90,9 @@ aspect ErrorCheck {
 			// Contract without used classes must subsume contract via used classes
 			for(Iterator iter = requirementsViaUsage.iterator(); iter.hasNext(); ){
 				TypeDecl td = (TypeDecl)iter.next();
-				if(!contractWithoutUsage.contains(td)){
+				// Ignore implicit classes
+				// TODO:  Rethink how implicit classes can be handled
+				if(!contractWithoutUsage.contains(td) && !td.isImplicitType()){
 					error(name() + " cannot inherit requirement " + td.name() + " via usage (private inheritance)" +
 					" and must redeclare or fulfil " + td.name());
 				}

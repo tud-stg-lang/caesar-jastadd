@@ -267,6 +267,11 @@ aspect ContractsCompleteness {
 
 	/******
 	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
+	 * TODO:  It would be way more simple and intuitive to check if a class is concrete or not by 
+	 *		  first excluding all requirements then performing the check as normal.
+	 *		  This is however not so simple as it sounds since the check (accumulating all methods
+	 *		  and checking if all abstract methods are implemented) is already implemented and would
+	 *		  have to be understood and appropriately changed to ignore requirements. 
 	 ******/
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
 		// Avoid endless recursion
@@ -295,6 +300,11 @@ aspect ContractsCompleteness {
 			Object cd = itr.next();
 			if(cd instanceof CjContractClassDecl)
 				reqs.addAll(((CjContractClassDecl) cd).getReqsForVirtCls());
+		}
+		
+		// Class is implicit and only present via requirements - therefore skip check
+		if(isImplicit && reqs.containsAll(parents)){
+			reqs.add(this);
 		}
 		
 		return reqs;
