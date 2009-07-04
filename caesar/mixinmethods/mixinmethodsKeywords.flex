@@ -1,1 +1,1 @@
-  "mixin"					 { return sym(Terminals.MIXIN); }
+  "mixinmethod"					 { return sym(Terminals.MIXINMETHOD); }

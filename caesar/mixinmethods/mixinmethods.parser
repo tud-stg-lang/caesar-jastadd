@@ -1,3 +1,55 @@
+CompilationUnit compilation_unit =
+    encl_cclass_declaration.p import_declarations.i? type_declarations.t? 
+                                               {: return new ExternCompUnit("<undefined>", i, t,p); :}
+  ;
+  
+Access encl_cclass_declaration =
+    CCLASS name.n SEMICOLON                    {: return n; :}
+  ;  
+
+ClassDecl class_declaration =
+    cclass_declaration.c                       {: return c; :}
+  ;
+
+CjClassDecl cclass_declaration =
+	modifiers.m? CCLASS IDENTIFIER mixin.s? interfaces.i? requirements.r? uses.u? class_body.b
+										 				{: return new CjPrivInhClassDecl(new Modifiers(m), IDENTIFIER, s, b, i, r, u); :}
+  ;
+		
+List mixin =
+    EXTENDS mixin_type_list.i                  {: return i; :}
+  ;
+List mixin_type_list =
+    mixin_type.t                               {: return new List().add(t); :}
+  | mixin_type_list.l AND mixin_type.t         {: return l.add(t); :}
+  ;
+Access mixin_type =
+    name.n                                     {: return n; :}
+  ;  
+	
+List requirements =
+  	REQUIRES requirements_type_list.i          			{: return i; :} 
+  ;
+List requirements_type_list =
+    requirements_type.t                                	{: return new List().add(t); :}
+  | requirements_type_list.l AND requirements_type.t   	{: return l.add(t); :}
+  ;
+Access requirements_type =
+    name.n                                     			{: return n; :}
+  ;										
+
+List uses =	 												
+  	USES uses_type_list.i	 		                 	{: return i; :} 
+  ;
+List uses_type_list =
+    uses_type.t                                			{: return new List().add(t); :}
+  | uses_type_list.l AND uses_type.t   					{: return l.add(t); :}
+  ;
+Access uses_type =
+    name.n                                     			{: return n; :}
+  ;
+  
+  
 Modifier modifier =
-    MIXIN                                     {: return new Modifier("mixin"); :}
+	MIXINMETHOD									   {: return new Modifier("mixinmethod"); :}
   ;

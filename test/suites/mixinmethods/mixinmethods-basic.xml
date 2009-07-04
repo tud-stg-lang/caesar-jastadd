@@ -51,7 +51,7 @@
 			}
 
 			public cclass B {
-				mixin public String m(){ return "mixin versionB"; }
+				mixinmethod public String m(){ return "mixin versionB"; }
 			}
 
 			public cclass C extends B &amp; A {}
