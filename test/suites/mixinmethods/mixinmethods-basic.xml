@@ -62,7 +62,6 @@
 			C c = new C();
 			
 			assertEquals("mixin versionB", c.m());
-		</test>		 
-			 
+		</test>		 	 
 	</compile-run>
 </testsuite>

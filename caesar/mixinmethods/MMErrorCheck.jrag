@@ -1,0 +1,3 @@
+aspect MMErrorCheck {
+	syn boolean MethodDecl.isMixin() = getModifiers().numModifier("mixin") != 0;
+}
