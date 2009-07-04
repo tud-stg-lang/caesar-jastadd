@@ -267,11 +267,10 @@ aspect ContractsCompleteness {
 
 	/******
 	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
-	 * TODO:  It would be way more simple and intuitive to check if a class is concrete or not by 
+	 * NOTE:  It would be more intuitive to check if a class is concrete or not by 
 	 *		  first excluding all requirements then performing the check as normal.
-	 *		  This is however not so simple as it sounds since the check (accumulating all methods
-	 *		  and checking if all abstract methods are implemented) is already implemented and would
-	 *		  have to be understood and appropriately changed to ignore requirements. 
+	 *		  This is however not so simple as it sounds since one would not be able
+	 *		  to reuse existing methods and would have to re-implement parts from scratch. 
 	 ******/
 	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
 		// Avoid endless recursion
@@ -283,7 +282,7 @@ aspect ContractsCompleteness {
 		
 		// Return implicit parents whose Enclosing Top Level 
 		// is required by ETL of current class
-		Collection reqs = new ArrayList();
+		Collection reqs = new HashSet();
 		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
 			CjContractClassDecl cd = (CjContractClassDecl)itr.next();
 			if(getEnclosingTopLevel() instanceof CjContractClassDecl){
@@ -302,9 +301,28 @@ aspect ContractsCompleteness {
 				reqs.addAll(((CjContractClassDecl) cd).getReqsForVirtCls());
 		}
 		
+		// Call recursively for implicit parents
+		for(Iterator itr = parents.iterator(); itr.hasNext();){
+			Object cd = itr.next();
+			if(cd instanceof CjContractClassDecl)
+				reqs.addAll(((CjContractClassDecl) cd).getReqsForVirtCls());
+		}
+		
 		// Class is implicit and only present via requirements - therefore skip check
-		if(isImplicit && reqs.containsAll(parents)){
-			reqs.add(this);
+		if(isImplicit){
+			Collection onlyReqs = new HashSet();
+			onlyReqs.addAll(reqs);
+			
+			// Remove provided classes, but only if explicitly present
+			for (Object o : getProvidedForVirtCls()) {		
+				CjContractClassDecl cd = (CjContractClassDecl)o;
+				if(!cd.isImplicit)
+					onlyReqs.remove(cd);
+			}
+			
+			// If all parents are required then "this" would not exist if we ignored requirements
+			if(onlyReqs.containsAll(parents))
+				reqs.add(this);
 		}
 		
 		return reqs;
@@ -319,7 +337,7 @@ aspect ContractsCompleteness {
 		
 		// Return implicit parents whose Enclosing Top Level 
 		// is provided by ETL of current class
-		Collection provided = new ArrayList();
+		Collection provided = new HashSet();
 		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
 			CjContractClassDecl cd = (CjContractClassDecl)itr.next();
 			if(getEnclosingTopLevel() instanceof CjContractClassDecl){
@@ -329,6 +347,13 @@ aspect ContractsCompleteness {
 					provided.add(cd);
 				}
 			}
+		}
+		
+		// Call recursively
+		for(Iterator itr = parents.iterator(); itr.hasNext();){
+			Object cd = itr.next();
+			if(cd instanceof CjContractClassDecl)
+				provided.addAll(((CjContractClassDecl) cd).getProvidedForVirtCls());
 		}
 		
 		return provided;

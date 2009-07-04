@@ -37,7 +37,7 @@
         
 	</compile-run>
 	
-		<compile-run id="vc003"
+	<compile-run id="vc003"
 			 	 description="fulfilled required virtual classes">
 		<code>
 
@@ -108,6 +108,43 @@
 				}
 			}
 			
+			// The virtual class Shape is extended by a new method draw()
+			// This means all subclasses of Shape now have to implement a draw() method
+			public abstract cclass DrawableShapeFamily extends ShapeFamily {
+				public abstract void show();
+			
+				public abstract cclass Shape {
+					public abstract void draw();
+				}
+			}	
+			
+			// Although DecoratedShape is a subclass of Shape it doesn't need to implement draw()
+			// This is because DecoratedShape is only present via requirements
+			// DecoratedDrawableShapeFamily is therefore concrete
+			public cclass DecoratedDrawableShapeFamily extends DrawableShapeFamily requires DecoratedShapeFamily {
+				public void show() {
+					DecoratedShape s = new DecoratedShape();
+					s.makeDecoration();
+					s.draw();
+				}
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="vc006"
+						 error="NEW_INCOMPLETE" 
+						 description="concrete but nonetheless incomplete due to requirements">		 
+		<code>
+			public abstract cclass ShapeFamily {
+				public abstract cclass Shape {}
+			}
+			
+			public abstract cclass DecoratedShapeFamily extends ShapeFamily {
+				public cclass DecoratedShape extends Shape {
+					public abstract void makeDecoration();
+				}
+			}
+			
 			public abstract cclass DrawableShapeFamily extends ShapeFamily {
 				public abstract void show();
 			
@@ -123,8 +160,96 @@
 					s.draw();
 				}
 			}
+		
+			public class Test {	
+				public void test(){		
+					// Concreteness means no contracts are broken
+					// Completeness that all requirements are fulfilled
+					DecoratedDrawableShapeFamily ddsf = new DecoratedDrawableShapeFamily();
+				}
+			}		
 		</code>
+	</compile-check-error>
 	
+	<compile id="vc007" description="a further level in the hierarchy">		 
+		<code>
+			public abstract cclass ShapeFamily {
+				public abstract cclass Shape {}
+			}
+			
+			public abstract cclass DecoratedShapeFamily extends ShapeFamily {
+				public cclass DecoratedShape extends Shape {
+					public abstract void makeDecoration();
+				}
+			}
+			
+			public abstract cclass DrawableShapeFamily extends ShapeFamily {
+				public abstract void show();
+			
+				public abstract cclass Shape {
+					public abstract void draw();
+				}
+			}	
+			
+			public cclass DecoratedDrawableShapeFamily extends DrawableShapeFamily requires DecoratedShapeFamily {
+				public void show() {
+					DecoratedShape s = new DecoratedShape();
+					s.makeDecoration();
+					s.draw();
+				}
+			}
+			
+			// A further descendant inherits requirements etc.
+			public cclass FurtherFamily extends DecoratedDrawableShapeFamily {}
+		</code>
 	</compile>
 	
+	<compile-run id="vc008" description="fulfilled requirements">		 
+		<code>
+			public abstract cclass ShapeFamily {
+				public abstract cclass Shape {}
+			}
+			
+			public abstract cclass DecoratedShapeFamily extends ShapeFamily {
+				public cclass DecoratedShape extends Shape {
+					public abstract void makeDecoration();
+				}
+			}
+			
+			public abstract cclass DrawableShapeFamily extends ShapeFamily {
+				public abstract void show();
+			
+				public abstract cclass Shape {
+					public abstract void draw();
+				}
+			}	
+			
+			public cclass DecoratedDrawableShapeFamily extends DrawableShapeFamily requires DecoratedShapeFamily {
+				public void show() {
+					DecoratedShape s = new DecoratedShape();
+					s.makeDecoration();
+					s.draw();
+				}
+			}
+			
+			// Interesting:  We do not have to implement draw() here as it is not part of the contract
+			public cclass DecoratedShapeProvider extends DecoratedShapeFamily {
+				public cclass DecoratedShape {
+					public void makeDecoration() {/*...*/}
+				}
+			}
+			
+			// Now that we have introduced DecoratedShape via extends, we have to implement draw() to
+			// fulfill the extended Shape contract
+			public cclass CompleteFamily extends DecoratedDrawableShapeFamily &amp; DecoratedShapeProvider {
+				public cclass DecoratedShape {
+					public void draw() {/*...*/}
+				}
+			}
+		</code>
+		
+		<test>
+			CompleteFamily cf = new CompleteFamily();
+		</test>
+	</compile-run>
 </testsuite>
