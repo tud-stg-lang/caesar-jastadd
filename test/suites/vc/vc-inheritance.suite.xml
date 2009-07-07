@@ -224,70 +224,22 @@
         </code>
     </compile-run>
     
-    
-    <!--  Note on the following tests
-          ***************************************************************************
-    	  Currently the tests reflect the (old) CaesarJ spec:
-    	  "(inh.gener.6) Generalization relationships between Caesar classes 
-    					 with different nesting level are disallowed."
+    <compile id="vcinheritance017" description="Test typical EAOP generated classes">
+		<code>
+		  public cclass VClass { 
+		     public cclass State {  }
 
-		  We might well decide to allow such nesting generalizations *), so the tests
-		  may need to be changed.
-    	  
-    	  *) possible allowing generalizations of virtual class A extends B if
-    	  	 either     B.out <: A.out     or     B.out = null
-    	  ***************************************************************************
-     -->
-    
-    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error id="vcinheritance011" error="WRONG_INHERITANCE_RELATIONSHIP"
-    						description="Inherit inner from outer">
-        <code>
-			public cclass G {
-				public cclass N {
-					public int n() { return 42; }
-				}
-			}
-			
-			public cclass X extends G {
-				public cclass N extends G {
-					public int p() { return n(); }
-				}
-			}
-		</code>		
-    </compile-check-error>
-    
-    
-    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error id="vcinheritance012" error="WRONG_INHERITANCE_RELATIONSHIP"
-    						description="Inherit outer from inner (simple)">
-    <!-- CaesarJ (inh.gener.6) -->
-        <code>
-			public cclass G {
-				public cclass N extends G {
-				}
-			}
-		</code>
-    </compile-check-error>
-    
-    
-    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-check-error id="vcinheritance013" error="WRONG_INHERITANCE_RELATIONSHIP"
-    						description="Inherit outer from inner (longer chain of furtherbounds)">
-    <!-- CaesarJ (inh.gener.6) -->
-        <code>
-			public cclass G {
-				public cclass N {
-					public int n() { return 42; }
-				}
-			}
-			public cclass H extends G {}
-			public cclass X extends H {
-				public cclass N extends G {
-					public int p() { return n(); }
-				}
-			}
-		</code>
-    </compile-check-error>
+		     public cclass S0 extends State { 
+                public Object void foo() { 
+		           return transit(new S0());
+		        }
+		     }
+
+             protected Object transit(State state) {
+                return state;
+             }
+          }	
+        </code>
+    </compile>
       
 </testsuite>
