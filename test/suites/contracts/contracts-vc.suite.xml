@@ -252,4 +252,35 @@
 			CompleteFamily cf = new CompleteFamily();
 		</test>
 	</compile-run>
+	
+	<compile-run id="vc009" description="instantiation of virtual classes">		 
+		<code>
+			public abstract cclass X {
+				public cclass A {
+				   abstract public void foo();				
+				}
+			}
+			
+			public cclass Y requires X {
+			    public cclass B extends A {
+			        public void boo() { }
+			    }			
+			}
+			
+			public cclass Z extends X {
+			    public cclass A {
+			       public void foo() { }			    
+			    }			
+			}
+			
+			public cclass W extends Y &amp; Z { }
+		</code>
+		
+		<test>
+			W w = new W();
+			W.B b = w.new B();
+			b.boo();
+		</test>
+	</compile-run>
+	
 </testsuite>

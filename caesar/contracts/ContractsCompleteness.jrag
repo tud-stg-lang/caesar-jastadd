@@ -363,6 +363,6 @@ aspect ContractsCompleteness {
 	 * 20.) complete := isComplete()
 	 ******/
 	syn boolean CjContractClassDecl.isComplete() 
-						= !isAbstract() && getProvided().containsAll(getRequirements());
+						= !isAbstract() && (isNestedType() || getProvided().containsAll(getRequirements()));
 						
 }
