@@ -1,0 +1,355 @@
+<testsuite name="Test cross-level inheritance between classes" package="vc.crosslevel">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel001" description="implementing a method of a cross-level superclass">
+        <code>
+        	abstract public cclass X {
+			    abstract public String m();
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public String m() {
+			         return "A.B";
+			      }			   
+			   }			
+			}
+        </code>
+        <test>
+            X x = new A().new B();
+            assertEquals("A.B", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel002" description="overriding a method of a cross-level superclass">
+        <code>
+        	public cclass X {
+			    public String m() { return "X"; }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public String m() {
+			         return "A.B";
+			      }			   
+			   }			
+			}
+        </code>
+        <test>
+            X x = new A().new B();
+            assertEquals("A.B", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel003" description="inheriting a method of a cross-level superclass">
+        <code>
+        	public cclass X {
+			    public String m() { return "X"; }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {   }			
+			}
+        </code>
+        <test>
+            X x = new A().new B();
+            assertEquals("X", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel004" description="super call to a method of a cross-level superclass">
+        <code>
+        	public cclass X {
+			    public String m() { return "X"; }
+			}
+			
+			public cclass A {
+			   public cclass B extends X { 
+			      public String m() {
+			         return super.m();
+			      }
+			   }			
+			}
+        </code>
+        <test>
+            X x = new A().new B();
+            assertEquals("X", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel005" description="access to a field of a cross-level superclass">
+        <code>
+        	public cclass X {
+			    protected String x = "X";
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public String m() { 
+			         return x; 
+			      }
+			   }   			
+			}
+        </code>
+        <test>
+            A.B x = new A().new B();
+            assertEquals("X", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vccrosslevel006" error="WRONG_INHERITANCE_RELATIONSHIP"
+                         description="implementing a method of a cross-level virtual superclass">
+        <code>
+            public cclass Y {
+        	   abstract public cclass X {
+			      abstract public String m();
+			   }
+			}
+			
+			public cclass Z extends Y {
+			   public cclass A {
+			      public cclass B extends X {
+			         public String m() {
+			            return "A.B";
+			         }			   
+			      }
+			   }   			
+			}
+        </code>        
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel007" description="instantiating a virtual class of a cross-level superclass">
+        <code>
+        	public cclass X {
+        	    public cclass Y {
+        	       public String m() { return "Y"; }
+        	    }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public String m() { 
+			         return new Y().m(); 
+			      }
+			   }   			
+			}
+        </code>
+        <test>
+            A.B x = new A().new B();
+            assertEquals("Y", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel008" description="inheriting from a virtual class of a cross-level superclass">
+        <code>
+        	public cclass X {
+        	    public cclass Y {
+        	       public String m() { return "Y"; }
+        	    }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public cclass C extends Y { }   
+			   }   			
+			}
+        </code>
+        <test>
+            X.Y x = new A().new B().new C();
+            assertEquals("Y", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel009" description="overriding a virtual class of a cross-level superclass">
+        <code>
+        	public cclass X {
+        	    public cclass Y {
+        	       public String m() { return "Y"; }
+        	    }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public cclass Y {
+			         public String m() { return "B.Y"; } 
+			      }   
+			   }   			
+			}
+        </code>
+        <test>
+            X.Y x = new A().new B().new Y();
+            assertEquals("B.Y", x.m());        
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel010" description="accessing a virtual class of a cross-level superclass in a type">
+        <code>
+        	public cclass X {
+        	   public String foo(Y y) {
+        	      return y.m();        	   
+        	   }
+        	   public cclass Y {
+        	      public String m() { return "m"; }
+        	   }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public String foo(Y y) { 
+			         return y.n(); 
+			      }			      
+			      public cclass Y {
+			         public String n() { return "n"; } 
+			      }			         
+			   }   			
+			}
+        </code>
+        <test>
+            final X x1 = new X();
+            final X x2 = new A().new B();
+            assertEquals("m", x1.foo(x1.new Y()));
+            assertEquals("n", x2.foo(x2.new Y()));                    
+        </test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vccrosslevel011" error="METHOD_NOT_FOUND"
+                         description="accessing a virtual class of a cross-level superclass in a type">
+        <code>
+        	public cclass X {
+        	   public String foo(Y y) {
+        	      return y.m();        	   
+        	   }
+        	   public cclass Y {
+        	      public String m() { return "m"; }
+        	   }
+			}
+			
+			public cclass A {
+			   public cclass B extends X {
+			      public String foo(Y y) { 
+			         return y.n(); 
+			      }			      
+			      public cclass Y {
+			         public String n() { return "n"; } 
+			      }			         
+			   }   			
+			}
+			
+			public class Test {
+			   void test() {
+			      final X x1 = new X();
+			      final X x2 = new A().new B();
+                  String out = x2.foo(x1.new Y());
+			   }			
+			}
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vccrosslevel012" error="WRONG_INHERITANCE_RELATIONSHIP"
+                         description="inheriting from enclosing class">
+        <code>
+        	public cclass X {
+        	   public cclass Y extends X {        	      
+        	   }
+			}
+		</code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel013" 
+                         description="inheriting from superclass of enclosing class">
+        <code>
+            public cclass Z { public String m() { return "Z"; } }
+			  
+        	public cclass X extends Z {
+        	   public String m() { return "X"; }
+        	   public cclass Y extends Z {	   }
+			}
+		</code>		
+		<test>
+		    Z z1 = new X();
+		    assertEquals("X", z1.m());
+		    Z z2 = new X().new Y();
+		    assertEquals("Z", z2.m());
+		</test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel014" 
+                         description="inheriting from superclass of enclosing class with virtual class">
+        <code>
+            public cclass Z {
+               public cclass W {
+                  public String m() { return "Z.W"; }
+               }               
+			}
+			  
+        	public cclass X extends Z {
+        	   public cclass W {
+                  public String m() { return "X.W"; }
+               }
+               
+        	   public cclass Y extends Z {	   
+        	      public W yW() { return new W(); }
+        	   }
+			}
+		</code>		
+		<test>
+		    Z z1 = new X();
+		    assertEquals("X.W", z1.new W().m());
+		    Z z2 = new X().new Y();
+		    assertEquals("Z.W", z2.new W().m());
+		    assertEquals("Z.W", new X().new Y().yW().m());
+		</test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel015" 
+                         description="inheriting from superclass of enclosing class with virtual class">
+        <code>
+            public cclass Z {
+               public cclass Y {
+                  public String m() { return "Z.Y"; }
+               }               
+			}
+			  
+        	public cclass X extends Z {        	   
+        	   public cclass Y extends Z {
+        	      public String m() { return "X.Y"; }	   
+        	      public Y yY() { return new Y(); }
+        	   }
+			}
+		</code>		
+		<test>
+		    Z z1 = new X();
+		    assertEquals("X.Y", z1.new Y().m());
+		    Z z2 = new X().new Y();
+		    assertEquals("Z.Y", z2.new Y().m());
+		    assertEquals("Z.Y", new X().new Y().yY().m());
+		</test>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="vccrosslevel016" error="CLASS_CIRCULARITY"
+                         description="inheriting from a subclass of an enclosing class">
+        <code>
+        	public cclass X {
+        	   public cclass Y extends Z {        	      
+        	   }
+			}
+			public cclass Z extends X {	}
+		</code>
+    </compile-check-error>   
+      
+</testsuite>
