@@ -62,12 +62,9 @@
         </code>
 	</compile>
 	
-	<compile-check-error id="propagation004"
-						 error="IMPL_REQUIRED_METHOD"
-			 			 description="Super call doesn't work for requirements and so direct implementation of requirements are prohibited">
+	<compile id="propagation004" description="Test direct implementation of required methods">
 		<code>
-
-			public abstract cclass ContractA {
+		    public abstract cclass ContractA {
 				public abstract String a();
 			}
 
@@ -78,6 +75,6 @@
 			}
 			
         </code>
-         
-	</compile-check-error>
+    </compile>
+    
 </testsuite>
