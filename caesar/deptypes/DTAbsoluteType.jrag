@@ -1,7 +1,14 @@
 aspect DTAbsoluteType {
 	
 	syn lazy TypeDecl TypeDecl.absoluteType() = this;
-	eq DependentTypeDecl.absoluteType() = depType().absoluteType(thist);
+	eq DependentTypeDecl.absoluteType() {
+		try {
+			return depType().absoluteType(thist);
+		}
+		catch (DependentTypeException e) {
+			return unknownType(); 
+		}		
+	}
 	
 	/*********************************
 	 * 
