@@ -56,12 +56,15 @@ aspect ContractsErrorCheck{
   				" - Only top-level families or normal classes can have requirements.");
   		}
   		
-  		disallowReqImp();
+  		// disallowing direct implementation of required methods
+  		// may be too restrictive  		 
+  		// disallowReqImp();
   	}
 
 
 	/******
-	 * Direct implementation of required methods is not allowed 	 
+	 * Direct implementation of required methods is not allowed
+	 * (the check is currently unused) 	 
 	 ******/
 	 public void CjContractClassDecl.disallowReqImp() {
 	 	// Trivial case: no requirements...
