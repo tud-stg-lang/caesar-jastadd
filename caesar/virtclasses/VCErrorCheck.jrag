@@ -23,6 +23,14 @@ aspect VCErrorCheck {
 				else if(isTopLevelType() || enclosingType()!=explicitSuperType.enclosingType())
 					error("a cclass "+ name()+" may not inherit from external inner cclass " + explicitSuperType.typeName());
 		}
+		
+		// Extend check to enclosed implicit classes
+		// Necessary at least for detecting the circular inheritance between virtual classes
+		// resulting from conflicting inheritance links declared in parent families
+		List imp = getImplicitClassList();
+		for(int i = 0; i < imp.getNumChild(); i++){
+			((MemberClassDecl)imp.getChild(i)).getClassDecl().nameCheck();
+		}
 	}
 	
 	// allow static members in virtual classes
