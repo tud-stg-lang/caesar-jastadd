@@ -56,11 +56,19 @@ aspect MCErrorCheck {
     	Iterator it = getDirectParents().iterator();
     	while (it.hasNext()) {
 			TypeDecl td = (TypeDecl)it.next();
-			while (td != null) {
-				if (td.isCircular())
-					return true;
-				td = td.enclosingType();
+			// ensure that the parent class does not inherit from this
+			if (td.isCircular()) {
+				return true;
 			}
+			// ensure that the parent class does not inherit from 
+			// the enclosing classes of this
+			TypeDecl encl = enclosingType();
+			while (encl != null) {
+				if (td.subtype(encl)) {
+					return true;
+				}
+				encl = encl.enclosingType();				
+			}			
 		}
 		
 		for(int i = 0; i < getNumImplements(); i++) {
