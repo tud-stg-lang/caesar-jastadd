@@ -189,7 +189,9 @@ aspect MethodSignature15 {
     if(m.getNumParameter() != getNumArg())
       return false;
     for(int i = 0; i < m.getNumParameter(); i++)
-      if(!getArg(i).type().methodInvocationConversionTo(m.getParameter(i).type()))
+    // begin vaidas	
+      if(!getArg(i).type().methodInvocationConversionTo(m.getParamType(i, this)))
+    // end vaidas	  
         return false;
     return true;
   }
