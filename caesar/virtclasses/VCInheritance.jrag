@@ -248,10 +248,12 @@ aspect VCInheritance {
 	public CjVirtualClassDecl CjVirtualClassDecl.createImplicitClass(Modifiers modifiers, String name) {
 		return new CjVirtualClassDecl(modifiers, name, new List(), new List(), new List());
 	}
-			
+	
 	// create implicitly inherited virtual classes
 	syn lazy List CjVirtualClassDecl.getImplicitClassList() {
-		if (isCircular()) { return new List(); }
+		if (isCircular()) { 
+			return new List();			
+		}
 		List newMembers = new List();
 		Iterator i = missingInheritedVirtualClasses().iterator();
 		while(i.hasNext()) {
@@ -305,4 +307,23 @@ aspect VCInheritance {
 	    	decl.transformation();			
 		}	    
 	}
+	
+	//
+	// Avoid expanding virtual classes when analysing
+	// imported types
+	//
+	inh lazy boolean Expr.withinImport();
+	eq CompilationUnit.getChild().withinImport() = false;
+	eq CompilationUnit.getImportDecl().withinImport() = true;
+		
+	refine LookupType eq Expr.qualifiedLookupType(String name) {
+		if (withinImport()) {
+			// do not analyze inheritance links of type() 
+			return keepAccessibleTypes(type().localTypeDecls(name));			
+		}
+		else {
+			return keepAccessibleTypes(type().memberTypes(name));
+		}
+	}
+		
 }
