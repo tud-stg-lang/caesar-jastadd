@@ -225,6 +225,21 @@
 	        	}
 	        }
 		</code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="boxing001" description="Test combination with boxing of primitive types">
+    	<test>
+    	   final A a = new A();
+    	   int x = a.m(a.new B(), 1);
+    	   assertEquals(1, x);
+    	</test>
+        <code>
+        	public cclass A {
+        	    public cclass B {  }
+        	    public Integer m(B b, Integer x) { return x; }        		
+			}
+        </code>
     </compile-run>	
 
 </testsuite>
