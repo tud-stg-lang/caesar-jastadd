@@ -91,4 +91,13 @@ aspect DTNameResolving {
 		if(!set.isEmpty()) return set;
 		return lookupVariable(name);		
 	}
+	
+	/*****************************************************
+	 * 
+	 * Ignore field access in field types for 
+	 * final field assignment analysis
+	 * 
+	 */
+	
+	eq FieldDeclaration.getTypeAccess().isDAbefore(Variable v) = true;
 }
