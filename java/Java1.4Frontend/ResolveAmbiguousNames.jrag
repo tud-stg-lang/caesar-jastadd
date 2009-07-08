@@ -160,6 +160,12 @@ aspect QualifiedNames {
 }
 
 aspect NameResolution {
+	
+  // begin vaidas
+  syn boolean Expr.isClassified() = true;
+  eq AmbiguousAccess.isClassified() = false;
+  eq PackageOrTypeAccess.isClassified() = false;
+  // end vaidas
  
   // Resolve Package or Type name
   rewrite PackageOrTypeAccess {
@@ -169,7 +175,9 @@ aspect NameResolution {
     when(hasPackage(name()))
     to Access new PackageAccess(name());
     */
-    when(!duringSyntacticClassification())
+	// begin vaidas  
+    when(!duringSyntacticClassification() && (!isQualified() || qualifier().isClassified()))
+    // end vaidas
     to Access{
       if(!lookupType(name()).isEmpty())
         return new TypeAccess(name(), start(), end());
@@ -188,7 +196,9 @@ aspect NameResolution {
     when(hasPackage(name()))
     to Access new PackageAccess(name());
     */
-    when(!duringSyntacticClassification())
+	// begin vaidas  
+    when(!duringSyntacticClassification() && (!isQualified() || qualifier().isClassified()))
+    // end vaidas
     to Access {
       if(!lookupVariable(name()).isEmpty()) {
         return new VarAccess(name(), start(), end());
