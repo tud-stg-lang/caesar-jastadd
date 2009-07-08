@@ -39,29 +39,6 @@
 		</code>
 	</compile>
 
-	<compile-run
-			description="initializing final field in cclass-constructor"
-			id="vcconstr002">
-		<test>
-			GraphLib graph = new GraphLib();
-			X x = new X(graph);
-			x.foo();
-		</test>
-		<code>
-			public cclass X{
-				public final GraphLib g; 
-			
-				public X(GraphLib graph) { 
-					g = graph; 
-				}
-			
-				public void foo(){ 
-					GraphLib.Node node = g.new Node();
-				}
-			}
-		</code>
-	</compile-run>
-
 	<compile-run description="test explicit super call" id="vcconstr003">
 		<test>
 			assertEquals(42, new Y(42).i);
@@ -100,7 +77,7 @@
 			}
 		</code>
 	</compile-run>	
-	
+
 	<compile-run description="test this constructor call" id="vcconstr005">
 		<test>
 			assertEquals(42, new Y().i);
