@@ -4,7 +4,7 @@ ClassDecl class_declaration =
   
 CjClassDecl cclass_declaration =
     modifiers.m? CCLASS IDENTIFIER mixin.s? interfaces.i? class_body.b 
-                                               {: return new CjClassDecl(new Modifiers(m), IDENTIFIER, s, i, b); :}
+                                               {: return CjClassDecl.createCjClassDecl(new Modifiers(m), IDENTIFIER, s, i, b); :}
   ;  
 
 List mixin =
@@ -18,3 +18,8 @@ Access mixin_type =
     name.n                                     {: return n; :}
   ;
 
+Expr primary_no_new_array =
+    primitive_type.n DOT CCLASS                 {: return new CjClassAccess(n); :}
+  | name.n DOT CCLASS                           {: return new CjClassAccess(n); :}
+  | VOID DOT CCLASS                             {: return new CjClassAccess(new PrimitiveTypeAccess("void")); :}
+  ;
