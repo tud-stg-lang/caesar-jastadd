@@ -1,0 +1,8 @@
+aspect MCParserSupport {
+	static public CjClassDecl CjClassDecl.createCjClassDecl(
+		Modifiers mod, beaver.Symbol name, List<Access> supers, List<Access> ifcs, 
+		List<BodyDecl> body)
+	{
+		return new CjClassDecl(mod, name, supers, ifcs, body);		
+	}
+}

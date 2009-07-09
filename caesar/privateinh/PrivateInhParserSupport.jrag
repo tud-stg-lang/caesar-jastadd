@@ -1,0 +1,15 @@
+aspect PrivateInhParserSupport {
+	refine ContractsParserSupport static public CjContractClassDecl CjContractClassDecl.createCjContractClassDecl(
+		Modifiers mod, beaver.Symbol name, List<Access> supers, List<Access> ifcs, 
+		List<BodyDecl> body, List<Access> reqs)
+	{
+		return CjPrivInhClassDecl.createCjPrivInhClassDecl(mod, name, supers, ifcs, body, reqs, new List<Access>());		
+	}
+	
+	static public CjPrivInhClassDecl CjPrivInhClassDecl.createCjPrivInhClassDecl(
+		Modifiers mod, beaver.Symbol name, List<Access> supers, List<Access> ifcs, 
+		List<BodyDecl> body, List<Access> reqs, List<Access> uses)	
+	{
+		return new CjPrivInhClassDecl(mod, name, supers, body, ifcs, reqs, uses);		
+	}		
+}
