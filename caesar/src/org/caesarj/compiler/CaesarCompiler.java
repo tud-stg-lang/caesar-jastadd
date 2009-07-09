@@ -169,14 +169,18 @@ public class CaesarCompiler {
 		
 		try {
 			program.insertExternalizedVC();
-			
+	
 			double step = 1.0 / countSourceCUs();
 			for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
 				CompilationUnit cu = (CompilationUnit)iter.next();
 				if (cu.fromSource()) {
 					progressTracker.advanceProgress("Checking for errors: " + cu.relativeName(), step);
-					cu.collectErrors();	
-					for (Object e: cu.getErrors()) {
+					Collection cuErrors = cu.parseErrors();
+					Collection warnings = new LinkedList();
+		            // compute static semantic errors when there are no parse errors 
+		            if (errors.isEmpty())
+		            	cu.errorCheck(cuErrors, warnings);		            
+					for (Object e: cuErrors) {
 						if (e instanceof Problem) {
 							errors.add(((Problem)e).toString());
 						}
