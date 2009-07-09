@@ -254,4 +254,15 @@
 		</code>
 	</compile-run>
 	
+	<compile-run id="mctypeinfo024" description="Method returning type info of a simple class">
+		<test>
+		    assertEquals("java.lang.String", new A().info().getName());						
+		</test>
+		<code>
+			public class A {
+				public Class info() { return String.cclass.implClass(); }	
+			}			
+		</code>
+	</compile-run>
+	
 </testsuite>
