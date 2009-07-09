@@ -25,6 +25,8 @@
 <property name="scanner.dir" value="gen/scanner"/>
 <!-- "parser.dir" is the directory where generated parser files will be stored -->
 <property name="parser.dir" value="gen/parser"/>
+<!-- "dist.dir" is output directory for distribution files -->
+<property name="dist.dir" value="dist"/>
 
 <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
 <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${tools}/JFlex.jar"/>
@@ -86,11 +88,6 @@
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		<fileset dir="caesar/mixinmethods">
-			<include name="**/*.ast"/>
-			<include name="**/*.jrag"/>
-			<include name="**/*.jadd"/>
-		</fileset>
 	</jastadd>
 	<!-- copy library files-->
 	<copy todir="${target.dir}/beaver" preservelastmodified="true">
@@ -129,9 +126,6 @@
 		<filelist dir="caesar/privateinh">
 			<file name="privateinhKeywords.flex"/>
 		</filelist>
-		<filelist dir="caesar/mixinmethods">
-			<file name="mixinmethodsKeywords.flex"/>
-		</filelist>  
 		<filelist dir="${Java1.4Frontend}/scanner">
 			<file name="Literals.flex"/>
 		</filelist>
@@ -167,18 +161,18 @@
 		<fileset dir="${Java1.5Frontend}">
 			<include name="*.parser"/>
 		</fileset>
-		<!-- <fileset dir="caesar/privateinh">
-			<include name="*.parser"/>
-		</fileset> -->
-		<fileset dir="caesar/mixinmethods">
+		<fileset dir="caesar/mixincomp">
 			<include name="*.parser"/>
 		</fileset>
-		<!-- <fileset dir="caesar/contracts">
+		<fileset dir="caesar/virtclasses">
 			<include name="*.parser"/>
-		</fileset> -->
-		<!-- <fileset dir="caesar/virtclasses">
+		</fileset>
+		<fileset dir="caesar/contracts">
 			<include name="*.parser"/>
-		</fileset> -->
+		</fileset>
+		<fileset dir="caesar/privateinh">
+			<include name="*.parser"/>
+		</fileset>
 	</concat>
 	<!-- generate the parser phase 2, translating .lalr to .beaver -->
 	<java classpath="${tools}/JastAddParser.jar:${tools}/beaver-rt.jar" classname="Main" fork="true">
