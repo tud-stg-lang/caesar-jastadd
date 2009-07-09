@@ -230,7 +230,7 @@
 		     public cclass State {  }
 
 		     public cclass S0 extends State { 
-                public Object void foo() { 
+                public Object foo() { 
 		           return transit(new S0());
 		        }
 		     }
