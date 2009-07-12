@@ -39,5 +39,5 @@ vcabstr.misc.abstrmisc004 [error]
 ------------------------------------------------
 Mixin methods: In work...
 ------------------------------------------------
-mixinMethods.basic.mixinMethods001
-mixinMethods.basic.mixinMethods003
+Some tests that contain mixin-invalid methods are now
+failing...  This problem will be solved soon..
