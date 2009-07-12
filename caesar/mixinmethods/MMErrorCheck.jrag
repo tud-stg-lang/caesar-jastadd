@@ -1,3 +1,76 @@
 aspect MMErrorCheck {
+	// Introduce new modifier for method that is used to annotate a method being "mixin" 
+	// i.e. compatible to base versions, or not
 	syn boolean MethodDecl.isMixin() = getModifiers().numModifier("mixinmethod") != 0;
+	
+	// A class implements a version of a method if its signature is present in the local body of the class
+	syn boolean CjPrivInhClassDecl.implementsVersion(MethodDecl m) = localMethodsSignatureMap().containsKey(m.signature());
+	
+	// A class implements a non-mixin version of a method if the version present in the local body of the class is not 
+	// annotated as a mixin.
+	syn boolean CjPrivInhClassDecl.implementsNonMixinVersion(MethodDecl m){
+		if(implementsVersion(m)){
+			MethodDecl versionOfM = (MethodDecl)localMethodsSignatureMap().get(m.signature());
+			
+			return !versionOfM.isMixin();
+		}
+		
+		return false;
+	}
+
+	// Definition of mixin-validity
+	syn boolean CjPrivInhClassDecl.checkIfmixinValid() {
+		// Add class itself as first member of linearisation list before sorted parents
+		ArrayList linearisationList = new ArrayList();
+		linearisationList.add(this);
+		linearisationList.addAll(mixinList());
+		
+		// Check for all methods available in class
+		for (Iterator methods = methodsSignatureMap().values().iterator(); methods.hasNext(); ){
+			Object o = methods.next();
+			
+			if(o instanceof MethodDecl){
+			
+				MethodDecl m = (MethodDecl)o;
+			
+				// Ignore methods from Object or CjObject
+				if(!m.hostType().name().equals("Object") && !m.hostType().name().equals("CjObject")){
+				
+					// Check for a non-mixin version of m
+					boolean found = false;
+					for (Iterator classes = linearisationList.iterator(); classes.hasNext(); ){
+						CjPrivInhClassDecl ci = (CjPrivInhClassDecl)classes.next();
+
+						// If a non-mixin version is found, ensure that all classes further up in linearisation list
+						// either don't implement m or if they do, are supertypes.				
+						if(ci.implementsNonMixinVersion(m)){
+							found = true;
+							while(classes.hasNext()){
+								CjPrivInhClassDecl cj = (CjPrivInhClassDecl)classes.next();
+							
+								if(cj.implementsVersion(m) && !(ci.mixinList().contains(cj))){
+									error(fullName() + " is not mixin-valid: " + m.name() + " inherited from " + ci.fullName() 
+									+ " overrides version in " + cj.fullName() + " implicitly.");
+									return false;
+								}
+							}
+						}
+					}
+		
+					// Error if no base version found and if method is not from an interface
+					if(!found && !m.hostType().isInterfaceDecl())
+						error(fullName() + " is not mixin-valid: There exists no non-mixin-version of " + m.name());
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	// Extend check to include mixin-validity
+	refine PrivateInhErrorCheck public void CjPrivInhClassDecl.checkModifiers() {
+		PrivateInhErrorCheck.CjPrivInhClassDecl.checkModifiers();
+		
+		checkIfmixinValid();
+	}
 }
