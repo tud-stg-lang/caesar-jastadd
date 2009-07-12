@@ -1,6 +1,6 @@
 // Adds checks that define semantics for private inheritance
 
-aspect ErrorCheck {
+aspect PrivateInhErrorCheck {
 
     /******
   	 * Only top level types can have used classes
