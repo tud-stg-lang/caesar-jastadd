@@ -1,0 +1,130 @@
+<testsuite name="Test generics" package="typesys.generics">
+
+	<common-code-base>
+		public class Cell &lt; T &gt; {
+           private T x;
+           public void set(T x) { this.x = x; }
+           public T get() { return this.x; }            
+        }        
+	</common-code-base>
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="generics001" description="Test generics on simple types">
+		<test>
+		    Cell &lt; A &gt; cell = new Cell &lt; A &gt;();
+		    cell.set(new B());
+		    A a = cell.get();
+		    assertEquals("B", a.info()); 
+		</test>
+        <code>
+            public class A {
+	           public String info() { return "A"; }        
+	        }
+	        public class B extends A {
+	           public String info() { return "B"; }        
+	        }        
+        </code>
+    </compile-run>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="generics002" error="METHOD_NOT_FOUND" description="Test generics on simple types">
+        <code>
+            public class Test {
+               void test() {
+                  Cell &lt; B &gt; cell = new Cell &lt; B &gt;();
+                  cell.set(new A());
+               }           
+            }
+            public class A {
+	           public String info() { return "A"; }        
+	        }
+	        public class B extends A {
+	           public String info() { return "B"; }        
+	        }        
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="generics003" error="INCOMPATIBLE_TYPE" description="Test generics on simple types">
+        <code>
+            public class Test {
+               void test() {
+                  Cell &lt; A &gt; cell = new Cell &lt; B &gt;();                  
+               }           
+            }
+            public class A {
+	           public String info() { return "A"; }        
+	        }
+	        public class B extends A {
+	           public String info() { return "B"; }        
+	        }        
+        </code>
+    </compile-check-error>
+    
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="generics004" description="Test generics on outer cclasses">
+		<test>
+		    Cell &lt; A &gt; cell = new Cell &lt; A &gt;();
+		    cell.set(new B());
+		    A a = cell.get();
+		    assertEquals("B", a.info()); 
+		</test>
+        <code>
+            public cclass A {
+	           public String info() { return "A"; }        
+	        }
+	        public cclass B extends A {
+	           public String info() { return "B"; }        
+	        }        
+        </code>
+    </compile-run>
+    
+      <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="generics005" error="INCOMPATIBLE_TYPE" description="Test generics on outer cclasses">
+        <code>
+            public class Test {
+               void test() {
+                  Cell &lt; A &gt; cell = new Cell &lt; B &gt;();                  
+               }           
+            }
+            public cclass A {
+	           public String info() { return "A"; }        
+	        }
+	        public cclass B extends A {
+	           public String info() { return "B"; }        
+	        }        
+        </code>
+    </compile-check-error>
+    
+     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="generics006" description="Test generics on virtual classes">
+		<test>
+		    A a = new B();
+		    a.init();		    
+		    assertEquals("X.B", a.info()); 
+		</test>
+        <code>
+            public cclass A {
+	           public cclass X {
+	              public String msg1() { return "X.A"; }	           
+	           }
+	           public void init() {
+	           	  cell.set(new X());
+	           }
+	           public String info() {
+	              return cell.get().msg1();
+	           }
+	           protected Cell &lt; X &gt; cell;
+	        }
+	        public cclass B extends A {
+	           public cclass X {
+	              public String msg2() { return "X.B"; }	           
+	           }
+	           public String info() {
+	              return cell.get().msg2();
+	           }        
+	        }        
+        </code>
+    </compile-run>
+
+</testsuite>
