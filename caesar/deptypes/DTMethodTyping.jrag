@@ -14,7 +14,7 @@ aspect DTMethodTyping {
 	    }
 	    else {
 	    	// substitution failed
-	    	return ma.unknownType();	    	
+	    	return ma.noneType();	    	
 	    }		
 	}
 	
@@ -24,7 +24,7 @@ aspect DTMethodTyping {
     	}
 	    catch (DependentTypeException e) {
 	    	// error(e.msg);
-	    	return ma.unknownType();
+	    	return ma.noneType();
 	    }	   
 	}
 	

@@ -57,10 +57,6 @@ aspect MCSuperType {
 	syn boolean TypeDecl.isCjSuperType() = false;
 	eq CjSuperType.isCjSuperType() = true;
 
-	eq CjSuperType.isSupertypeOfCjClassDecl(CjClassDecl type) {
-		return type == getSource();
-	}
-	
 	// method map includes methods of all superclasses
 	// if two superclasses have methods with equal signatures - return them all
     // this will cause an error message "several most specific methods"

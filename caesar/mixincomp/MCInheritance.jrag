@@ -30,50 +30,6 @@ aspect MCInheritance {
 	syn lazy Collection TypeDecl.getDirectParents() = new ArrayList();
 	// multiple superclasses - direct parents ordered as in extends clause
 	eq CjClassDecl.getDirectParents() = getDeclaredParents();
-		
-	// ---------- CjClassDecl.instanceOf ----------
-	eq CjClassDecl.instanceOf(TypeDecl type) {
-	    if (isCircular()) {
-	       return false;
-	    }
-	    else {
-	       return type.isSupertypeOfCjClassDecl(this);
-	    }
-	}
-
-	syn boolean TypeDecl.isSupertypeOfCjClassDecl(CjClassDecl type) = false;
-	
-	eq UnknownType.isSupertypeOfCjClassDecl(CjClassDecl type) = false;
-
-	eq InterfaceDecl.isSupertypeOfCjClassDecl(CjClassDecl type) {
-		if (isSupertypeOfClassDecl(type)) 
-			return true;
-		// Check all base classes
-		Iterator i = type.getDirectParents().iterator();
-		while (i.hasNext()) {
-			TypeDecl base = (TypeDecl)i.next();
-			if (base.instanceOf(this))
-				return true;
-		}
-		return false;
-	}
-
-	//	Object is the only java class allowed as a base class
-	eq ClassDecl.isSupertypeOfCjClassDecl(CjClassDecl type) = isObject() || isCjObject();
-
-	eq CjClassDecl.isSupertypeOfCjClassDecl(CjClassDecl type) {
-		if (type == this)
-			return true;
-		// Check all base classes
-		Iterator i = type.getDirectParents().iterator();
-		while (i.hasNext()) {
-			TypeDecl base = (TypeDecl)i.next();
-			if (base.instanceOf(this))
-				return true;
-		}
-		return false;
-	}
-	
 	
 	// only explicitly declared parents will be used for graph sorting
 	// the attribute is intended to be overridden for virtual classes

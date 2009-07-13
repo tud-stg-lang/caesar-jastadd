@@ -4,6 +4,8 @@ DependentTypeDecl : ReferenceType ::= /Modifiers/;
 
 DependentTypeSuperDecl : DependentTypeDecl ::= /Modifiers/;
 
+NoneType : TypeDecl; 
+
 CjCastExpr : CastExpr;  
 
 

@@ -31,27 +31,27 @@ aspect DTSubtyping {
 	 * 
 	 */
 	
-	eq DependentTypeDecl.instanceOf(TypeDecl type) = type.isSupertypeOfDependentType(this);
+	eq DependentTypeDecl.subtype(TypeDecl type) = type.supertypeDependentType(this);
 	
-	syn boolean TypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) { 
+	syn boolean TypeDecl.supertypeDependentType(DependentTypeDecl type) { 
 	  try {
-		  return type.absoluteType().instanceOf(this);
+		  return type.absoluteType().subtype(this);
 		}
 		catch (DependentTypeException e) {
 		  return false;
 		}  
 	}
 	
-	eq DependentTypeDecl.isSupertypeOfDependentType(DependentTypeDecl type) {
+	eq DependentTypeDecl.supertypeDependentType(DependentTypeDecl type) {
 		DependentType type1 = type.depType();
 		DependentType type2 = this.depType();
 		return isSubtype(type.thist, type1, type2);
 	}
 	
-	eq DependentTypeDecl.isSupertypeOfNullType(NullType type) = true;
+	eq DependentTypeDecl.supertypeNullType(NullType type) = true;
 	
-	eq DependentTypeDecl.isSupertypeOfCjClassDecl(CjClassDecl type) =
-		depType().isAbsolute() && type.instanceOf(absoluteType());		
+	eq DependentTypeDecl.supertypeCjClassDecl(CjClassDecl type) =
+		depType().isAbsolute() && type.subtype(absoluteType());		
 		
 	/*************************
 	 * 

@@ -1,0 +1,31 @@
+aspect MCSubtyping {
+    // ---------- CjClassDecl.sutype ----------
+	eq CjClassDecl.subtype(TypeDecl type) {
+	    if (isCircular()) {
+	       return false;
+	    }
+	    else {
+	       return type.supertypeCjClassDecl(this);
+	    }
+	}
+
+	syn boolean TypeDecl.supertypeCjClassDecl(CjClassDecl type) {
+		if (supertypeClassDecl(type)) 
+			return true;		
+		if (isCjObject()) {
+			return true;
+		}
+		// Check all base classes
+		Iterator i = type.getDirectParents().iterator();
+		while (i.hasNext()) {
+			TypeDecl base = (TypeDecl)i.next();
+			if (base.instanceOf(this))
+				return true;
+		}
+		return false;
+	}
+
+	eq CjSuperType.supertypeCjClassDecl(CjClassDecl type) {
+		return type == getSource();
+	}
+}

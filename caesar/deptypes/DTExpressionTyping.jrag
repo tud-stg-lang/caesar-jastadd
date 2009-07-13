@@ -117,7 +117,7 @@ aspect DTExpressionTyping {
     	try {
 	    	TypeDecl decl = decl();
 	    	if (decl.isVirtualClassDecl() && decl.isNestedType()) {
-	    		CjVirtualClassDecl vcdecl = (CjVirtualClassDecl)decl; 
+	    		CjVirtualClassDecl vcdecl = decl.getVirtualClassDecl(); 
 		    	// perform implicit scoping
 		    	DependentType outType = qualifierDepType(vcdecl.enclosingType());
 		    	if (outType != null) {
