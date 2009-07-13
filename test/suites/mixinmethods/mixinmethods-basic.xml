@@ -68,4 +68,48 @@
 			assertEquals("mixin versionB", c.m());
 		</test>		 	 
 	</compile-run>
+	
+	<compile-check-error id="mixinmethods004"
+	         error="NOT_MIXIN_VALID"
+			 description="Simple methods cannot override mixin methods.">
+		<code>
+			public cclass A extends Base {
+				mixinmethod public String m(){ return "versionA"; }
+			}
+
+			public cclass Base {
+				public String m() { return "base version";}
+			}
+
+			public cclass B extends Base {
+				public String m(){ return "mixin versionB"; }
+			}
+
+			public cclass C extends B &amp; A {}        
+		</code>				 	 
+	</compile-check-error>
+	
+	<compile-check-error id="mixinmethods005"
+	         error="NOT_MIXIN_VALID"
+			 description="Mixin method is not sufficient by itself.">
+		<code>
+			public cclass Base {
+				mixinmethod public String m() { return "base version";}
+			}
+		</code>			 	 
+	</compile-check-error>
+	
+	<compile-check-error id="mixinmethods006"
+	         error="NOT_MIXIN_VALID"
+			 description="Mixin method is not sufficient by itself.">
+		<code>
+			abstract public cclass Base {
+				abstract public String m(); 
+			}
+			public cclass A extends Base {
+				mixinmethod public String m(){ return "versionA"; }
+			}
+		</code>			 	 
+	</compile-check-error>
+	
 </testsuite>
