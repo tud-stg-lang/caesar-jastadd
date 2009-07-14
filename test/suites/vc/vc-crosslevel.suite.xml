@@ -350,6 +350,37 @@
 			}
 			public cclass Z extends X {	}
 		</code>
-    </compile-check-error>   
+    </compile-check-error>
+    
+     <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="vccrosslevel017" 
+                         description="testing relationships between deeper virtual classes">
+        <code>
+            public cclass X {
+               public cclass W {
+			      public String m() { return "X.W"; }
+			   }
+			   public cclass U extends W { } 
+			}
+			
+			public cclass A {
+			   public cclass Y extends X {
+			      public cclass W {
+			         public String m() { return "Y.W"; }
+			      }
+			      public cclass V extends W {
+			         public String m() { return "Y.V"; }
+			      }			    			   
+			   }			
+			}
+		</code>		
+		<test>
+		    A.Y y = new A().new Y();
+		    X x = y;
+		    assertEquals("Y.W", x.new W().m());
+		    assertEquals("Y.W", x.new U().m());
+		    assertEquals("Y.V", y.new V().m());		    
+		</test>
+    </compile-run>   
       
 </testsuite>
