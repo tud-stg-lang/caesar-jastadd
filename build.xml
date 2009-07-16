@@ -88,11 +88,6 @@
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		<fileset dir="caesar/mixinmethods">
-    		<include name="**/*.ast"/>
-			<include name="**/*.jrag"/>
-			<include name="**/*.jadd"/>
-		</fileset>
 	</jastadd>
 	<!-- copy library files-->
 	<copy todir="${target.dir}/beaver" preservelastmodified="true">
@@ -130,9 +125,6 @@
 		</filelist>
 		<filelist dir="caesar/privateinh">
 			<file name="privateinhKeywords.flex"/>
-		</filelist>
-		<filelist dir="caesar/mixinmethods">
-			<file name="mixinmethodsKeywords.flex"/>
 		</filelist>
 		<filelist dir="${Java1.4Frontend}/scanner">
 			<file name="Literals.flex"/>
@@ -179,9 +171,6 @@
 			<include name="*.parser"/>
 		</fileset>
 		<fileset dir="caesar/privateinh">
-			<include name="*.parser"/>
-		</fileset>
-		<fileset dir="caesar/mixinmethods">
 			<include name="*.parser"/>
 		</fileset>
 	</concat>

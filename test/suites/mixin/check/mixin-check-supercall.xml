@@ -1,4 +1,4 @@
-<testsuite name="Test super keyword" package="mixin.check.supercall">
+<testsuite name="Test super keyword" package="mixincomp.check.supercall">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile-check-error id="stcsuper001ma" error="METHOD_NOT_FOUND"

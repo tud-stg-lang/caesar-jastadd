@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry including="**/*.java" kind="src" path="gen"/>
 	<classpathentry kind="src" path="caesar/src"/>
 	<classpathentry kind="src" path="test/src"/>
+	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="JUNIT_HOME/junit.jar" sourcepath="/JUNIT_SRC_HOME/junitsrc.zip"/>
 	<classpathentry kind="lib" path="tools/beaver-rt.jar"/>

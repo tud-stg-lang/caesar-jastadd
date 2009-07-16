@@ -1,4 +1,4 @@
-<testsuite name="Test Member visibility modifiers" package="binary.mixin.visibility">
+<testsuite name="Test Member visibility modifiers" package="binary.mixincomp.visibility">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<!--

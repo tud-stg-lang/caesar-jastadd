@@ -1,3 +1,0 @@
-Modifier modifier =
-	MIXINMETHOD									   {: return new Modifier("mixinmethod"); :}
-  ;

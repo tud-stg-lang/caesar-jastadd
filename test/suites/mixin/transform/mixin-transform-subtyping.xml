@@ -1,4 +1,4 @@
-<testsuite name="Test Subtyping" package="mixin.transform.subtyping">
+<testsuite name="Test Subtyping" package="mixincomp.transform.subtyping">
 	
 	<compile-run id="mitsubtyping001" description="test simple inheritance">
 		<test>

@@ -1,4 +1,4 @@
-<testsuite name="Testcases for super calls" package="mixin.transform.supercall">
+<testsuite name="Testcases for super calls" package="mixincomp.transform.supercall">
 
     <compile-run id="mitsuper001" description="Test simple super call">
 		<test>		

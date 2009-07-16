@@ -1,4 +1,4 @@
-<testsuite name="Test Multiple Inheritance Links" package="binary.mixin.inhlinks">
+<testsuite name="Test Multiple Inheritance Links" package="binary.mixincomp.inhlinks">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile  id="stcinhlinks001" description="simple inheritance">

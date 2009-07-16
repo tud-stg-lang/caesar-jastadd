@@ -1,4 +1,4 @@
-<testsuite name="Test Modifiers except visibility" package="mixin.check.modifiers">
+<testsuite name="Test Modifiers except visibility" package="mixincomp.check.modifiers">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile id="stcmodifiers001" description="test simple inheritance with abstract method">

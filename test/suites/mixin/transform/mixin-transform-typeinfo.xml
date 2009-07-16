@@ -1,4 +1,4 @@
-<testsuite name="Testcases for runtime type information" package="mixin.transform.typeinfo">
+<testsuite name="Testcases for runtime type information" package="mixincomp.transform.typeinfo">
 
     <compile-run id="mctypeinfo001" description="Test cclass name">
 		<test>		

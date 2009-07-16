@@ -1,4 +1,4 @@
-<testsuite name="Test Member visibility modifiers" package="mixin.check.visibility">
+<testsuite name="Test Member visibility modifiers" package="mixincomp.check.visibility">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-check-error id="stcvisibility001" error="CCLASS_NOT_PUBLIC" 

@@ -23,3 +23,7 @@ Expr primary_no_new_array =
   | name.n DOT CCLASS                           {: return new CjClassAccess(n); :}
   | VOID DOT CCLASS                             {: return new CjClassAccess(new PrimitiveTypeAccess("void")); :}
   ;
+
+Modifier modifier =
+	MIXINMETHOD									{: return new Modifier("mixinmethod"); :}
+  ;

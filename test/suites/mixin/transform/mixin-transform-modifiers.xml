@@ -1,4 +1,4 @@
-<testsuite name="Test Modifiers except visibility" package="mixin.transform.modifiers">
+<testsuite name="Test Modifiers except visibility" package="mixincomp.transform.modifiers">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile-run id="mitmodifiers001" description="test simple inheritance with abstract method">

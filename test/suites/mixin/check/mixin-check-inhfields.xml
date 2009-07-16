@@ -1,4 +1,4 @@
-<testsuite name="Test Inheritance of Fields" package="mixin.check.inhfields">
+<testsuite name="Test Inheritance of Fields" package="mixincomp.check.inhfields">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile  id="stcinhfields001" description="test simple field inheritance">

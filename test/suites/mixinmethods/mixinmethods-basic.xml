@@ -55,7 +55,7 @@
 			}
 
 			public cclass B extends Base {
-				mixinmethod public String m(){ return "mixin versionB"; }
+				mixin public String m(){ return "mixin versionB"; }
 			}
 
 			public cclass C extends B &amp; A {}
@@ -74,7 +74,7 @@
 			 description="Simple methods cannot override mixin methods.">
 		<code>
 			public cclass A extends Base {
-				mixinmethod public String m(){ return "versionA"; }
+				mixin public String m(){ return "versionA"; }
 			}
 
 			public cclass Base {
@@ -94,7 +94,7 @@
 			 description="Mixin method is not sufficient by itself.">
 		<code>
 			public cclass Base {
-				mixinmethod public String m() { return "base version";}
+				mixin public String m() { return "base version";}
 			}
 		</code>			 	 
 	</compile-check-error>
@@ -107,7 +107,7 @@
 				abstract public String m(); 
 			}
 			public cclass A extends Base {
-				mixinmethod public String m(){ return "versionA"; }
+				mixin public String m(){ return "versionA"; }
 			}
 		</code>			 	 
 	</compile-check-error>

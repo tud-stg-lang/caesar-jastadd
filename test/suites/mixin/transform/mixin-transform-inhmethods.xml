@@ -1,4 +1,4 @@
-<testsuite name="Test Inheritance of Methods" package="mixin.transform.inhmethods">
+<testsuite name="Test Inheritance of Methods" package="mixincomp.transform.inhmethods">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile-run id="mitinhmethods001" description="test simple method inheritance">

@@ -41,3 +41,21 @@ Mixin methods: In work...
 ------------------------------------------------
 Some tests that contain mixin-invalid methods are now
 failing...  This problem will be solved soon..
+
+stcinhmethods014
+stcinhmethods016
+stcinhmethods017
+
+mixininheritance001
+
+mitinhmethods005
+mitinhmethods006
+
+vcallfromcc003,013,014,014b,015,017,017a,018,020,021,021a,021b,021c,022,023,025,028,030,032
+
+-----------------------------
+new errors?
+-----------------------------
+generics006
+
+vcoptim003

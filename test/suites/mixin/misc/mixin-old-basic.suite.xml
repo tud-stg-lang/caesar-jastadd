@@ -1,4 +1,4 @@
-<testsuite name="Basic Java cclass tests" package="mixin.old.basic">
+<testsuite name="Basic Java cclass tests" package="mixincomp.old.basic">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile id="mixinbasic001" description="Simple cclass">

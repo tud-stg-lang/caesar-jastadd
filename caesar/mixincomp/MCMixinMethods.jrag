@@ -1,11 +1,26 @@
-aspect MMErrorCheck {
+// Defines semantic and error checks for mixin-methods
+aspect MCMixinMethods {
+	
 	// Introduce new modifier for method that is used to annotate a method being "mixin" 
 	// i.e. compatible to base versions, or not
 	syn boolean MethodDecl.isMixin() = getModifiers().numModifier("mixinmethod") != 0;
 	
 	// A class implements a version of a method if its signature is present in the local body of the class
-	syn boolean CjPrivInhClassDecl.implementsVersion(MethodDecl m) = localMethodsSignatureMap().containsKey(m.signature());
-	
+	// and the method is not abstract.
+	syn boolean CjPrivInhClassDecl.implementsVersion(MethodDecl m){
+	if(localMethodsSignatureMap().containsKey(m.signature())){
+    		Object o = localMethodsSignatureMap().get(m.signature());
+    		
+    		if(o instanceof MethodDecl){
+    			return !((MethodDecl) o).isAbstract();
+    		}else if(o instanceof Set){
+    			return !allMethodsAbstract((SimpleSet) o);
+    		}
+    	}  
+    	
+    	return false;
+    }
+    
 	// A class implements a non-mixin version of a method if the version present in the local body of the class is not 
 	// annotated as a mixin.
 	syn boolean CjPrivInhClassDecl.implementsNonMixinVersion(MethodDecl m){
@@ -33,8 +48,8 @@ aspect MMErrorCheck {
 			
 				MethodDecl m = (MethodDecl)o;
 			
-				// Ignore methods from Object or CjObject
-				if(!m.hostType().name().equals("Object") && !m.hostType().name().equals("CjObject")){
+				// Ignore methods from Object or CjObject and all abstract methods
+				if(!m.hostType().name().equals("Object") && !m.hostType().name().equals("CjObject") && !m.isAbstract()){
 				
 					// Check for a non-mixin version of m
 					boolean found = false;

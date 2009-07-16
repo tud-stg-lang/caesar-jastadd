@@ -1,4 +1,4 @@
-<testsuite name="Miscelaneous cclass tests" package="mixin.old.misc">
+<testsuite name="Miscelaneous cclass tests" package="mixincomp.old.misc">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-run id="mixinmisc002" description="Test interface method call through abstract cclass">

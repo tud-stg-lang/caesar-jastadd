@@ -1,4 +1,4 @@
-<testsuite name="Test Inheritance of Methods" package="mixin.check.inhmethods">
+<testsuite name="Test Inheritance of Methods" package="mixincomp.check.inhmethods">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile  id="stcinhmethods001a" description="test simple method inheritance from Object">

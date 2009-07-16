@@ -1,4 +1,4 @@
-<testsuite name="Basic cclass inheritance tests" package="mixin.old.inheritance">
+<testsuite name="Basic cclass inheritance tests" package="mixincomp.old.inheritance">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile id="mixininheritance001" description="Simple multiple inheritance">
