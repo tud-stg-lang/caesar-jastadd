@@ -1,5 +1,5 @@
 <testsuite name="Basic tests for mixin methods"
-	package="mixinmethods.basic">
+	package="mixincomp.mixinmethods.basic">
 
 	<compile-check-error id="mixinmethods001"
 						 error="NOT_MIXIN_VALID"
