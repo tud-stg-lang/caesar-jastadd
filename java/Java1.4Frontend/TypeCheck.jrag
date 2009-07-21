@@ -435,7 +435,9 @@ aspect TypeCheck {
     if(isQualified() && qualifier().isTypeAccess() && !qualifier().type().isUnknown())
       error("*** The expression in a qualified class instance expr must not be a type name");
     // 15.9
-    if(isQualified() && !type().isInnerClass() && !((ClassDecl)type()).superclass().isInnerClass() && !type().isUnknown()) {
+    // begin vaidas
+    if(isQualified() && !type().isInnerClass() && !type().getClassDecl().superclass().isInnerClass() && !type().isUnknown()) {
+    // end vaidas 	
       error("*** Qualified class instance creation can only instantiate inner classes and their anonymous subclasses");
     }
     if(!type().isClassDecl()) {
