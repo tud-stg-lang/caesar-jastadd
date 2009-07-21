@@ -283,4 +283,139 @@
 		</test>
 	</compile-run>
 	
+	<compile-run id="vc010" 
+				 description="Test completeness of concrete virtual classes">
+		<test>
+		    assertEquals("X", new D().new Y().a());
+		</test>		 
+		<code>
+			// Define contract
+			abstract public cclass A {
+			    public cclass X {
+				   public abstract String a();
+				}				   
+			}
+			
+			public cclass B requires A {
+			    public cclass Y extends X { }
+			}
+			
+			public cclass C extends A {
+			    public cclass X {
+			       public String a() { return "X"; } 
+			    }
+			}
+			
+			public cclass D extends B &amp; C { }
+		</code>
+	</compile-run>
+	
+	<compile-check-error id="vc011" 
+						 error="CLASS_MUST_IMPLEMENT"
+						 description="Test completeness of concrete virtual classes">
+		<code>
+		    abstract public cclass A {
+		       public cclass X { }		    
+		    }
+			// Define contract
+			abstract public cclass B requires A {
+			    public cclass X {
+				   public abstract String a();
+				}
+			}
+			
+			abstract public cclass C requires A {
+			    public cclass X {
+				   public abstract String b();
+				}
+			} 
+			
+			public cclass D extends C requires B {
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile-check-error id="vc012" 
+						 error="CLASS_MUST_IMPLEMENT"
+						 description="Test completeness of concrete virtual classes">
+		<code>
+		    abstract public cclass A {
+		       abstract public cclass X { }		    
+		    }
+		    
+		    abstract public cclass B extends A {
+		        public cclass Y extends X { }
+		    }
+		    
+			// Define contract
+			abstract public cclass C requires A {
+			    abstract public cclass X {
+				   public abstract String a();
+				}				
+			}
+			
+			public cclass D extends B &amp; C {			    
+			}
+		</code>
+	</compile-check-error>
+	
+	<compile id="vc013" 
+			 description="Test completeness of concrete virtual classes">
+		<code>
+		    abstract public cclass A {
+		       abstract public cclass X { }		    
+		    }
+		    
+		    abstract public cclass B extends A {
+		        public cclass Y extends X { }
+		    }
+		    
+			// Define contract
+			abstract public cclass C extends B {
+			    abstract public cclass X {
+				   public abstract String a();
+				}
+			}
+			
+			abstract public cclass D extends A {
+			    abstract public cclass X {
+				   public abstract String b();
+				}
+			} 
+			
+			public cclass E extends D requires C {
+			}
+		</code>
+	</compile>
+	
+	<compile-check-error id="vc014"
+	         error="CLASS_MUST_IMPLEMENT" 
+			 description="Test completeness of concrete virtual classes">
+		<code>
+		    abstract public cclass A {
+		       abstract public cclass X { }		    
+		    }
+		    
+		    abstract public cclass B extends A {
+		        public cclass Y extends X { }
+		    }
+		    
+			// Define contract
+			abstract public cclass C extends B {
+			    abstract public cclass X {
+				   public abstract String a();
+				}
+			}
+			
+			abstract public cclass D extends B {
+			    abstract public cclass X {
+				   public abstract String b();
+				}
+			} 
+			
+			public cclass E extends D requires C {
+			}
+		</code>
+	</compile-check-error>		
+	
 </testsuite>
