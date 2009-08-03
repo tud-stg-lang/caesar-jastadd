@@ -96,14 +96,11 @@ aspect ContractsCompleteness {
 	syn lazy Collection CjContractClassDecl.getExplicitProvided() {
 		Collection provided = new HashSet();
 	
-		// An abstract class doesn't have to provide anything
-		if(!isAbstract()){
-			// For a concrete class, every contract via extends has to be fulfilled
-			provided.addAll(getExplicitExtends());
-			
-			// Implemented interfaces are part of fulfilled contract
-			provided.addAll(getExplicitImplements());
-		}
+		// For a concrete class, every contract via extends has to be fulfilled
+		provided.addAll(getExplicitExtends());
+		
+		// Implemented interfaces are part of fulfilled contract
+		provided.addAll(getExplicitImplements());
 		
 		return provided;
 	}
@@ -127,38 +124,21 @@ aspect ContractsCompleteness {
 		c.addAll(getExplicitProvided());
 		
 		// Call recursively (recursion anchor = no extends relationships)
-		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getExplicitProvided().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
 				CjContractClassDecl cd = (CjContractClassDecl)td;
-				
-				c.addAll(cd.getProvided());
-				
-				// Provided abstract classes do not provide anything but
-				// nonetheless extend the contracts of their superclasses
-				// This means these contracts are provided as well.
-				if(cd.isAbstract()){
-					c.addAll(cd.getSupertypesOf());
-				}
+				c.addAll(cd.getProvided());				
 			}
-		}
-		
-		// Call recursively (recursion anchor = no implements relationships)
-		if(!isAbstract()){
-			for(Iterator iter = getExplicitImplements().iterator(); iter.hasNext(); ){
-				TypeDecl td = (TypeDecl)iter.next();
 			
-				if(td instanceof InterfaceDecl){
-					c.addAll(((InterfaceDecl)td).getAllExtends());
-				}
+			if(td instanceof InterfaceDecl){
+				c.addAll(((InterfaceDecl)td).getAllExtends());
 			}
 		}
 		
 		return c;
 	}
-	
-	
 	
 	/******
 	 * 10.) <requires> := getExplicitRequirements()
