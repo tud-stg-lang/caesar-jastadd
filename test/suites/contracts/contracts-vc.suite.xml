@@ -416,6 +416,31 @@
 			public cclass E extends D requires C {
 			}
 		</code>
+	</compile-check-error>	
+	
+	<compile-check-error id="vc015"
+	         error="CLASS_MUST_IMPLEMENT" 
+			 description="Test completeness of concrete virtual classes">
+		<code>
+		    abstract public cclass IStructure {
+	            abstract public cclass A { }
+	            public cclass B extends A { }
+            }
+            
+            public cclass Structure extends IStructure { }
+            
+            abstract public cclass IService requires IStructure {
+         	    abstract public cclass A {
+		           abstract public String a();
+	            }
+            }
+            
+            public cclass Client requires IService {  }
+
+            /* error: B.a() is not implemented in Main, 
+               but it must be, because "extends IService and extends IStructure" */
+		    public cclass Main extends Structure &amp; IService &amp; Client { }		    
+		</code>
 	</compile-check-error>		
 	
 </testsuite>
