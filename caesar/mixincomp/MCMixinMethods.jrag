@@ -73,7 +73,8 @@ aspect MCMixinMethods {
 					}
 		
 					// Error if no base version found and if method is not from an interface
-					if(!found && !m.hostType().isInterfaceDecl())
+					// Ignore if class is abstract
+					if(!found && !m.hostType().isInterfaceDecl() && !m.hostType().isAbstract())
 						error(fullName() + " is not mixin-valid: There exists no non-mixin-version of " + m.name());
 				}
 			}

@@ -214,7 +214,7 @@
 			assertEquals("AAA", d.m()); // mixin linearization
 		</test>
 		<code>
-			public cclass AAA { public String m() { return "AAA"; } }	
+			public abstract cclass AAA { public mixin String m() { return "AAA"; } }	
 			public cclass BBB { public String m() { return "BBB"; } }
 			public cclass CCC extends AAA &amp; BBB { }
 			public cclass DDD extends CCC { } 
@@ -242,15 +242,15 @@
 		</test>
 		<code>
 			public cclass A           { public String m() { return "A"; } }	
-			public cclass B extends A { public String m() { return "B"; } }
-			public cclass C           { public String m() { return "C"; } }
+			public cclass B extends A { public mixin String m() { return "B"; } }
+			public cclass C extends A { public String m() { return "C"; } }
 			public cclass D extends B &amp; C { }
 		</code>
 	</compile-run>
 	
 	<compile id="stcinhmethods017" description="methods with same signature and same return types from inside">
 		<code>
-			public cclass A { public void m() {} }	
+			public abstract cclass A { public mixin void m() {} }	
 			public cclass B { public void m() {} }
 			public cclass C extends A &amp; B { 
 				public void test() {

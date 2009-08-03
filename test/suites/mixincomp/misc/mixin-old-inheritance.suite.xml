@@ -3,8 +3,8 @@
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
 	<compile id="mixininheritance001" description="Simple multiple inheritance">
 		<code>
-			public cclass test1 {
-				public void f() { System.out.println("f1"); }
+			public abstract cclass test1 {
+				public mixin void f() { System.out.println("f1"); }
 			}
 			public cclass test2 {
 				public void f() { System.out.println("f2"); }

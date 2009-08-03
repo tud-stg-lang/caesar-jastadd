@@ -67,7 +67,7 @@
 			assertEquals(expected, result);
 		</test>
 		<code>
-			public cclass AAA {	public String m() { return "ma"; } }
+			public abstract cclass AAA { public mixin String m() { return "ma"; } }
 			public cclass BBB {	public String m() { return "mb"; } }
 			public cclass CCC extends AAA &amp; BBB { }
 		</code>
@@ -81,7 +81,7 @@
 			assertEquals(expected, result);
 		</test>
 		<code>
-			public cclass AAA {	public String m() { return "ma"; } }
+			public abstract cclass AAA { public mixin String m() { return "ma"; } }
 			public cclass BBB {	public String m() { return "mb"; } }
 			public cclass CCC extends AAA &amp; BBB { }
 			public cclass DDD extends CCC { } 
