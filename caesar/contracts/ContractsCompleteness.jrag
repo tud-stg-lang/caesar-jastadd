@@ -329,6 +329,9 @@ aspect ContractsCompleteness {
 			}
 		}
 		
+		// Add explicit parents
+		provided.addAll(getExplicitParents());
+		
 		// Call recursively
 		for(Iterator itr = parents.iterator(); itr.hasNext();){
 			Object cd = itr.next();

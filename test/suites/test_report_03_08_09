@@ -1,9 +1,13 @@
+Runs: 848/848  Errors: 0  Failures: 215
+
 ----------------
-TODO binary tests
+Binary tests
 ----------------
 
 typesys.casts.casts002
 typesys.casts.casts009
+
+typesys-generics.generics006
 
 typesys.methods.outside.methods009
 
@@ -11,27 +15,18 @@ typesys.more.methods.mmethods004
 
 typesys.overriding.overriding008
 
-----------------------------------------
-support for arrays & type casts
-----------------------------------------
+**quite a few tests from vc.allfromcc still have to be made mixin valid!
+
 vc.allfromcc.vcallfromcc024
 vc.allfromcc.vcallfromcc037
 vc.allfromcc.vcallfromcc040
 
-------------------------------------------------
-Virtual classes: Anonymous classes, constructors
-------------------------------------------------
 vc.anonym.vcanonym008
 
 vc.newop.vcnew003
 vc.newop.vcnew004
 vc.newop.vcnew008
 
+vc.optimise.vcoptim003
+
 vc.visibility.vcvis013
-
------------------------------
-new errors?
------------------------------
-generics006
-
-vcoptim003
