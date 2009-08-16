@@ -1,0 +1,210 @@
+<testsuite name="Basic tests for mixin methods"
+	package="mixincomp.mixinmethods.basic">
+
+	<compile-check-error id="mixinmethods001"
+						 error="NOT_MIXIN_VALID"
+			 			 description="Implicit overriding is disallowed">
+		<code>
+			public cclass A {
+				public String m(){ return "versionA"; }
+			}
+
+			public cclass B {
+				public String m(){ return "versionB"; }
+			}
+
+			public cclass C extends B &amp; A {}
+
+        </code>
+	</compile-check-error>
+	
+	<compile-run id="mixinmethods002"
+			 description="Explicit overriding is of course still possible.">
+		<code>
+			public cclass A {
+				public String m(){ return "versionA"; }
+			}
+
+			public cclass B {
+				public String m(){ return "versionB"; }
+			}
+
+			public cclass C extends B &amp; A {
+				public String m(){ return "versionC"; }
+			}
+
+        </code>
+		
+		<test>
+			C c = new C();
+			
+			assertEquals("versionC", c.m());
+		</test>		 
+			 
+	</compile-run>
+	
+	<compile-run id="mixinmethods003"
+			 description="Mixin methods can override base versions.">
+		<code>
+			public cclass A extends Base {
+				public String m(){ return "versionA"; }
+			}
+
+			public cclass Base {
+				public String m() { return "base version";}
+			}
+
+			public cclass B extends Base {
+				mixin public String m(){ return "mixin versionB"; }
+			}
+
+			public cclass C extends B &amp; A {}
+
+        </code>
+		
+		<test>
+			C c = new C();
+			
+			assertEquals("mixin versionB", c.m());
+		</test>		 	 
+	</compile-run>
+	
+	<compile-check-error id="mixinmethods004"
+	         error="NOT_MIXIN_VALID"
+			 description="Simple methods cannot override mixin methods.">
+		<code>
+			public cclass A extends Base {
+				mixin public String m(){ return "versionA"; }
+			}
+
+			public cclass Base {
+				public String m() { return "base version";}
+			}
+
+			public cclass B extends Base {
+				public String m(){ return "mixin versionB"; }
+			}
+
+			public cclass C extends B &amp; A {}        
+		</code>				 	 
+	</compile-check-error>
+	
+	<compile-check-error id="mixinmethods005"
+	         error="NOT_MIXIN_VALID"
+			 description="Mixin method is not sufficient by itself.">
+		<code>
+			public cclass Base {
+				mixin public String m() { return "base version";}
+			}
+		</code>			 	 
+	</compile-check-error>
+	
+	<compile-check-error id="mixinmethods006"
+	         error="NOT_MIXIN_VALID"
+			 description="Mixin method is not sufficient by itself.">
+		<code>
+			abstract public cclass Base {
+				abstract public String m(); 
+			}
+			public cclass A extends Base {
+				mixin public String m(){ return "versionA"; }
+			}
+		</code>			 	 
+	</compile-check-error>
+	
+	<compile-check-error id="mixinmethods007" error="NOT_MIXIN_VALID"
+			 description="Virtual classes.">
+		<code>
+			public cclass Group {
+				public cclass Person {
+					public String description() { return "this is a person";}
+				}
+
+				public cclass Man extends Person {
+					public String description(){ return "this is a male person"; }
+				}
+			}
+
+			public cclass Family extends Group {
+				public cclass Person {
+					public String description() {return "a member of a family";}
+				}
+				
+				// description() in Group.Man overrides description() in Family.Person implicitly!
+				// Group.Man.description has to be declared as a mixin.
+			}
+        </code> 	 
+	</compile-check-error>
+
+	<compile-check-error id="mixinmethods008" error="NOT_MIXIN_VALID"
+			 description="Virtual classes.">
+		<code>
+			public cclass Group {
+				public cclass Person {}
+
+				public cclass Man extends Person {
+					// There exists now no non-mixin version for description!
+					// This means Group.Man is "not concrete" and should be declared as abstract
+					mixin public String description(){ return "this is a male person"; }
+				}
+			}
+
+			public cclass Family extends Group {
+				public cclass Person {
+					public String description() {return "a member of a family";}
+				}
+			}
+        </code> 	 
+	</compile-check-error>	
+	
+	<compile-run id="mixinmethods009"
+			 description="Virtual classes.">
+		<code>
+			public cclass Group {
+				public cclass Person {
+					public String description() { return "this is a person";}
+				}
+
+				public cclass Man extends Person {
+					mixin public String description(){ return "this is a male person"; }
+				}
+			}
+
+			public cclass Family extends Group {
+				public cclass Person {
+					public String description() {return "a member of a family";}
+				}
+			}
+        </code>
+         	 
+        <test>
+        	final Family f = new Family();
+        	Family.Person p = f.new Person();
+        	assert(p.description().equals("a member of a family"));		
+        </test>
+	</compile-run>
+
+	<compile-run id="mixinmethods010"
+			 description="Virtual classes.">
+		<code>
+			public cclass Group {
+				public cclass Person {}
+
+				abstract public cclass Man extends Person {
+					mixin public String description(){ return "this is a male person"; }
+				}
+			}
+
+			public cclass Family extends Group {
+				public cclass Person {
+					public String description() {return "a member of a family";}
+				}
+			}
+        </code> 	 
+        <test>
+        	final Family f = new Family();
+        	Family.Person p = f.new Person();
+        	assert(p.description().equals("a member of a family"));	
+        </test>
+	</compile-run>	
+</testsuite>

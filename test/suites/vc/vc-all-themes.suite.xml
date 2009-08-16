@@ -201,7 +201,7 @@
 							// return this.n1==n1 &amp;&amp; this.n2==n2;
 						}
 			
-						public String toString() {
+						mixin public String toString() {
 							return super.toString()+", "+n2+"->"+n1;
 							// return n1+"->"+n2+", "+n2+"->"+n1;
 						}
@@ -1237,9 +1237,9 @@
 					}
 				}
 			
-				public cclass InnerB extends InnerA
+				abstract public cclass InnerB extends InnerA
 				{
-					public String queryB()
+					mixin public String queryB()
 					{
 						return "A.B.B";
 					}
@@ -1249,7 +1249,7 @@
 						return "A.B.C";
 					}
 			
-					public String queryE()
+					mixin public String queryE()
 					{
 						return "A.B.E";
 					}
@@ -1384,9 +1384,9 @@
 					}
 				}
 			
-				public cclass InnerB extends InnerA
+				abstract public cclass InnerB extends InnerA
 				{
-					public String queryB()
+					mixin public String queryB()
 					{
 						return super.queryB() + ", A.B.B";
 					}
@@ -1396,7 +1396,7 @@
 						return super.queryC() + ", A.B.C";
 					}
 			
-					public String queryE()
+					mixin public String queryE()
 					{
 						return "A.B.E";
 					}
@@ -1496,7 +1496,7 @@
 			//	 [A.L1, O.L1, A.C1, 0.C1]
 				public cclass Leaf1 extends Cat1
 				{
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", A.L1";
 					}
 				}
@@ -1516,7 +1516,7 @@
 				// [B.L1, B.C2, O.C2]
 				public cclass Leaf1 extends Cat2
 				{
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", B.L1";
 					}
 				}
@@ -1584,7 +1584,7 @@
 			
 				public cclass InnerC extends InnerB
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.C.A";
 					}
@@ -1611,7 +1611,7 @@
 				
 				public cclass InnerD extends InnerC
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.D.A";
 					}
@@ -1932,13 +1932,13 @@
 							setChild(InnerA.this.new DeepestC());
 						}
 			
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", A.A.B, child: " + _child.queryA();
 						}
 					}
 			
 					public cclass DeepestC extends DeepestA {
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", A.A.C";
 						}
 					}
@@ -1952,7 +1952,7 @@
 			
 				public cclass InnerB extends InnerA {
 					public cclass DeepestA {
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", A.B.A";
 						}
 					}
@@ -1968,24 +1968,24 @@
 							setChild2(InnerB.this.new DeepestD());
 						}
 			
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", A.B.A, child2: " + _child2.queryA();
 						}
 					}
 			
 					public cclass DeepestC {
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", A.B.C";
 						}
 					}
 			
 					public cclass DeepestD extends DeepestC {
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", A.B.D";
 						}
 					}
 			
-					public DeepestB defaultObject() {
+					mixin public DeepestB defaultObject() {
 						DeepestB b = super.defaultObject();
 						b.setDefaultChild2();
 						return b;
@@ -2012,19 +2012,19 @@
 							setChild3(InnerA.this.new DeepestE());
 						}
 			
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", B.A.B, child3: " + _child3.queryA();
 						}
 					}
 			
 					public cclass DeepestC {
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", B.A.C";
 						}
 					}
 			
 					public cclass DeepestE extends DeepestC {
-						public String queryA() {
+						mixin public String queryA() {
 							return super.queryA() + ", B.A.E";
 						}
 					}
@@ -2059,7 +2059,7 @@
 					public cclass DeepestC { }
 					public cclass DeepestD extends DeepestC { }
 			
-					public DeepestB defaultObject() {
+					mixin public DeepestB defaultObject() {
 						DeepestB b = super.defaultObject();
 						return b;
 					}
@@ -2148,7 +2148,7 @@
 				}
 			}
 			
-			public cclass OuterB extends OuterA
+			abstract public cclass OuterB extends OuterA
 			{
 				protected String _b = "B.b";
 			
@@ -2165,12 +2165,12 @@
 					return super.queryB() + ", " + _b;
 				}
 			
-				public String queryD()
+				mixin public String queryD()
 				{
 					return super.queryD() + ", " + _d;
 				}
 			
-				public String queryE()
+				mixin public String queryE()
 				{
 					return _e;
 				}
@@ -2521,7 +2521,7 @@
 				{
 					protected String _a = "B.a";
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _a;
 					}
@@ -2534,7 +2534,7 @@
 				{
 					protected String _a = "C.a";
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _a;
 					}
@@ -2547,7 +2547,7 @@
 				{
 					protected String _a = "D.a";
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _a;
 					}
@@ -2632,13 +2632,13 @@
 						setChild(OuterA.this.new InnerC());
 					}
 			
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", A.B, child: " + _child.queryA();
 					}
 				}
 			
 				public cclass InnerC extends InnerA {
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", A.C";
 					}
 				}
@@ -2653,7 +2653,7 @@
 			
 			public cclass OuterB extends OuterA {
 				public cclass InnerA {
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", B.A";
 					}
 				}
@@ -2669,24 +2669,24 @@
 						setChild2(OuterB.this.new InnerD());
 					}
 			
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", B.B, child2: " + _child2.queryA();
 					}
 				}
 			
 				public cclass InnerC {
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", B.C";
 					}
 				}
 			
 				public cclass InnerD extends InnerC {
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", B.D";
 					}
 				}
 			
-				public InnerB defaultObject() {
+				mixin public InnerB defaultObject() {
 					InnerB b = super.defaultObject();
 					b.setDefaultChild2();
 					return b;
@@ -2711,19 +2711,19 @@
 						setChild3(OuterC.this.new InnerE());
 					}
 			
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", C.B, child3: " + _child3.queryA();
 					}
 				}
 			
 				public cclass InnerC {
-					public String queryA() {
+					mixin public String queryA() {
 						return super.queryA() + ", C.C";
 					}
 				}
 			
 				public cclass InnerE extends InnerC {
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", C.E";
 					}
@@ -2743,17 +2743,17 @@
 	
 	<compile id="vcallfromcc021a" description="Simplified: Test joining extensions of state.">	
 		<code>
-			public cclass OuterA {
+			abstract public cclass OuterA {
 				public cclass InnerA {
 					public String queryA() { 	return "A.A"; }
 				}
 			
 				public cclass InnerB extends InnerA {
-					public String queryA() {	return super.queryA() + ", A.B, child: -"; }
+					mixin public String queryA() {	return super.queryA() + ", A.B, child: -"; }
 				}
 			
 				public cclass InnerC extends InnerA {
-					public String queryA() {	return super.queryA() + ", A.C"; }
+					mixin public String queryA() {	return super.queryA() + ", A.C"; }
 				}
 			
 				public InnerB defaultObject() {
@@ -2764,22 +2764,22 @@
 			
 			public cclass OuterB extends OuterA {
 				public cclass InnerA {
-					public String queryA() {	return super.queryA() + ", B.A"; }
+					mixin public String queryA() {	return super.queryA() + ", B.A"; }
 				}
 			
 				public cclass InnerB {
-				    public String queryA() {	return super.queryA() + ", B.B, child2: -"; }
+				    mixin public String queryA() {	return super.queryA() + ", B.B, child2: -"; }
 				}
 			
 				public cclass InnerC {
-					public String queryA() {	return super.queryA() + ", B.C"; }
+					mixin public String queryA() {	return super.queryA() + ", B.C"; }
 				}
 			
 				public cclass InnerD extends InnerC {
-					public String queryA() {	return super.queryA() + ", B.D"; }
+					mixin public String queryA() {	return super.queryA() + ", B.D"; }
 				}
 			
-				public InnerB defaultObject() {
+				mixin public InnerB defaultObject() {
 					InnerB b = super.defaultObject();
 					return b;
 				}
@@ -2791,15 +2791,15 @@
 				}
 			
 				public cclass InnerB {
-				    public String queryA() {	return super.queryA() + ", C.B, child3: -"; }
+				    mixin public String queryA() {	return super.queryA() + ", C.B, child3: -"; }
 				}
 			
 				public cclass InnerC {
-					public String queryA() {	return super.queryA() + ", C.C"; }
+					mixin public String queryA() {	return super.queryA() + ", C.C"; }
 				}
 			
 				public cclass InnerE extends InnerC {
-					public String queryA() {	return super.queryA() + ", C.E"; }
+					mixin public String queryA() {	return super.queryA() + ", C.E"; }
 				}
 			
 				public InnerB defaultObject() {
@@ -2832,7 +2832,7 @@
 				public cclass InnerC { }
 				public cclass InnerD extends InnerC { }
 			
-				public InnerB defaultObject() {
+				mixin public InnerB defaultObject() {
 					InnerB b = super.defaultObject();
 					return b;
 				}
@@ -2866,7 +2866,7 @@
 			
 			public cclass OuterB extends OuterA {
 				public cclass InnerA { }
-				public InnerA defaultObject() {
+				mixin public InnerA defaultObject() {
 					return super.defaultObject();
 				}
 			}
@@ -2971,7 +2971,7 @@
 			
 				public cclass InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.A.A";
 					}
@@ -3077,7 +3077,7 @@
 			
 				public cclass InnerB extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.B";
 					}
@@ -3085,7 +3085,7 @@
 			
 				public cclass InnerC extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.C";
 					}
@@ -3093,7 +3093,7 @@
 			
 				public cclass InnerD extends InnerB &amp; InnerC
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.D";
 					}
@@ -3101,7 +3101,7 @@
 			
 				public cclass InnerE extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.E";
 					}
@@ -3109,7 +3109,7 @@
 			
 				public cclass InnerF extends InnerD &amp; InnerE
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.F";
 					}
@@ -3120,7 +3120,7 @@
 			{
 				public cclass InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.A";
 					}
@@ -3128,7 +3128,7 @@
 			
 				public cclass InnerC
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.C";
 					}
@@ -3136,14 +3136,14 @@
 			
 				public cclass InnerD
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.D";
 					}
 				}
 			
 				public cclass InnerF {
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.F";
 					}
@@ -3151,7 +3151,7 @@
 			
 				public cclass InnerG extends InnerC &amp; InnerF
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", B.G";
 					}
@@ -3170,14 +3170,14 @@
 			
 				public cclass InnerB
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", C.B";
 					}
 				}
 			
 				public cclass InnerC {
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", C.C";
 					}
@@ -3185,7 +3185,7 @@
 			
 				public cclass InnerD
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", C.D";
 					}
@@ -3193,7 +3193,7 @@
 			
 				public cclass InnerH extends InnerB &amp; InnerC
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", C.H";
 					}
@@ -3372,7 +3372,7 @@
 					}
 			
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _ab;
 					}
@@ -3387,7 +3387,7 @@
 						_ac = "A.C";
 					}
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _ac;
 					}
@@ -3402,7 +3402,7 @@
 						_ad = "A.D";
 					}
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _ad;
 					}
@@ -3447,7 +3447,7 @@
 						_bb = "B.B";
 					}
 			
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", " + _bb;
 					}
@@ -3669,7 +3669,7 @@
 				public cclass InnerB
 				{ }
 			
-				public cclass InnerC
+				abstract public cclass InnerC
 				{ }
 			}
 			
@@ -3693,19 +3693,19 @@
 					}
 				}
 			
-				public cclass InnerC extends InnerA
+				abstract public cclass InnerC extends InnerA
 				{
 					public String queryA()
 					{
 						return super.queryA() + ", A.C.A";
 					}
 			
-					public String queryC()
+					mixin public String queryC()
 					{
 						return "A.C.C";
 					}
 			
-					public String queryG()
+					mixin public String queryG()
 					{
 						return "A.C.G";
 					}
@@ -3732,7 +3732,7 @@
 					}
 				}
 			
-				public cclass InnerC extends InnerB
+				abstract public cclass InnerC extends InnerB
 				{
 					public String queryB()
 					{
@@ -3744,7 +3744,7 @@
 						return "B.C.C";
 					}
 			
-					public String queryF()
+					mixin public String queryF()
 					{
 						return "B.C.F";
 					}
@@ -3753,6 +3753,7 @@
 			
 			public cclass OuterC extends OuterA &amp; OuterB
 			{
+				public cclass InnerC {}
 			}
 		</code>
 	</compile-run>
@@ -3996,7 +3997,7 @@
 			
 				public cclass InnerB extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.B.A";
 					}
@@ -4004,7 +4005,7 @@
 			
 				public cclass InnerC extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.C.A";
 					}
@@ -4012,7 +4013,7 @@
 			
 				public cclass InnerD extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.D.A";
 					}
@@ -4108,7 +4109,7 @@
 			
 				public cclass InnerC extends InnerN
 				{
-					public String queryN()
+					mixin public String queryN()
 					{
 						return super.queryN() + ", B.C.N";
 					}
@@ -4289,7 +4290,7 @@
 			
 				public cclass InnerC extends InnerA
 				{
-					public String queryA()
+					mixin public String queryA()
 					{
 						return super.queryA() + ", A.C.A";
 					}

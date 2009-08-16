@@ -7,7 +7,7 @@ aspect MCMixinMethods {
 	
 	// A class implements a version of a method if its signature is present in the local body of the class
 	// and the method is not abstract.
-	syn boolean CjPrivInhClassDecl.implementsVersion(MethodDecl m){
+	syn boolean CjClassDecl.implementsVersion(MethodDecl m){
 	if(localMethodsSignatureMap().containsKey(m.signature())){
     		Object o = localMethodsSignatureMap().get(m.signature());
     		
@@ -23,7 +23,7 @@ aspect MCMixinMethods {
     
 	// A class implements a non-mixin version of a method if the version present in the local body of the class is not 
 	// annotated as a mixin.
-	syn boolean CjPrivInhClassDecl.implementsNonMixinVersion(MethodDecl m){
+	syn boolean CjClassDecl.implementsNonMixinVersion(MethodDecl m){
 		if(implementsVersion(m)){
 			MethodDecl versionOfM = (MethodDecl)localMethodsSignatureMap().get(m.signature());
 			
@@ -34,7 +34,7 @@ aspect MCMixinMethods {
 	}
 
 	// Definition of mixin-validity
-	syn boolean CjPrivInhClassDecl.checkIfmixinValid() {
+	syn boolean CjClassDecl.checkIfmixinValid() {
 		// Add class itself as first member of linearisation list before sorted parents
 		ArrayList linearisationList = new ArrayList();
 		linearisationList.add(this);
@@ -48,20 +48,22 @@ aspect MCMixinMethods {
 			
 				MethodDecl m = (MethodDecl)o;
 			
-				// Ignore methods from Object or CjObject and all abstract methods
-				if(!m.hostType().name().equals("Object") && !m.hostType().name().equals("CjObject") && !m.isAbstract()){
+				// Ignore methods from Object, CjObject, all abstract methods and constructors
+				if(!m.hostType().name().equals("Object") &&
+				   !m.hostType().name().equals("CjObject") &&
+				   !m.isAbstract() && !m.name().equals("$cj$init")){
 				
 					// Check for a non-mixin version of m
 					boolean found = false;
 					for (Iterator classes = linearisationList.iterator(); classes.hasNext(); ){
-						CjPrivInhClassDecl ci = (CjPrivInhClassDecl)classes.next();
+						CjClassDecl ci = (CjClassDecl)classes.next();
 
 						// If a non-mixin version is found, ensure that all classes further up in linearisation list
 						// either don't implement m or if they do, are supertypes.				
 						if(ci.implementsNonMixinVersion(m)){
 							found = true;
 							while(classes.hasNext()){
-								CjPrivInhClassDecl cj = (CjPrivInhClassDecl)classes.next();
+								CjClassDecl cj = (CjClassDecl)classes.next();
 							
 								if(cj.implementsVersion(m) && !(ci.mixinList().contains(cj))){
 									error(fullName() + " is not mixin-valid: " + m.name() + " inherited from " + ci.fullName() 
@@ -84,8 +86,8 @@ aspect MCMixinMethods {
 	}
 	
 	// Extend check to include mixin-validity
-	refine PrivateInhErrorCheck public void CjPrivInhClassDecl.checkModifiers() {
-		PrivateInhErrorCheck.CjPrivInhClassDecl.checkModifiers();
+	public void CjClassDecl.checkModifiers() {
+		super.checkModifiers();
 		
 		checkIfmixinValid();
 	}

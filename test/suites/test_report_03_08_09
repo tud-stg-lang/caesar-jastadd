@@ -1,4 +1,4 @@
-Runs: 848/848  Errors: 0  Failures: 215
+Runs: 852/852  Errors: 0  Failures: 196
 
 ----------------
 Binary tests
@@ -14,8 +14,6 @@ typesys.methods.outside.methods009
 typesys.more.methods.mmethods004
 
 typesys.overriding.overriding008
-
-**quite a few tests from vc.allfromcc still have to be made mixin valid!
 
 vc.allfromcc.vcallfromcc024
 vc.allfromcc.vcallfromcc037
