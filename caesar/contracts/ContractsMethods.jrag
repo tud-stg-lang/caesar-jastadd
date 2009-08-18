@@ -1,46 +1,75 @@
 // Removes required methods from list of unimplemented methods
 // This allows concrete but incomplete classes, 
 // i.e. classes not declared abstract, but containing abstract methods via requirements
+// This is also implemented for virtual classes.
 
 aspect ContractsMethods {	 
+	
+	/*******
+	 * Determine if class would not be present if requirements were to be removed
+	 ******/
+	syn boolean CjContractClassDecl.presentOnlyDueToReqs(){
+		// Avoid endless recursion
+		if(isCircular())
+			return false;
+		
+		// Trivial if class is explicit
+		if(!isImplicit)
+			return false;
+		
+		// Condition holds if all furtherbounds are required
+		// or themselves only present due to requirements
+		for(Iterator itr = getDirectFurtherbounds().iterator(); itr.hasNext(); ){
+			Object o = itr.next();
+			if(o instanceof CjContractClassDecl){
+				CjContractClassDecl cd = (CjContractClassDecl)o;
+				
+				if(!getRequirements().contains(cd) && !cd.presentOnlyDueToReqs()){
+					return false;
+				}
+			}
+		}
+		 
+		return true;
+	}
+	
+	
 	 /******
-	  * Remove required methods from list of unimplemented methods
+	  * Remove non-redundant required methods from list of unimplemented methods
 	  ******/
 	 eq CjContractClassDecl.unimplementedMethods() {
 
+		// Skip check for unimplemented methods if class would not be
+		// present if we ignored requirements
+		if(presentOnlyDueToReqs())
+			return new ArrayList();
+		 
 		// Get complete list of abstract methods
-	 	Collection c = super.unimplementedMethods();
+	 	Collection unimpMethods = super.unimplementedMethods();
 	 	
-	 	// Remove all required methods from list of unimplemented methods
-	 	for(Iterator reqs = getRequirements().iterator(); reqs.hasNext(); ){
+	 	// Determine all non-redundant requirements
+	 	// A requirement is redundant if it is also provided
+	 	Collection nonRedundReqs = getRequirements();
+	 	nonRedundReqs.removeAll(getProvided());
+	 	
+	 	// Go through all non-redundant requirements
+	 	for(Iterator reqs = nonRedundReqs.iterator(); reqs.hasNext(); ){
 	 		TypeDecl td = (TypeDecl)reqs.next();
 	 	
-	 		if(getProvided().contains(td)){
-	 			// If requirement is part of contract to be provided (redundant requirement)
-	 			// do not remove methods from set of unimplemented methods
-	 		}else if(td instanceof CjContractClassDecl || td instanceof InterfaceDecl){
-				Collection r = new HashSet();
-			
-		 		for(Iterator unimpMethods = c.iterator(); unimpMethods.hasNext(); ){
-					MethodDecl m = (MethodDecl)unimpMethods.next();
-		
-					// Remove methods of required class or interface
-					if(td.memberMethods(m.name()).contains(m)){
-						r.add(m);
-					}	
-	 			}
-	 				
-	 			c.removeAll(r);
+	 		// For each requirement, remove methods from collection of unimplemented methods
+			// These methods are "required" and do not have to be implemented...	
+	 		if(td instanceof CjContractClassDecl || td instanceof InterfaceDecl){
+				unimpMethods.removeAll(td.methodsSignatureMap().values());
 	 		}
 	 	}
 	 	
-	 	return c;
+	 	return unimpMethods;
 	 }
 	 
 	  /******
 	  * Determine the enclosing top-level type
 	  ******/
-	 syn lazy TypeDecl CjContractClassDecl.getEnclosingTopLevel(){
+	 syn TypeDecl CjContractClassDecl.getEnclosingTopLevel(){
 	 	TypeDecl cd = this;
 	 	
 	 	while(!cd.isTopLevelType()){

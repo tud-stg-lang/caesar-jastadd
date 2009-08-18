@@ -89,7 +89,7 @@ aspect PrivateInhPrivateInheritance {
 		// Call recursively (recursion anchor = no superclass relationships)
 		
 		// Get used classes of direct parents, 
-		// getDirectParents() generalise for virtual classes by including directFurtherBounds
+		// getDirectParents() generalises for virtual classes by including directFurtherBounds
 		for(Iterator parents = getDirectParents().iterator(); parents.hasNext(); ){
 			TypeDecl tdParent = (TypeDecl)parents.next();
 			
@@ -125,8 +125,10 @@ aspect PrivateInhPrivateInheritance {
 			}
 		}
 		
-		// Remove used classes that are supertypes of this via other means
-		c.removeAll(getSupertypesOf());
+		// For top-level classes, remove "redundant" uses that are supertypes via other means (extends, requires...)
+		// These classes are not to be regarded as being "used" and subtyping is allowed.
+		if(!isNestedType())
+			c.removeAll(getSupertypesOf());
 		
 		return c;
 	}	

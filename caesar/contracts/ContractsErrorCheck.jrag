@@ -44,9 +44,9 @@ aspect ContractsErrorCheck{
   	public void CjContractClassDecl.nameCheck() {
   		super.nameCheck();
   		
-  		if(!isTopLevelType() && !getExplicitRequirements().isEmpty()){ 
+  		if(!isTopLevelType() && !getDeclaredRequirements().isEmpty()){ 
   			String requirements = ": ";
-      		for(Iterator iter = getRequirements().iterator(); iter.hasNext(); ){
+      		for(Iterator iter = getDeclaredRequirements().iterator(); iter.hasNext(); ){
       			requirements += ((TypeDecl)iter.next()).name();
       			
       			if(iter.hasNext()){ requirements += ", "; }

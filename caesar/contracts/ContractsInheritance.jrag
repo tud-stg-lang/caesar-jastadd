@@ -61,7 +61,7 @@ aspect ContractsInheritance {
 		}
 		
 		// Add parents via direct requirements; also filter duplicates via new list
-		for (Iterator i = getExplicitRequirements().iterator(); i.hasNext(); ) {
+		for (Iterator i = getDeclaredRequirements().iterator(); i.hasNext(); ) {
 			ASTNode dp = (ASTNode)i.next();
 			if (!parents.contains(dp)) {
 				parents.add(dp);
@@ -86,7 +86,7 @@ aspect ContractsInheritance {
 	/******
 	 * Determine requirements that are interfaces
 	 ******/
-	syn lazy Collection CjContractClassDecl.getReqInterfaces() {
+	syn Collection CjContractClassDecl.getReqInterfaces() {
 		ArrayList reqs = new ArrayList();
 	
 		for(int i = 0; i < getNumRequiredClasses(); i++){

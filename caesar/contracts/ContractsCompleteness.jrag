@@ -6,7 +6,12 @@ aspect ContractsCompleteness {
 	/******
 	 * 1.) <extends> := getExplicitExtends() for classes
 	 ******/
-	syn lazy Collection CjContractClassDecl.getExplicitExtends() {
+	syn Collection CjContractClassDecl.getExplicitExtends() {
+		// Virtual classes  (i.e. nested classes ) are handled differently
+		if(isNestedType()){
+			return getExplicitExtendsForVirtCls();
+		}
+		
 		Collection c = new HashSet();
 		
 		for(int i1 = 0; i1 < getNumSuperClasses(); i1++){
@@ -19,7 +24,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 2.) <extends> := getExplicitExtends() for interfaces
 	 ******/
-	syn lazy Collection InterfaceDecl.getExplicitExtends() {
+	syn Collection InterfaceDecl.getExplicitExtends() {
 		Collection c = new ArrayList();
 		
 		for(int i = 0; i < getNumSuperInterfaceId(); i++){
@@ -32,7 +37,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 3,4.) [extends] := getAllExtends() for classes
 	 ******/
-	syn lazy Collection CjContractClassDecl.getAllExtends() {
+	syn Collection CjContractClassDecl.getAllExtends() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -56,7 +61,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 3,4.) [extends] := getAllExtends() for interfaces
 	 ******/
-	syn lazy Collection InterfaceDecl.getAllExtends() {
+	syn Collection InterfaceDecl.getAllExtends() {
 		// Prevent endless recursion
 	 	if(isCircular()) { return Collections.EMPTY_LIST; }
 	
@@ -79,7 +84,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 5.) <implements> := getExplicitImplements()
 	 ******/
-	syn lazy Collection CjContractClassDecl.getExplicitImplements() {
+	syn Collection CjContractClassDecl.getExplicitImplements() {
 		Collection imps = new ArrayList();
 		
 		// add all explicitly implemented
@@ -93,7 +98,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 6,7.) [provides] := getExplicitProvided()
 	 ******/
-	syn lazy Collection CjContractClassDecl.getExplicitProvided() {
+	syn Collection CjContractClassDecl.getExplicitProvided() {
 		Collection provided = new HashSet();
 	
 		// For a concrete class, every contract via extends has to be fulfilled
@@ -108,12 +113,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 8,9.) [provides] := getProvided()
 	 ******/
-	syn lazy Collection CjContractClassDecl.getProvided() {
-		// Virtual classes  (i.e. nested classes ) are handled differently
-		if(isNestedType()){
-			return getProvidedForVirtCls();
-		}
-	
+	syn Collection CjContractClassDecl.getProvided() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -140,26 +140,40 @@ aspect ContractsCompleteness {
 		return c;
 	}
 	
+	
 	/******
-	 * 10.) <requires> := getExplicitRequirements()
+	 * 10a.) Differentiate between declared and explicit requirements
 	 ******/
-
-	syn lazy Collection CjContractClassDecl.getExplicitRequirements() {
-		Collection c = new HashSet();
+	syn Collection CjContractClassDecl.getDeclaredRequirements(){
+		Collection c = new ArrayList();
 		
-		// Add explicit (declared) requirements
+		// Add declared requirements
 		for (int i1 = 0; i1 < getNumRequiredClasses(); i1++) {
 			c.add(getRequiredClasses(i1).type());
 		}
-		
+			
 		return c;
+	}
+	
+
+	/******
+	 * 10b.) <requires> := getExplicitRequirements()
+	 ******/
+
+	syn Collection CjContractClassDecl.getExplicitRequirements() {
+		// Virtual classes  (i.e. nested classes ) are handled differently
+		if(isNestedType()){
+			return getExplicitReqsForVirtCls();
+		}
+		
+		return getDeclaredRequirements();
 	}
 	
 	
 	/******
 	 * 11 - 16.) [subtypeof] := getSupertypesOf() for classes (i.e. A [subtypeof] B == A.getSupertypesOf().contains(B))
 	 ******/
-	syn lazy Collection CjContractClassDecl.getSupertypesOf() {
+	syn Collection CjContractClassDecl.getSupertypesOf() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -206,12 +220,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 17 - 19.) [requires] := getRequirements()
 	 ******/
-	syn lazy Collection CjContractClassDecl.getRequirements() {
-		// Virtual classes  (i.e. nested classes ) are handled differently
-		if(isNestedType()){
-			return getReqsForVirtCls();
-		}
-	
+	syn Collection CjContractClassDecl.getRequirements() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -246,106 +255,60 @@ aspect ContractsCompleteness {
 	}
 
 	/******
-	 * Auxiliary method for 17, 19: Generalizes reqs for virtual classes 
-	 * NOTE:  It would be more intuitive to check if a class is concrete or not by 
-	 *		  first excluding all requirements then performing the check as normal.
-	 *		  This is however not so simple as it sounds since one would not be able
-	 *		  to reuse existing methods and would have to re-implement parts from scratch. 
+	 * 20.) complete := isComplete()
+	 * Virtual classes are exempted from the completeness check.
+	 * getReqsForVirtCls() and getProvidedForVirtCls() are however still used to
+	 * generalise ContractsMethods.unimplementedMethods() for virtual classes.
 	 ******/
-	syn lazy Collection CjContractClassDecl.getReqsForVirtCls(){
-		// Avoid endless recursion
-		if(isCircular())
-			return Collections.EMPTY_LIST;
+	syn boolean CjContractClassDecl.isComplete() 
+						= !isAbstract() && (isNestedType() || getProvided().containsAll(getRequirements()));
+						
+	
+	
+	/********************************************************************************************************
+	 *  Handling virtual classes
+	 *******************************************************************************************************/	
+	
+	/******
+	 * Auxiliary method for 10b.) Generalizes getExplicitRequirements() for virtual classes 
+	 ******/
+	syn Collection CjContractClassDecl.getExplicitReqsForVirtCls(){
+		// Get all direct parents, implicit and explicit
+		// Implicit parents are direct furtherbounds
+		// Exlplicit parents are declared parents of class and its furtherbounds
+		Collection directParents = getDirectParents();
 		
-		// Get all implicit parents
-		Collection parents = getDirectFurtherbounds();
-		
-		// Return implicit parents whose Enclosing Top Level 
+		// Determine direct parents whose Enclosing Top Level 
 		// is required by ETL of current class
+		// These are by definition the direct requirements of a virtual class.
 		Collection reqs = new HashSet();
-		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
-			CjContractClassDecl cd = (CjContractClassDecl)itr.next();
-			if(getEnclosingTopLevel() instanceof CjContractClassDecl){
-				CjContractClassDecl tl = ((CjContractClassDecl)getEnclosingTopLevel());
+		
+		for (Iterator itr = directParents.iterator(); itr.hasNext();) {
+			Object o = itr.next();
+			if (o instanceof CjContractClassDecl) {
+				CjContractClassDecl cd = (CjContractClassDecl) o;
 				
-			   	if(tl.getRequirements().contains(cd.getEnclosingTopLevel())){
-					reqs.add(cd);
+				if (getEnclosingTopLevel() instanceof CjContractClassDecl) {
+					CjContractClassDecl tl = ((CjContractClassDecl) getEnclosingTopLevel());
+
+					if (tl.getExplicitRequirements().contains(cd.getEnclosingTopLevel())) {
+						reqs.add(cd);
+					}
 				}
 			}
-		}
-		
-		// Call recursively for explicit parents
-		for(Iterator itr = getExplicitParents().iterator(); itr.hasNext();){
-			Object cd = itr.next();
-			if(cd instanceof CjContractClassDecl)
-				reqs.addAll(((CjContractClassDecl) cd).getReqsForVirtCls());
-		}
-		
-		// Call recursively for implicit parents
-		for(Iterator itr = parents.iterator(); itr.hasNext();){
-			Object cd = itr.next();
-			if(cd instanceof CjContractClassDecl)
-				reqs.addAll(((CjContractClassDecl) cd).getReqsForVirtCls());
-		}
-		
-		// Class is implicit and only present via requirements - therefore skip check
-		if(isImplicit){
-			Collection onlyReqs = new HashSet();
-			onlyReqs.addAll(reqs);
-			
-			// Remove provided classes, but only if explicitly present
-			for (Object o : getProvidedForVirtCls()) {		
-				CjContractClassDecl cd = (CjContractClassDecl)o;
-				if(!cd.isImplicit)
-					onlyReqs.remove(cd);
-			}
-			
-			// If all parents are required then "this" would not exist if we ignored requirements
-			if(onlyReqs.containsAll(parents))
-				reqs.add(this);
 		}
 		
 		return reqs;
 	}
 	
 	/******
-	 * Auxiliary method for 8,9: Generalizes getProvided for virtual classes 
+	 * Auxiliary method for 1.) Generalizes getExplicitExtends() for virtual classes 
 	 ******/
-	syn lazy Collection CjContractClassDecl.getProvidedForVirtCls(){
-		// Get all implicit parents
-		Collection parents = getDirectFurtherbounds();
+	syn Collection CjContractClassDecl.getExplicitExtendsForVirtCls(){
+		Collection c = new ArrayList();
+		c.addAll(getDirectParents());
+		c.removeAll(getExplicitReqsForVirtCls());
 		
-		// Return implicit parents whose Enclosing Top Level 
-		// is provided by ETL of current class
-		Collection provided = new HashSet();
-		for(Iterator itr = parents.iterator(); itr.hasNext(); ){
-			CjContractClassDecl cd = (CjContractClassDecl)itr.next();
-			if(getEnclosingTopLevel() instanceof CjContractClassDecl){
-				CjContractClassDecl tl = ((CjContractClassDecl)getEnclosingTopLevel());
-				
-			   	if(tl.getProvided().contains(cd.getEnclosingTopLevel())){
-					provided.add(cd);
-				}
-			}
-		}
-		
-		// Add explicit parents
-		provided.addAll(getExplicitParents());
-		
-		// Call recursively
-		for(Iterator itr = parents.iterator(); itr.hasNext();){
-			Object cd = itr.next();
-			if(cd instanceof CjContractClassDecl)
-				provided.addAll(((CjContractClassDecl) cd).getProvidedForVirtCls());
-		}
-		
-		return provided;
+		return c;
 	}
-	
-	/******
-	 * 20.) complete := isComplete()
-	 ******/
-	syn boolean CjContractClassDecl.isComplete() 
-						= !isAbstract() && (isNestedType() || getProvided().containsAll(getRequirements()));
-						
 }
