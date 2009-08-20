@@ -4,7 +4,7 @@ aspect ContractsInheritance {
 
 	/* Inherited name type for non terminals has to be set in sub classes */
 	eq CjContractClassDecl.getRequiredClasses().nameType() = NameType.TYPE_NAME;
-	eq CjContractClassDecl.getExplicitImplements().nameType() = NameType.TYPE_NAME;
+	eq CjContractClassDecl.getDeclaredImplements().nameType() = NameType.TYPE_NAME;
 
 	/****** 
 	 * Adds required interfaces to list of implemented interfaces
@@ -27,8 +27,8 @@ aspect ContractsInheritance {
 		// Computing list for the first time so build from scratch
 		List c = new List();
 		
-		for(int i = 0; i < getNumExplicitImplements(); i++){
-     		c.add(getExplicitImplements(i));
+		for(int i = 0; i < getNumDeclaredImplements(); i++){
+     		c.add(getDeclaredImplements(i));
      	}
 	
      	for(int i = 0; i < getNumRequiredClasses(); i++){
@@ -36,7 +36,7 @@ aspect ContractsInheritance {
      	
      		// If requirement is an interface and not already in list of 
      		// explicitly implemented interfaces
-     		if(td instanceof InterfaceDecl && !getExplicitImplements().contains(td)){
+     		if(td instanceof InterfaceDecl && !getDeclaredImplements().contains(td)){
      			c.add(getRequiredClasses(i));	
      		}
      	}  

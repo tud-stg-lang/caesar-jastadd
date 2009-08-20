@@ -1,2 +1,2 @@
-CjContractClassDecl : CjVirtualClassDecl ::=  ExplicitImplements:Access* 
+CjContractClassDecl : CjVirtualClassDecl ::=  DeclaredImplements:Access* 
 	RequiredClasses:Access* /Implements:Access*/;

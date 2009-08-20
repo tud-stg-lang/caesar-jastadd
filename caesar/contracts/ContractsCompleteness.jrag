@@ -4,14 +4,15 @@
 aspect ContractsCompleteness {
 
 	/******
-	 * 1.) <extends> := getExplicitExtends() for classes
+	 * 1.) <extends> := getDirectExtends() for classes
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitExtends() {
+	syn Collection CjContractClassDecl.getDirectExtends() {
 		// Virtual classes  (i.e. nested classes ) are handled differently
 		if(isNestedType()){
-			return getExplicitExtendsForVirtCls();
+			return getDirectExtendsForVirtCls();
 		}
 		
+		// For normal and top-level classes direct == declared
 		Collection c = new HashSet();
 		
 		for(int i1 = 0; i1 < getNumSuperClasses(); i1++){
@@ -22,9 +23,9 @@ aspect ContractsCompleteness {
 	}
 	
 	/******
-	 * 2.) <extends> := getExplicitExtends() for interfaces
+	 * 2.) <extends> := getDirectExtends() for interfaces
 	 ******/
-	syn Collection InterfaceDecl.getExplicitExtends() {
+	syn Collection InterfaceDecl.getDirectExtends() {
 		Collection c = new ArrayList();
 		
 		for(int i = 0; i < getNumSuperInterfaceId(); i++){
@@ -44,10 +45,10 @@ aspect ContractsCompleteness {
 		
 		Collection c = new HashSet();
 	
-		c.addAll(getExplicitExtends());
+		c.addAll(getDirectExtends());
 		
 		// Call recursively (recursion anchor = no extends relationships)
-		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectExtends().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -62,14 +63,15 @@ aspect ContractsCompleteness {
 	 * 3,4.) [extends] := getAllExtends() for interfaces
 	 ******/
 	syn Collection InterfaceDecl.getAllExtends() {
-		// Prevent endless recursion
-	 	if(isCircular()) { return Collections.EMPTY_LIST; }
+		// Avoid endless recursion
+	 	if(isCircular())  
+	 		return Collections.EMPTY_LIST;
 	
 		Collection c = new ArrayList();
 		
-		c.addAll(getExplicitExtends());
+		c.addAll(getDirectExtends());
 		
-		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectExtends().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			// Ignore super classes like Object or wrong syntax (an error in the code)
@@ -82,30 +84,29 @@ aspect ContractsCompleteness {
 	
 	
 	/******
-	 * 5.) <implements> := getExplicitImplements()
+	 * 5.) <implements> := getDeclaredImplements()
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitImplements() {
+	syn Collection CjContractClassDecl.getDeclaredImplements() {
 		Collection imps = new ArrayList();
 		
-		// add all explicitly implemented
-		for(int i = 0; i < getNumExplicitImplements(); i++){
-			imps.add(getExplicitImplements(i).type());
+		for(int i = 0; i < getNumDeclaredImplements(); i++){
+			imps.add(getDeclaredImplements(i).type());
 		}
 		
 		return imps;
 	}
 	
 	/******
-	 * 6,7.) [provides] := getExplicitProvided()
+	 * 6,7.) [provides] := getDirectProvided()
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitProvided() {
+	syn Collection CjContractClassDecl.getDirectProvided() {
 		Collection provided = new HashSet();
 	
 		// For a concrete class, every contract via extends has to be fulfilled
-		provided.addAll(getExplicitExtends());
+		provided.addAll(getDirectExtends());
 		
 		// Implemented interfaces are part of fulfilled contract
-		provided.addAll(getExplicitImplements());
+		provided.addAll(getDeclaredImplements());
 		
 		return provided;
 	}
@@ -120,11 +121,11 @@ aspect ContractsCompleteness {
 			
 		Collection c = new HashSet();
 		
-		// Add explicit provided
-		c.addAll(getExplicitProvided());
+		// Add directly provided
+		c.addAll(getDirectProvided());
 		
 		// Call recursively (recursion anchor = no extends relationships)
-		for(Iterator iter = getExplicitProvided().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectProvided().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -157,15 +158,16 @@ aspect ContractsCompleteness {
 	
 
 	/******
-	 * 10b.) <requires> := getExplicitRequirements()
+	 * 10b.) <requires> := getDirectRequirements()
 	 ******/
 
-	syn Collection CjContractClassDecl.getExplicitRequirements() {
+	syn Collection CjContractClassDecl.getDirectRequirements() {
 		// Virtual classes  (i.e. nested classes ) are handled differently
 		if(isNestedType()){
-			return getExplicitReqsForVirtCls();
+			return getDirectReqsForVirtCls();
 		}
 		
+		// For normal or top-level classes, direct == declared
 		return getDeclaredRequirements();
 	}
 	
@@ -180,17 +182,17 @@ aspect ContractsCompleteness {
 		
 		Collection c = new HashSet();
 		
-		// Add explicit extends
-		c.addAll(getExplicitExtends());
+		// Add direct extends
+		c.addAll(getDirectExtends());
 		
-		// Add explicit requirements
-		c.addAll(getExplicitRequirements());
+		// Add direct requirements
+		c.addAll(getDirectRequirements());
 		
-		// Add explicit implements
-		c.addAll(getExplicitImplements());
+		// Add declared == direct implements
+		c.addAll(getDeclaredImplements());
 		
 		// Call recursively
-		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectExtends().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -198,7 +200,7 @@ aspect ContractsCompleteness {
 			}
 		}			
 		
-		for(Iterator iter = getExplicitRequirements().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectRequirements().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -206,7 +208,7 @@ aspect ContractsCompleteness {
 			}
 		}			
 		
-		for(Iterator iter = getExplicitImplements().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDeclaredImplements().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -227,11 +229,11 @@ aspect ContractsCompleteness {
 		
 		Collection c = new HashSet();
 		
-		// Add explicit requirements
-		c.addAll(getExplicitRequirements());
+		// Add direct requirements
+		c.addAll(getDirectRequirements());
 		
 		// Add recursively all supertypes of direct requirements
-		for(Iterator iter = getExplicitRequirements().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectRequirements().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -243,7 +245,7 @@ aspect ContractsCompleteness {
 		}			
 		
 		// Add recursively only requirements of extended parents
-		for(Iterator iter = getExplicitExtends().iterator(); iter.hasNext(); ){
+		for(Iterator iter = getDirectExtends().iterator(); iter.hasNext(); ){
 			TypeDecl td = (TypeDecl)iter.next();
 			
 			if(td instanceof CjContractClassDecl){
@@ -270,9 +272,9 @@ aspect ContractsCompleteness {
 	 *******************************************************************************************************/	
 	
 	/******
-	 * Auxiliary method for 10b.) Generalizes getExplicitRequirements() for virtual classes 
+	 * Auxiliary method for 10b.) Generalizes getDirectRequirements() for virtual classes 
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitReqsForVirtCls(){
+	syn Collection CjContractClassDecl.getDirectReqsForVirtCls(){
 		// Get all direct parents, implicit and explicit
 		// Implicit parents are direct furtherbounds
 		// Exlplicit parents are declared parents of class and its furtherbounds
@@ -291,7 +293,7 @@ aspect ContractsCompleteness {
 				if (getEnclosingTopLevel() instanceof CjContractClassDecl) {
 					CjContractClassDecl tl = ((CjContractClassDecl) getEnclosingTopLevel());
 
-					if (tl.getExplicitRequirements().contains(cd.getEnclosingTopLevel())) {
+					if (tl.getDirectRequirements().contains(cd.getEnclosingTopLevel())) {
 						reqs.add(cd);
 					}
 				}
@@ -302,12 +304,12 @@ aspect ContractsCompleteness {
 	}
 	
 	/******
-	 * Auxiliary method for 1.) Generalizes getExplicitExtends() for virtual classes 
+	 * Auxiliary method for 1.) Generalizes getDirectExtends() for virtual classes 
 	 ******/
-	syn Collection CjContractClassDecl.getExplicitExtendsForVirtCls(){
+	syn Collection CjContractClassDecl.getDirectExtendsForVirtCls(){
 		Collection c = new ArrayList();
 		c.addAll(getDirectParents());
-		c.removeAll(getExplicitReqsForVirtCls());
+		c.removeAll(getDirectReqsForVirtCls());
 		
 		return c;
 	}
