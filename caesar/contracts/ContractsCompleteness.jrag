@@ -6,7 +6,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 1.) <extends> := getDirectExtends() for classes
 	 ******/
-	syn Collection CjContractClassDecl.getDirectExtends() {
+	syn lazy Collection CjContractClassDecl.getDirectExtends() {
 		// Virtual classes  (i.e. nested classes ) are handled differently
 		if(isNestedType()){
 			return getDirectExtendsForVirtCls();
@@ -38,7 +38,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 3,4.) [extends] := getAllExtends() for classes
 	 ******/
-	syn Collection CjContractClassDecl.getAllExtends() {
+	syn lazy Collection CjContractClassDecl.getAllExtends() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -62,7 +62,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 3,4.) [extends] := getAllExtends() for interfaces
 	 ******/
-	syn Collection InterfaceDecl.getAllExtends() {
+	syn lazy Collection InterfaceDecl.getAllExtends() {
 		// Avoid endless recursion
 	 	if(isCircular())  
 	 		return Collections.EMPTY_LIST;
@@ -114,7 +114,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 8,9.) [provides] := getProvided()
 	 ******/
-	syn Collection CjContractClassDecl.getProvided() {
+	syn lazy Collection CjContractClassDecl.getProvided() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
@@ -145,7 +145,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 10a.) Differentiate between declared and explicit requirements
 	 ******/
-	syn Collection CjContractClassDecl.getDeclaredRequirements(){
+	syn lazy Collection CjContractClassDecl.getDeclaredRequirements(){
 		Collection c = new ArrayList();
 		
 		// Add declared requirements
@@ -222,7 +222,7 @@ aspect ContractsCompleteness {
 	/******
 	 * 17 - 19.) [requires] := getRequirements()
 	 ******/
-	syn Collection CjContractClassDecl.getRequirements() {
+	syn lazy Collection CjContractClassDecl.getRequirements() {
 		// Avoid endless recursion
 		if(isCircular())
 			return Collections.EMPTY_LIST;
