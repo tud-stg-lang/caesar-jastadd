@@ -177,9 +177,10 @@ public class CaesarCompiler {
 					progressTracker.advanceProgress("Checking for errors: " + cu.relativeName(), step);
 					Collection cuErrors = cu.parseErrors();
 					Collection warnings = new LinkedList();
-		            // compute static semantic errors when there are no parse errors 
-		            if (cuErrors.isEmpty())
-		            	cu.errorCheck(cuErrors, warnings);		            
+		            
+					// TODO  compute static semantic errors only when there are no parse errors 
+					cu.errorCheck(cuErrors, warnings);		            
+					
 					for (Object e: cuErrors) {
 						if (e instanceof Problem) {
 							errors.add(((Problem)e).toString());
