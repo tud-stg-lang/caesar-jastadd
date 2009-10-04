@@ -49,11 +49,13 @@ aspect TypeHierarchyCheck {
       }
       if(!allAbstract && validArgs()) {
         StringBuffer s = new StringBuffer();
-        s.append("several most specific methods for " + this + "\n");
+        // begin vaidas
+        s.append("several most specific methods for " + this + ":");
         for(Iterator iter = decls().iterator(); iter.hasNext(); ) {
           MethodDecl m = (MethodDecl)iter.next();
-          s.append("    " + m.signature() + " in " + m.hostType().typeName() + "\n");
+          s.append("  " + m.signature() + " in " + m.hostType().typeName() + ",");
         }
+        // end vaidas
         error(s.toString());
       }
        

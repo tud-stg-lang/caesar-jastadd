@@ -83,12 +83,13 @@ aspect Modifiers {
     if(!isAbstract() && hasAbstract()) {
       StringBuffer s = new StringBuffer();
       // begin vaidas
-      s.append("" + fullName() + " is not declared abstract but contains abstract members: \n");
-      // end vaidas
+      s.append("" + fullName() + " is not declared abstract but contains abstract members:");
+     
       for(Iterator iter = unimplementedMethods().iterator(); iter.hasNext(); ) {
         MethodDecl m = (MethodDecl)iter.next();
-        s.append("  " + m.signature() + " in " + m.hostType().typeName() + "\n");
+        s.append("  " + m.signature() + " in " + m.hostType().typeName() + ",");
       }
+      // end vaidas
       error(s.toString());
     }
   }

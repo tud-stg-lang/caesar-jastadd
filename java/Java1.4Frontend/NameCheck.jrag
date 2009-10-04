@@ -182,10 +182,12 @@ aspect NameCheck {
       error("no field named " + name());
     if(decls().size() > 1) {
       StringBuffer s = new StringBuffer();
-      s.append("several fields named " + name());
+      // begin vaidas
+      s.append("several fields named " + name() + ":");
       for(Iterator iter = decls().iterator(); iter.hasNext(); ) {
         Variable v = (Variable)iter.next();
-        s.append("\n    " + v.type().typeName() + "." + v.name() + " declared in " + v.hostType().typeName());
+        s.append("  " + v.type().typeName() + "." + v.name() + " declared in " + v.hostType().typeName() + ",");
+        // end vaidas
       }
       error(s.toString());
     }
