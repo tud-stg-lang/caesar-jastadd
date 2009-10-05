@@ -178,8 +178,8 @@ public class CaesarCompiler {
 					Collection cuErrors = cu.parseErrors();
 					Collection warnings = new LinkedList();
 		            
-					// TODO  compute static semantic errors only when there are no parse errors 
-					cu.errorCheck(cuErrors, warnings);		            
+					if (cuErrors.isEmpty())
+		            	cu.errorCheck(cuErrors, warnings);
 					
 					for (Object e: cuErrors) {
 						if (e instanceof Problem) {
