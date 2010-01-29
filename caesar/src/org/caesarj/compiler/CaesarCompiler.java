@@ -43,7 +43,8 @@ public class CaesarCompiler {
           public CompilationUnit parse(java.io.InputStream is, String fileName) throws java.io.IOException, beaver.Parser.Exception {
             return new parser.JavaParser().parse(is, fileName);
           }
-        });		
+        });
+		program.initCjSourceFiles();
 	}
 	
 	public static void cleanUp() {
@@ -140,8 +141,6 @@ public class CaesarCompiler {
 				return false;
 			}
 		}
-		
-		program.initCjSourceFiles();
 		
 		for (Iterator iter = files.iterator(); iter.hasNext();) {
 			String name = (String) iter.next();
