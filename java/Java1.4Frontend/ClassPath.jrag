@@ -358,8 +358,10 @@ aspect ClassPath {
         try {  
           if(program.options().verbose())
             System.out.print("Loading .java file: " + fullName + " ");
-            
-          CompilationUnit u = program.javaParser.parse(is, fullName);
+          
+          // begin vaidas          
+          CompilationUnit u = program.javaParser.parse(is, relativeName);
+          // end vaidas
           is.close();
           is = null;
           

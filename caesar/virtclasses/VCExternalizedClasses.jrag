@@ -36,65 +36,69 @@ aspect VCExternalizedClasses {
 		
 		public void addSourceFile(String fileName) {
 			try {
-				// compute canonical name of the class in the file
 				Reader reader = new FileReader(fileName);
-				scanner.JavaScanner scanner = new scanner.JavaScanner(new scanner.Unicode(reader));
-				StringBuffer packageName = new StringBuffer();
-				Symbol sym = scanner.nextToken();
-				boolean isExternalized = false;
-				if (sym.getId() == parser.JavaParser.Terminals.PACKAGE) {
-					while(true) {
-						sym = scanner.nextToken();
-						if(sym.getId() == parser.JavaParser.Terminals.SEMICOLON)
-							break;
-						packageName.append(sym.value);
-					}
-				}
-				else if (sym.getId() == parser.JavaParser.Terminals.CCLASS) {
-					while(true) {
-						sym = scanner.nextToken();
-						if (sym.getId() == parser.JavaParser.Terminals.SEMICOLON) {
-							isExternalized = true;
-							break;
-						}
-						else if (sym.getId() == parser.JavaParser.Terminals.IDENTIFIER ||
-								 sym.getId() == parser.JavaParser.Terminals.DOT) {
+				try {
+					// compute canonical name of the class in the file
+					scanner.JavaScanner scanner = new scanner.JavaScanner(new scanner.Unicode(reader));
+					StringBuffer packageName = new StringBuffer();
+					Symbol sym = scanner.nextToken();
+					boolean isExternalized = false;
+					if (sym.getId() == parser.JavaParser.Terminals.PACKAGE) {
+						while(true) {
+							sym = scanner.nextToken();
+							if(sym.getId() == parser.JavaParser.Terminals.SEMICOLON)
+								break;
 							packageName.append(sym.value);
 						}
-						else {
-							packageName = new StringBuffer();
-							break;
+					}
+					else if (sym.getId() == parser.JavaParser.Terminals.CCLASS) {
+						while(true) {
+							sym = scanner.nextToken();
+							if (sym.getId() == parser.JavaParser.Terminals.SEMICOLON) {
+								isExternalized = true;
+								break;
+							}
+							else if (sym.getId() == parser.JavaParser.Terminals.IDENTIFIER ||
+									 sym.getId() == parser.JavaParser.Terminals.DOT) {
+								packageName.append(sym.value);
+							}
+							else {
+								packageName = new StringBuffer();
+								break;
+							}
+						}
+					}				
+					if(packageName.length() != 0)
+						packageName.append(".");
+					int begin = fileName.lastIndexOf(File.separatorChar);
+					begin = begin + 1;
+					int end = fileName.lastIndexOf('.');
+					packageName.append(fileName.substring(begin, end));
+					
+					// register the file for the canonical name
+					String canonicalName = packageName.toString();
+					sourceFiles.put(canonicalName, fileName);
+					
+					// register package names
+					if (!isExternalized) {
+						String pathName = canonicalName;
+						if (!packages.contains(pathName)) {
+							int pos = 0;
+							while(pathName != null && -1 != (pos = pathName.indexOf('.', pos + 1))) {
+								String n = pathName.substring(0, pos);
+								if(!packages.contains(n))
+									packages.add(n);
+							}
 						}
 					}
 				}
-				reader.close();
-				if(packageName.length() != 0)
-					packageName.append(".");
-				int begin = fileName.lastIndexOf(File.separatorChar);
-				begin = begin + 1;
-				int end = fileName.lastIndexOf('.');
-				packageName.append(fileName.substring(begin, end));
-				
-				// register the file for the canonical name
-				String canonicalName = packageName.toString();
-				sourceFiles.put(canonicalName, fileName);
-				
-				// register package names
-				if (!isExternalized) {
-					String pathName = canonicalName;
-					if (!packages.contains(pathName)) {
-						int pos = 0;
-						while(pathName != null && -1 != (pos = pathName.indexOf('.', pos + 1))) {
-							String n = pathName.substring(0, pos);
-							if(!packages.contains(n))
-								packages.add(n);
-						}
-					}
+				finally {
+					reader.close();
 				}
 			}
 			catch (Exception e) {
 				sourceFiles.put(fileName, fileName);
-			}
+			}			
 		}
 		
 	}
