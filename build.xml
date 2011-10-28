@@ -78,7 +78,7 @@
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
-		<fileset dir="caesar/contracts">
+		<!--fileset dir="caesar/contracts">
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
@@ -87,7 +87,7 @@
 			<include name="**/*.ast"/>
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
-		</fileset>
+		</fileset-->
 	</jastadd>
 	<!-- copy library files-->
 	<copy todir="${target.dir}/beaver" preservelastmodified="true">
@@ -120,12 +120,12 @@
 		<filelist dir="caesar/mixincomp">
 			<file name="mixinKeywords.flex"/>
 		</filelist>
-		<filelist dir="caesar/contracts">
+		<!--filelist dir="caesar/contracts">
 			<file name="contractsKeywords.flex"/>
 		</filelist>
 		<filelist dir="caesar/privateinh">
 			<file name="privateinhKeywords.flex"/>
-		</filelist>
+		</filelist-->
 		<filelist dir="${Java1.4Frontend}/scanner">
 			<file name="Literals.flex"/>
 		</filelist>
@@ -167,12 +167,12 @@
 		<fileset dir="caesar/virtclasses">
 			<include name="*.parser"/>
 		</fileset>
-		<fileset dir="caesar/contracts">
+		<!--fileset dir="caesar/contracts">
 			<include name="*.parser"/>
 		</fileset>
 		<fileset dir="caesar/privateinh">
 			<include name="*.parser"/>
-		</fileset>
+		</fileset-->
 	</concat>
 	<!-- generate the parser phase 2, translating .lalr to .beaver -->
 	<java classpath="${tools}/JastAddParser.jar:${tools}/beaver-rt.jar" classname="Main" fork="true">
