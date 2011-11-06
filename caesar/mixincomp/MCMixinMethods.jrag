@@ -51,7 +51,7 @@ aspect MCMixinMethods {
 				// Ignore methods from Object, CjObject, all abstract methods and constructors
 				if(!m.hostType().name().equals("Object") &&
 				   !m.hostType().name().equals("CjObject") &&
-				   !m.isAbstract() && !m.name().equals("$cj$init")){
+				   !m.isAbstract() && !m.name().equals(Program.CJ_INIT_NAME)){
 				
 					// Check for a non-mixin version of m
 					boolean found = false;

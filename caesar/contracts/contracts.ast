@@ -1,2 +1,0 @@
-CjContractClassDecl : CjVirtualClassDecl ::=  DeclaredImplements:Access* 
-	RequiredClasses:Access* /Implements:Access*/;

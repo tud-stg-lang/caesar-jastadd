@@ -175,8 +175,8 @@ aspect MCErrorCheck {
 		List thisParamList = thisMethod.getParameterList();
 			
 		// (a) check that the parameters are syntactically equivalently declared: 
-		String thisRawSigString = thisMethod.rawSignatureString();
-		String lastRawSigString = lastMethod.rawSignatureString();
+		String thisRawSigString = thisMethod.signature();
+		String lastRawSigString = lastMethod.signature();
 			
 		if (lastRawSigString != null && !lastRawSigString.equals(thisRawSigString)) {
 			error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". Dependent parameter types sharing a common top furtherbound are considered equal, however the method declarations must match. Mismatch between "+thisRawSigString + " and " +lastRawSigString);
@@ -191,7 +191,7 @@ aspect MCErrorCheck {
 			TypeDecl thisType = ((ParameterDeclaration) thisParamList.getChild(i)).getTypeAccess().type();
 			TypeDecl lastType = ((ParameterDeclaration) lastParamList.getChild(i)).getTypeAccess().type();
 			
-			if (!thisType.equivalentTo(lastType)) {
+			if (!thisType.equals(lastType)) {
 			    error("Method " + thisMethod.signature()+ " is multiply declared in " + this.typeName() + ". " + 
 			    "Dependent parameter types sharing a common top furtherbound are considered equal, " + 
 			    "however the dependent parameters must refer to the same value.");
@@ -209,7 +209,7 @@ aspect MCErrorCheck {
 		TypeDecl mType = m.type();
 		TypeDecl lastType = lastMethod.type();
 		
-		if (!mType.equivalentTo(lastType)) {
+		if (!mType.equals(lastType)) {
 			// make pretty error message:
 			String returnTypes;
 			if (mType.name().equals(lastType.name())) {

@@ -112,7 +112,7 @@
 		</code>			 	 
 	</compile-check-error>
 	
-	<compile-check-error id="mixinmethods007" error="NOT_MIXIN_VALID"
+	<!--compile-check-error id="mixinmethods007" error="NOT_MIXIN_VALID"
 			 description="Virtual classes.">
 		<code>
 			public cclass Group {
@@ -134,7 +134,7 @@
 				// Group.Man.description has to be declared as a mixin.
 			}
         </code> 	 
-	</compile-check-error>
+	</compile-check-error-->
 
 	<compile-check-error id="mixinmethods008" error="NOT_MIXIN_VALID"
 			 description="Virtual classes.">

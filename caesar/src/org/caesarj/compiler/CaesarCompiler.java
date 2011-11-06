@@ -44,7 +44,7 @@ public class CaesarCompiler {
             return new parser.JavaParser().parse(is, fileName);
           }
         });
-		program.initCjSourceFiles();
+		//program.initCjSourceFiles();
 	}
 	
 	public static void cleanUp() {
@@ -167,7 +167,7 @@ public class CaesarCompiler {
 		progressTracker.startPhase("typeCheck",	"Checking for errors...", 0.5);
 		
 		try {
-			program.insertExternalizedVC();
+			//program.insertExternalizedVC();
 	
 			double step = 1.0 / countSourceCUs();
 			for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {

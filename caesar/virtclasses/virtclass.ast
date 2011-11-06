@@ -1,7 +1,0 @@
-ExternCompUnit : CompilationUnit ::= EnclCClass:Access;
-
-CjVirtualClassDecl : CjClassDecl ::= /ImplicitClass:MemberTypeDecl*/ /[FactoryMethod:FactoryMethodDecl]/;
-
-FactoryMethodDecl : MethodDecl;
-
-DirectMethodAccess : MethodAccess ::= <Target:MethodDecl>; 

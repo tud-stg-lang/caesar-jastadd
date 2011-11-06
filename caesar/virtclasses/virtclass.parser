@@ -1,8 +1,0 @@
-CompilationUnit compilation_unit =
-    encl_cclass_declaration.p import_declarations.i? type_declarations.t? 
-                                               {: return new ExternCompUnit("<undefined>", i, t,p); :}
-  ;
-  
-Access encl_cclass_declaration =
-    CCLASS name.n SEMICOLON                    {: return n; :}
-  ;  
