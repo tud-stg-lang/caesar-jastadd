@@ -112,30 +112,6 @@
 		</code>			 	 
 	</compile-check-error>
 	
-	<!--compile-check-error id="mixinmethods007" error="NOT_MIXIN_VALID"
-			 description="Virtual classes.">
-		<code>
-			public cclass Group {
-				public cclass Person {
-					public String description() { return "this is a person";}
-				}
-
-				public cclass Man extends Person {
-					public String description(){ return "this is a male person"; }
-				}
-			}
-
-			public cclass Family extends Group {
-				public cclass Person {
-					public String description() {return "a member of a family";}
-				}
-				
-				// description() in Group.Man overrides description() in Family.Person implicitly!
-				// Group.Man.description has to be declared as a mixin.
-			}
-        </code> 	 
-	</compile-check-error-->
-
 	<compile-check-error id="mixinmethods008" error="NOT_MIXIN_VALID"
 			 description="Virtual classes.">
 		<code>
@@ -156,55 +132,4 @@
 			}
         </code> 	 
 	</compile-check-error>	
-	
-	<compile-run id="mixinmethods009"
-			 description="Virtual classes.">
-		<code>
-			public cclass Group {
-				public cclass Person {
-					public String description() { return "this is a person";}
-				}
-
-				public cclass Man extends Person {
-					mixin public String description(){ return "this is a male person"; }
-				}
-			}
-
-			public cclass Family extends Group {
-				public cclass Person {
-					public String description() {return "a member of a family";}
-				}
-			}
-        </code>
-         	 
-        <test>
-        	final Family f = new Family();
-        	Family.Person p = f.new Person();
-        	assert(p.description().equals("a member of a family"));		
-        </test>
-	</compile-run>
-
-	<compile-run id="mixinmethods010"
-			 description="Virtual classes.">
-		<code>
-			public cclass Group {
-				public cclass Person {}
-
-				abstract public cclass Man extends Person {
-					mixin public String description(){ return "this is a male person"; }
-				}
-			}
-
-			public cclass Family extends Group {
-				public cclass Person {
-					public String description() {return "a member of a family";}
-				}
-			}
-        </code> 	 
-        <test>
-        	final Family f = new Family();
-        	Family.Person p = f.new Person();
-        	assert(p.description().equals("a member of a family"));	
-        </test>
-	</compile-run>	
 </testsuite>

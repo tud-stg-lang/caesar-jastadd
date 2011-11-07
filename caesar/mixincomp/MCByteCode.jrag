@@ -43,7 +43,6 @@ aspect MCByteCode {
 	   setImplementsList(new List().add(new DirectTypeAccess(ccifc)));
 	   ccifc.addAccessorsToBody(this);
 	   addAccessorsToBody();
-	   addBodyDecl(getRealConstructor());
 	}
 	
 	// changed cclass binary file extension to .cjclass

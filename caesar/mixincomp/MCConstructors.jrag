@@ -1,37 +1,14 @@
 aspect MCConstructors {
 	
-	public static final String Program.CJ_INIT_NAME = "$cj$init";
-	
 	/**********************************************************************************
      * 
      *  Transforming Instantiation Expressions 
      *
      */
      
-    
-	syn boolean ClassInstanceExpr.isCjInstanceExpr() = false;
-	eq CjClassInstanceExpr.isCjInstanceExpr() = true;
-	
-	public boolean ClassInstanceExpr.needsInitMethod() {
-		return !isCjInstanceExpr() && !hasTypeDecl() && getAccess().type().isCjClassDecl();
-	}
-	
-	public Dot ClassInstanceExpr.transformToInitMethod() { 
-	 	List args = new List().add(new NullLiteral());
-		ClassInstanceExpr prefix = new CjClassInstanceExpr(getAccess(), args, new Opt());
-		InitMethodAccess initCall = new InitMethodAccess(Program.CJ_INIT_NAME, getArgList()); 
-		return new Dot(prefix, initCall);	
-	}
-			
-	// rewrite all constructor calls to cclasses with parameters 
-	// to constructor calls without parameters and call of an init method	
-	rewrite ClassInstanceExpr {
-		when ( needsInitMethod() )
-		to Expr {
-			return transformToInitMethod(); 		
-		}
-	}
-	
+	/*
+	 * Go up in tree structure recursively in order to find the previous expression.
+	 */
 	refine ResolveAmbiguousNames eq Access.prevExpr() {
 		if (isRightChildOfDot()) {
 			return parentDot().leftSide();
@@ -64,8 +41,6 @@ aspect MCConstructors {
 		return false;
 	}
 	
-	eq InitMethodAccess.type() = prevExpr().type();
-	
 	// Equivalent ClassInstanceExpr.createBCode 
     // but avoid passing outer object
 	public void CjClassInstanceExpr.createBCode(CodeGeneration gen) {
@@ -92,154 +67,6 @@ aspect MCConstructors {
      *
      */
 	
-	syn boolean BodyDecl.isInitMethod() = false;
-	eq CjInitMethodDecl.isInitMethod() = true;
-	
-	public boolean ConstructorDecl.isGeneratedConstr = false;
-	
 	eq CjClassDecl.needsEnclosing() = false;
 		
-	// rewrite all constructors in cclasses to corresponding init methods 
-    // then a new default constructor will be created by constructors() attribute
-	// wait unit another rewrite creates a super constructor invocation
-	rewrite ConstructorDecl {
-	    when ( !isGeneratedConstr && hasConstructorInvocation() && hostType().isCjClassDecl() )
-	    to MethodDecl {
-	    	List stmts = new List();	        
-	        // create super call
-	        Expr cie = ((ExprStmt)getConstructorInvocation()).getExpr();
-			if (cie instanceof ConstructorAccess) {
-				ConstructorAccess ca = (ConstructorAccess)cie;
-				Access initCall = new MethodAccess(Program.CJ_INIT_NAME, ca.getArgList());
-				Expr prefix = (ca instanceof SuperConstructorAccess) ?
-						new SuperAccess("super") : new ThisAccess("this");
-				stmts.add(new ExprStmt(new Dot(prefix, initCall)));
-			}		
-			// copy all statements from constructor body
-			for (int i = 0; i < getBlock().getNumStmt(); i++) {
-				stmts.add(getBlock().getStmt(i));
-			}
-			// return this at the end of the method
-	        stmts.add(new ReturnStmt(new ThisAccess("this")));
-	        
-	        MethodDecl decl = new CjInitMethodDecl(getModifiers(),
-	                       			new DirectTypeAccess(typeCjObject()),
-	                       			Program.CJ_INIT_NAME,
-	                       			getParameterList(),
-	                       			getExceptionList(),
-	                       			new Opt(new Block(stmts)),
-	                       			getID());
-	        return decl;
-	    }
-	}
-	
-	syn lazy Opt CjClassDecl.getRealConstructorOpt() {
-		Modifiers m = new Modifiers();
-        m.addModifier(new Modifier("public"));
-		// generate true constructor
-		List params = new List().add(new ParameterDeclaration(
-				new Modifiers(), 
-				new DirectTypeAccess(typeCjObjectIfc()),
-				"$cj$out"));
-				
-		List superArgs = new List().add(new VarAccess("$cj$out"));
-		Stmt superCall = new ExprStmt(new SuperConstructorAccess("super", superArgs));		 
-		
-		ConstructorDecl decl = new CjConstructorDecl(
-						              m,
-						              name(),
-						              params,
-						              new List(),
-						              new Opt(superCall),
-						              new Block());
-        decl.isGeneratedConstr = true;
-        return new Opt(decl);
-	}
-	
-	// inherited attributes for the real constructor
-	eq CjClassDecl.getRealConstructor().hostType() = hostType();
-	    
-    // add implicit constructor
-    eq CjClassDecl.constructors() {
-      Collection c = new ArrayList();
-      c.add(getRealConstructor());
-      return c;
-    }
-    
-    // ensuring that default constructor is not created for cclasses
-    refine LookupConstructor eq List.requiresDefaultConstructor() {
-      if (getParent() instanceof CjClassDecl) {
-        return false;
-      }
-      return LookupConstructor.List.requiresDefaultConstructor();      
-    }
-    
-    /**********************************************************************************
-     * 
-     *  Final field assignment checks    
-     *
-     */
-    
-    // switch off checking of final field assignment in generated constructors 
-	refine DefiniteAssignment eq ConstructorDecl.isDAafter(Variable v) = true;
-	
-	// Treat an init method in the same way as a constructor with respect to field initialization
-	eq CjInitMethodDecl.fieldInitializationAllowed() = isInitMethod();
-	
-	eq CjInitMethodDecl.isDAafter(Variable v) = getBlock().isDAafter(v) && getBlock().checkReturnDA(v);
-	eq CjInitMethodDecl.getBlock().isDAbefore(Variable v) = isDAbefore(v);
-	
-	eq CjInitMethodDecl.isDUafter(Variable v) = getBlock().isDUafter(v) && getBlock().checkReturnDU(v);
-	eq CjInitMethodDecl.getBlock().isDUbefore(Variable v) = isDUbefore(v);
-	
-	eq CjClassDecl.getBodyDecl().isDUbefore(Variable v) {
-		BodyDecl b = getBodyDecl(childIndex);
-	    if ((b instanceof MethodDecl && !b.isInitMethod()) || b instanceof MemberTypeDecl) {
-	      return false;
-	    }
-	    if(v.isClassVariable() || v.isInstanceVariable()) {
-	      int index = childIndex - 1;
-	      if(b instanceof ConstructorDecl)
-	        index = getNumBodyDecl() - 1;
-	        
-	      for(int i = index; i >= 0; i--) {
-	        b = getBodyDecl(i);
-	        if(b instanceof FieldDeclaration) {
-	          FieldDeclaration f = (FieldDeclaration)b;
-	          //System.err.println("  working on field " + f.name() + " which is child " + i);
-	          if(f == v)
-	            return !f.hasInit();
-	          if((v.isClassVariable() && f.isStatic()) || (v.isInstanceVariable() && !f.isStatic()))
-	            return f.isDUafter(v);
-	          //System.err.println("  field " + f.name() + " can not affect " + v.name());
-	        }
-	        else if(b instanceof StaticInitializer && v.isClassVariable()) {
-	          StaticInitializer si = (StaticInitializer)b;
-	          //System.err.println("  working on static initializer which is child " + i);
-	          return si.isDUafter(v);
-	        }
-	        else if(b instanceof InstanceInitializer && v.isInstanceVariable()) {
-	          InstanceInitializer ii = (InstanceInitializer)b;
-	          //System.err.println("  working on instance initializer which is child " + i);
-	          return ii.isDUafter(v);
-	        }
-	      }
-	    }
-	    //System.err.println("Reached TypeDecl when searching for DU for variable");
-	    return isDUbefore(v);
-	}
-	
-	/**********************************************************************************
-     * 
-     *  Other functionality of init methods 
-     *
-     */
-	
-	public void CjInitMethodDecl.nameCheck() {
-	    super.nameCheck();
-	    // 8.8
-	    if(!hostType().name().equals(getOriginalID()))
-	      error("constructor " + name() +" does not have the same name as the simple name of the host class " + hostType().name());
-	}
-	
 }
