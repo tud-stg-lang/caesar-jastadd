@@ -73,7 +73,7 @@
        </code>
     </compile-run-->
     
-    <compile-run id="test002" description="error">
+    <!--compile-run id="test002" description="error">
 		<test>
 			OuterA a = new OuterA();
 			//OuterA.InnerX x = a.new InnerX();
@@ -85,9 +85,9 @@
 				}
 			}
         </code>
-    </compile-run>
+    </compile-run-->
 	
-    <compile-run id="test003" description="error">
+    <!--compile-run id="test003" description="error">
 		<test>
 			OuterA a = new OuterA();
 			OuterA.InnerX x = a.new InnerX();
@@ -103,6 +103,64 @@
 				public int i = 3;
 			}
         </code>
-    </compile-run>
+    </compile-run-->
      
+    <!--compile-run id="test004" description="access method from multiple inheritance">
+		<test>
+			C c = new C();
+			c.m();
+			c.m2();
+			c.m3();
+		</test>
+        <code>
+			public cclass A {
+				public void m() {
+					System.out.println("A");
+				}
+			}
+			public cclass B {
+				public void m2() {
+					System.out.println("B");
+				}
+			}
+			public cclass C extends B &amp; A {
+			}
+        </code>
+    </compile-run-->
+     
+    <compile-run id="test005" description="apply super constructor access to new super class">
+    	<test>
+    		new DDD("test");
+    	</test>
+        <code>
+        	public cclass AAA {	
+			   public AAA(String x) {
+			      System.out.format("AAA constructor - got value %s%n", x);
+			   }
+			}			
+			public cclass BBB extends AAA {
+			   public BBB() {
+			      super("BBB#1");
+			      System.out.println("BBB constructor #1");
+			   }
+			   public BBB(String x) {
+			      super(x);
+			      System.out.println("BBB constructor #2");
+			   }
+			}
+			public cclass CCC extends AAA {
+				public CCC(String x) {
+					super(x);
+					System.out.println("CCC constructor #1");
+				}
+			}
+			public cclass DDD extends BBB &amp; CCC {
+			   public DDD(String x) {
+			      super(x); // should call BBB(String) which in turn should call CCC(String)?
+			      System.out.println("DDD constructor");
+			   }
+			}
+        </code>
+    </compile-run>
+	
 </testsuite>

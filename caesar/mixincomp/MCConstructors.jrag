@@ -57,7 +57,7 @@ aspect MCConstructors {
 				else {
 					TypeDecl enclosing = hostType();
 					while (enclosing != null
-							&& enclosing.hasType(type().name())) // TODO OK like this? If not, see #emitInnerMemberEnclosing for a possibly correct template.
+							&& !enclosing.hasType(type().name())) // TODO OK like this? If not, see #emitInnerMemberEnclosing for a possibly correct template.
 						enclosing = enclosing.enclosingType();
 					if (enclosing == null)
 						throw new Error(errorPrefix()

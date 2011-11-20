@@ -1,0 +1,15 @@
+/*
+ * Adapts byte code creation for conditional constructors
+ *
+ * (1) In super constructor accesses, don't cast to the target parameter type if there
+ *     is no matching super constructor.
+ */
+aspect CCCreateBCode {
+
+	// Aspect goal (1)
+	refine CreateBCode private void SuperConstructorAccess.emitCastToIthParameterIfPossible(CodeGeneration gen, int i) {
+		if (!decl().equals(unknownConstructor()))
+			getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
+	}
+
+}

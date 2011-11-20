@@ -1,0 +1,22 @@
+/*
+ * Adapts error checking to conditional constructors
+ *
+ * (1) If a constructor pattern does not match any constructor of the superclass, no
+ *     error, but only a warning is produced. 
+ */
+aspect CCErrorCheck {
+
+	// Aspect goal (1)	 
+	refine NameCheck public void ConstructorAccess.nameCheck() {
+	    super.nameCheck();
+	    if(decls().isEmpty())
+	      warning("no constructor named " + this);
+	    if(decls().size() > 1 && validArgs()) {
+	      error("several most specific constructors for " + this);
+	      for(Iterator iter = decls().iterator(); iter.hasNext(); ) {
+	        error("         " + ((ConstructorDecl)iter.next()).signature());
+	      }
+	    }
+	}
+
+}
