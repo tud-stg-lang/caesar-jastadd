@@ -68,6 +68,9 @@
 			<include name="**/*.jrag"/>
 			<include name="**/*.jadd"/>
 		</fileset>
+		<fileset dir="caesar/condconstructors">
+			<include name="**/*.jrag"/>
+		</fileset>
 	</jastadd>
 	<!-- copy library files-->
 	<copy todir="${target.dir}/beaver" preservelastmodified="true">
@@ -151,6 +154,9 @@
 <target name="cleanGen">
 	<delete includeemptydirs="true">
 		<fileset dir="${target.dir}" includes="**/*"/>
+	</delete>
+	<delete includeemptydirs="true">
+		<fileset dir="test/out" includes="**/*"/>
 	</delete>
 </target>
 

@@ -644,7 +644,7 @@ aspect CreateBCode {
     // args
     for (int i = 0; i < getNumArg(); ++i) {
       getArg(i).createBCode(gen);
-      getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
+      emitCastToIthParameterIfPossible(gen, i);
     }
     if(decl().isPrivate() && decl().hostType() != hostType()) {
       gen.emit(Bytecode.ACONST_NULL);
@@ -653,6 +653,10 @@ aspect CreateBCode {
     else {
       decl().emitInvokeConstructor(gen);
     }
+  }
+
+  private void SuperConstructorAccess.emitCastToIthParameterIfPossible(CodeGeneration gen, int i) {
+    getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
   }
 
   // 15.9.2

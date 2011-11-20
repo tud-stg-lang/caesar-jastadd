@@ -10,8 +10,6 @@ CjInitMethodDecl : MethodDecl ::= <OriginalID:String>;
 
 DirectTypeAccess : Access ::= <Target:TypeDecl>; 
 
-InitMethodAccess : MethodAccess;
-
 CjConstructorDecl : ConstructorDecl;  
 
 CjClassInstanceExpr : ClassInstanceExpr;
