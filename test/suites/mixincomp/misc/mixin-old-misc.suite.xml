@@ -1,6 +1,24 @@
 <testsuite name="Miscelaneous cclass tests" package="mixincomp.old.misc">
 
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc001" description="Test outer field access from inner cclass">
+		<test>			
+		    OuterA.InnerA a = new OuterA().new InnerA();
+			assertEquals(a.m(), 5);
+		</test>
+        <code>
+        	public cclass OuterA {
+				private int a = 5;
+				public cclass InnerA {
+					public int m() {
+						return a;
+					}
+				}
+			}
+        </code>
+    </compile-run>		  	
+	
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
     <compile-run id="mixinmisc002" description="Test interface method call through abstract cclass">
 		<test>		
 			Role role = new RoleNet4J();
@@ -49,7 +67,7 @@
     </compile-run>		  	
 	
 	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc005" description="Test inlined cclass inside abstract cclass">
+    <compile-run id="mixinmisc005" description="Test inlined class inside abstract cclass">
 		<test>		
 			new ClassB().m();
 		</test>
@@ -89,7 +107,7 @@
     </compile>
     
     !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc007" description="Test method accessor from inlined cclass">
+    <compile-run id="mixinmisc007" description="Test method accessor from inlined class">
 		<test>		
 			new ClassA().m();
 		</test>
@@ -111,7 +129,7 @@
     </compile-run>
     
     !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc007a" description="Test field accessor from inlined cclass">
+    <compile-run id="mixinmisc007a" description="Test field accessor from inlined class">
 		<test>		
 			new ClassA().m();
 		</test>
@@ -131,7 +149,7 @@
     </compile-run>
     
     !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc008" description="Test method superaccessor from inlined cclass">
+    <compile-run id="mixinmisc008" description="Test method superaccessor from inlined class">
 		<test>		
 			new ClassA().m();
 		</test>
@@ -155,7 +173,7 @@
     </compile-run>
     
     !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
-    <compile-run id="mixinmisc008a" description="Test field superaccessor from inlined cclass">
+    <compile-run id="mixinmisc008a" description="Test field superaccessor from inlined class">
 		<test>		
 			new ClassA().m();
 		</test>
@@ -211,4 +229,130 @@
 		</code>		
     </compile-check-error>	
 
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc012" description="Test inlined cclass inside abstract cclass">
+		<test>		
+			new ClassB().m();
+		</test>
+        <code>
+        	public abstract cclass CRunnable implements Runnable {
+        	}
+        
+			public abstract cclass ClassA {
+				public ClassA() {		
+				}
+				
+				public void m() {
+					final Runnable inlined = new CRunnable() {
+						public void run() {
+							System.out.println("run12");
+						}
+			        };
+			        
+			        new Thread(inlined).start();
+				}
+			}
+			
+			public cclass ClassB extends ClassA {	
+			}
+		</code>
+    </compile-run>		
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc013" description="Test method accessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public abstract cclass CRunnable implements Runnable {
+        	}
+
+			public cclass ClassA {
+				private String getMsg() {
+					return "run13";
+				}
+				public void m() {
+					final Runnable inlined = new CRunnable() {
+						public void run() {
+							System.out.println(getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc013a" description="Test field accessor from inlined class">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public abstract cclass CRunnable implements Runnable {
+        	}
+			public cclass ClassA {
+				protected String msg = "run13a";
+				public void m() {
+					final Runnable inlined = new CRunnable() {
+						public void run() {
+							System.out.println(msg);
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc014" description="Test method superaccessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public abstract cclass CRunnable implements Runnable {
+        	}
+        	public cclass ClassB {
+        		protected String getMsg() {
+					return "run14";
+				}
+        	}
+			public cclass ClassA extends ClassB {
+				public void m() {
+					final Runnable inlined = new CRunnable() {
+						public void run() {
+							System.out.println(ClassA.super.getMsg());
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>
+    
+    !-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="mixinmisc014a" description="Test field superaccessor from inlined cclass">
+		<test>		
+			new ClassA().m();
+		</test>
+        <code>
+        	public abstract cclass CRunnable implements Runnable {
+        	}
+        	public cclass ClassB {
+        	    protected String msg = "run14a";        		
+        	}
+			public cclass ClassA extends ClassB {
+				public void m() {
+					final Runnable inlined = new CRunnable() {
+						public void run() {
+							System.out.println(ClassA.super.msg);
+						}
+			        };
+			        new Thread(inlined).start();
+				}
+			}
+		</code>
+    </compile-run>		
+    
 </testsuite>

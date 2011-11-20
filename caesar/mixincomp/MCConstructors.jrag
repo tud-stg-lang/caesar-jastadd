@@ -41,6 +41,37 @@ aspect MCConstructors {
 		return false;
 	}
 	
+	/*
+	 * Convert ClassInstanceExpr to CjInstanceExpr
+	 * Always add the instance of the outer class to the constructor arguments. If there
+	 * is no outer class, use null.
+	 */
+	rewrite ClassInstanceExpr {
+		when (!(this instanceof CjClassInstanceExpr) && getAccess().type().isCjClassDecl())
+		to CjClassInstanceExpr {
+			List<Expr> args = getArgs().copy();
+			final Expr outerObj;
+			if (type().isInnerType()) {
+				if (hasPrevExpr())
+					outerObj = (Expr) prevExpr().copy();
+				else {
+					TypeDecl enclosing = hostType();
+					while (enclosing != null
+							&& enclosing.hasType(type().name())) // TODO OK like this? If not, see #emitInnerMemberEnclosing for a possibly correct template.
+						enclosing = enclosing.enclosingType();
+					if (enclosing == null)
+						throw new Error(errorPrefix()
+								+ "Could not find enclosing for " + this);
+					outerObj = new TypeAccess(enclosing.name())
+							.qualifiesAccess(new ThisAccess("this"));
+				}
+			} else
+				outerObj = new NullLiteral("null");
+			args.insertChild(outerObj, 0);
+			return new CjClassInstanceExpr(getAccess(), args, getTypeDeclOpt());
+		}
+	}
+ 		
 	// Equivalent ClassInstanceExpr.createBCode 
     // but avoid passing outer object
 	public void CjClassInstanceExpr.createBCode(CodeGeneration gen) {
@@ -60,7 +91,7 @@ aspect MCConstructors {
       		decl().emitInvokeConstructor(gen);
     	}
   	}	
-		
+ 		
 	/**********************************************************************************
      * 
      *  Transforming Constructor Declarations   
@@ -68,5 +99,39 @@ aspect MCConstructors {
      */
 	
 	eq CjClassDecl.needsEnclosing() = false;
-		
+	
+	rewrite ConstructorDecl {
+		when (!(this instanceof CjConstructorDecl) && hostType() instanceof CjClassDecl) 
+		to CjConstructorDecl {
+			List<ParameterDeclaration> parameters = getParameters();
+			parameters.insertChild(new ParameterDeclaration(
+					new TypeAccess("org.caesarj.runtime", "CjObjectIfc"), "$cj$outer"), 0);
+			addCjOuterToConstructorInvocation();
+			return new CjConstructorDecl(getModifiers(), getID(), parameters, getExceptions(),
+					getConstructorInvocationOpt(), getBlock());
+		}
+	}
+	
+	private void ConstructorDecl.addCjOuterToConstructorInvocation() {
+		if (!hasConstructorInvocation())
+			return;
+		if (getConstructorInvocation().getNumChild() != 1)
+			return;
+		final ConstructorAccess constructorAccess;
+		ASTNode<?> child = getConstructorInvocation().getChild(0);
+		if (child instanceof ConstructorAccess)
+			constructorAccess = (ConstructorAccess) child;
+		else if (child instanceof ExprStmt) {
+			ExprStmt stmt = (ExprStmt) child;
+			if (stmt.getNumChild() != 1)
+				return;
+			if (!(stmt.getChild(0) instanceof ConstructorAccess))
+				return;
+			constructorAccess = (ConstructorAccess) stmt.getChild(0);
+		} else
+			return;
+		constructorAccess.getArgList().insertChild(new VarAccess("$cj$outer"),
+				0);
+	}
+	
 }

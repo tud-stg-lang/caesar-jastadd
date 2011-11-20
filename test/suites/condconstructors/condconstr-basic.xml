@@ -1,0 +1,42 @@
+<testsuite name="Test Conditional Constructors" package="condconstructors.basic">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <!--compile  id="condconstr001" description="test one matching and one not-matching constructor">
+        <code>
+        	public cclass AAA {	
+			   public AAA(String x) {
+			      System.out.format("AAA constructor - got value %s%n", x);
+			   }
+			}			
+			public cclass BBB extends AAA {
+			   public BBB() {
+			      super(4);
+			      System.out.println("BBB constructor #1");
+			   }
+			   public BBB(String x) {
+			      super(x);
+			      System.out.println("BBB constructor #2");
+			   }
+			}
+			public class Test {
+				public void test() {
+				   BBB b = new BBB("test");
+				}
+			}
+        </code>
+    </compile-->
+	
+    <!--compile-check-error id="stcinhfields002" error="VAR_UNKNOWN" 
+		                 description="test not available field">
+        <code>
+			public cclass BBB { }
+			public class Test {
+				public void test() {
+				   BBB b = null;
+				   b.s = null;
+				}
+			}
+        </code>
+    </compile-check-error-->
+    
+</testsuite>

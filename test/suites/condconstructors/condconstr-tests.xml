@@ -1,0 +1,108 @@
+<testsuite name="Test Conditional Constructors" package="condconstructors.tests">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <!--compile-run id="test001" description="behavior test">
+    	<test>
+    		System.out.format("v: %d%n", new C().v);
+    		new C();
+    	</test>
+        <code>
+			public cclass A extends B {
+			
+				public A() {
+					super(3);
+					System.out.println("A()");
+				}
+
+				public A(int i) {
+					System.out.format("A(%d)%n", i);
+				}
+
+			}
+
+			public cclass B {
+
+				public B() {
+					System.out.println("B()");
+				}
+
+				public B(int i) {
+					System.out.format("B(%d)%n", i);
+				}
+
+				public B(String s) {
+					System.out.format("B(\"%s\")%n", s);
+				}
+			
+			}
+			
+			public cclass BB extends D &amp; B {
+			
+				final public int v;
+			
+				{
+					System.out.println("BB init");
+				}
+			
+				public BB() {
+					System.out.println("BB()");
+				}
+				
+				public BB(int value) {
+					System.out.format("BB(%d)%n", value);
+					v = value;
+				}
+
+			}
+			
+			public cclass D {
+			
+				public D(int i) {
+					System.out.format("D(%d)%n", i);
+				}
+
+			}
+
+			public cclass C extends A &amp; BB {
+
+				public C() {
+					System.out.println("C()");
+				}
+
+			}
+       </code>
+    </compile-run-->
+    
+    <compile-run id="test002" description="error">
+		<test>
+			OuterA a = new OuterA();
+			//OuterA.InnerX x = a.new InnerX();
+			//x.toString();
+		</test>
+        <code>
+			public cclass OuterA {
+				public cclass InnerX {
+				}
+			}
+        </code>
+    </compile-run>
+	
+    <compile-run id="test003" description="error">
+		<test>
+			OuterA a = new OuterA();
+			OuterA.InnerX x = a.new InnerX();
+			x.m();
+		</test>
+        <code>
+			public cclass OuterA {
+				public cclass InnerX {
+					public void m() {
+						System.out.println(i);
+					}
+				}
+				public int i = 3;
+			}
+        </code>
+    </compile-run>
+     
+</testsuite>
