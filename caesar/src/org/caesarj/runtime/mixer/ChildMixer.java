@@ -1,8 +1,6 @@
 package org.caesarj.runtime.mixer;
 
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -26,7 +24,7 @@ import org.objectweb.asm.Type;
  * @author Tillmann Rendel
  */
 
-public class ChildMixer extends ClassAdapter {
+public class ChildMixer extends ClassVisitor {
 	
 	
 	
@@ -37,13 +35,13 @@ public class ChildMixer extends ClassAdapter {
 	 * {@link #visitMethodInsn(int, String, String, String) visitMethod} method
 	 * for every method of the transformed class.
 	 */
-	private class MethodMixer extends MethodAdapter {
+	private class MethodMixer extends MethodVisitor {
 		/**
 		 * Creates a new method mixer forwarding events to the given method visitor.
 		 * @param mv the method visitor forwarding events to
 		 */
 		public MethodMixer(MethodVisitor mv) {
-			super(mv);			
+			super(Opcodes.ASM4, mv);			
 		}
 
 		/**
@@ -90,7 +88,7 @@ public class ChildMixer extends ClassAdapter {
 	 *            mixin registry managing the mixins for this application
 	 */
 	public ChildMixer(ClassVisitor cv, ChildMixerInfo info) {
-		super(cv);
+		super(Opcodes.ASM4, cv);
 		this.info = info;
 	}
 

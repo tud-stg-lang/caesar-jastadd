@@ -169,17 +169,17 @@ public class MixinLoader extends ClassLoader {
 		reader.accept(attrVis, attributes, 0);
 		
 		ClassWriter writer = new ClassWriter(0);
+		ClassVisitor target = writer;
+		if (trace)
+			target = new TraceClassVisitor(target, new PrintWriter(System.err));
 		
 		// classes without Caesar attribute do not need transformation
-		if (attrVis.getInfo() != null) {
-			ClassVisitor target = trace ? new TraceClassVisitor(writer, new PrintWriter(System.err)) : writer; 
-			ChildMixer mixer = new ChildMixer(target, attrVis.getInfo());
-			// transform mixin data
-			reader.accept(mixer, attributes, 0);
-		}
-		else {
-			reader.accept(writer, attributes, 0);			
-		}
+		if (attrVis.getInfo() != null)
+			target = new ChildMixer(target, attrVis.getInfo());
+		
+		target = new ConstructorMixer(target);
+		
+		reader.accept(target, attributes, 0);
 		byte[] data = writer.toByteArray();
 		
 		// process transformed mixin data
@@ -216,7 +216,7 @@ public class MixinLoader extends ClassLoader {
 		System.arraycopy(args, 1, mainArgs, 0, mainArgs.length);
 
 		MixinLoader loader = new MixinLoader();
-		Class main = loader.loadClass(mainClass);	
+		Class<?> main = loader.loadClass(mainClass);
 		Method mainMethod = main.getMethod("main", new Class[] { mainArgs.getClass() });
 		try {
 			mainMethod.invoke(null, new Object[] { mainArgs });

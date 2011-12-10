@@ -3,8 +3,10 @@ package org.caesarj.runtime.mixer;
 import java.util.Vector;
 
 import org.objectweb.asm.Attribute;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Opcodes;
 
-public class CaesarAttributeVisitor extends EmptyClassVisitor {
+public class CaesarAttributeVisitor extends ClassVisitor {
 	
 	/**
 	 * The MixinRegistry managing the mixins for this application.
@@ -27,6 +29,7 @@ public class CaesarAttributeVisitor extends EmptyClassVisitor {
 	 *            mixin registry managing the mixins for this application
 	 */
 	public CaesarAttributeVisitor(MixinRegistry mixins) {
+		super(Opcodes.ASM4);
 		this.mixins = mixins;
 	}
 	

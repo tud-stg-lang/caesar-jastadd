@@ -1,24 +1,21 @@
 package org.caesarj.runtime.mixer;
 
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class MixinMixer extends ClassAdapter {
+public class MixinMixer extends ClassVisitor {
 	private final String newName;
 	private final String newSuper;
 	private final String newOut;
-	private final String newSuperOut;
+
 	private String oldName;
 	private String oldSuper;
 	private String oldOut;
-	private String oldSuperOut;
 	
-	private class MethodMixer extends MethodAdapter {
+	private class MethodMixer extends MethodVisitor {
 		public MethodMixer(MethodVisitor mv) {
-			super(mv);
+			super(Opcodes.ASM4, mv);
 		}
 
 		@Override
@@ -38,18 +35,16 @@ public class MixinMixer extends ClassAdapter {
 	}
 
 	public MixinMixer(ClassVisitor cv, String newName, String newSuper, String newOut, String newSuperOut) {
-		super(cv);
+		super(Opcodes.ASM4, cv);
 		this.newName = newName.replace('.', '/');
 		this.newSuper = newSuper.replace('.', '/');
 		this.newOut = newOut != null ? newOut.replace('.', '/') : null;
-		this.newSuperOut = newSuperOut != null ? newSuperOut.replace('.', '/') : null;
 	}
 	
 	@Override
 	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 		this.oldName = name;
 		this.oldSuper = superName;
-		this.oldSuperOut = oldSuper.contains("$") ? oldSuper.substring(0, oldSuper.lastIndexOf('$')) : null;
 		super.visit(version, access, update(name), signature, update(superName), interfaces);
 	}
 	
