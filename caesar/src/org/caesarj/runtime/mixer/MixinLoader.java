@@ -16,17 +16,20 @@ import org.objectweb.asm.util.TraceClassVisitor;
 
 public class MixinLoader extends ClassLoader {
 	private boolean trace = false;
-	
-	private static final Attribute[] attributes = new Attribute[]{ new MixerConfigAttribute() }; 
-	
-	private final MixinRegistry mixins = new MixinRegistry();	
-	
-	public void setTrace(boolean on) { trace = on; }
-	
-	public static final String systemClassDomains[] =
-	{ "java.", "javax.", "sun.", "sunw.", "com.sun.", "org.ietf.", 
-	  "org.jcp.", "org.omg.", "org.w3c.",  "org.xml." };
-	
+
+	private static final Attribute[] attributes = new Attribute[] {
+			new MixerConfigAttribute(), new ConstructorCallAttribute() };
+
+	private final MixinRegistry mixins = new MixinRegistry();
+
+	public void setTrace(boolean on) {
+		trace = on;
+	}
+
+	public static final String systemClassDomains[] = { "java.", "javax.",
+			"sun.", "sunw.", "com.sun.", "org.ietf.", "org.jcp.", "org.omg.",
+			"org.w3c.", "org.xml." };
+
 	boolean isSystemClass(String name) {
 		for (String prefix : systemClassDomains) {
 			if (name.startsWith(prefix)) {
@@ -35,50 +38,53 @@ public class MixinLoader extends ClassLoader {
 		}
 		return false;
 	}
-	
+
 	@Override
-	public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-		
-		if (trace) System.err.format("\nloadClass(%s, %s)\n", name, resolve);
-		Class<?> result = null; 
-		
+	public Class<?> loadClass(String name, boolean resolve)
+			throws ClassNotFoundException {
+
+		if (trace)
+			System.err.format("\nloadClass(%s, %s)\n", name, resolve);
+		Class<?> result = null;
+
 		if (isSystemClass(name)) {
-			
+
 			// try to load as a system class
-			if (trace) System.err.format("system class ~~~> ", name);
+			if (trace)
+				System.err.format("system class ~~~> ", name);
 			try {
 				result = findSystemClass(name);
 			} catch (ClassNotFoundException e) {
-				if (trace) System.err.format("%s\n", e);
+				if (trace)
+					System.err.format("%s\n", e);
 				throw e;
 			}
-		}
-		else {
+		} else {
 			// try to load as a normal class
-			if (trace) System.err.format("normal class ~~~> ", name);
+			if (trace)
+				System.err.format("normal class ~~~> ", name);
 			result = loadNormalClass(name);
-			
+
 			// try to load as a mixin class
 			if (result == null) {
-				if (trace) System.err.format("mixin  class ~~~> ", name);
+				if (trace)
+					System.err.format("mixin  class ~~~> ", name);
 				try {
 					result = loadMixinClass(name);
-				} 
-				catch (ClassNotFoundException e) {
-					if (trace) System.err.format("%s\n", e);
+				} catch (ClassNotFoundException e) {
+					if (trace)
+						System.err.format("%s\n", e);
 					throw e;
 				}
 			}
 		}
-		
-		if (resolve) 
+
+		if (resolve)
 			resolveClass(result);
-		
+
 		return result;
 	}
-	
 
-	
 	private Class<?> loadNormalClass(String name) {
 		InputStream in = getResourceAsStream(name.replace('.', '/') + ".class");
 		if (in == null) {
@@ -89,18 +95,18 @@ public class MixinLoader extends ClassLoader {
 			byte[] b = readBytes(in);
 			return defineClass(name, b, 0, b.length);
 		} catch (IOException e) {
-			if (trace) System.err.format("%s\n", e);
+			if (trace)
+				System.err.format("%s\n", e);
 			return null;
 		}
 	}
-
 
 	private byte[] readBytes(InputStream in) throws IOException {
 		// set up a list of buffers ...
 		final int bufferSize = 1024;
 		List<byte[]> buffers = new ArrayList<byte[]>();
 		byte[] buffer = new byte[bufferSize];
-		
+
 		// .. fill them with data from the InputStream ...
 		int offset = 0;
 		int n = in.read(buffer, offset, bufferSize - offset);
@@ -111,25 +117,27 @@ public class MixinLoader extends ClassLoader {
 				buffer = new byte[bufferSize];
 				offset = 0;
 			}
-			
+
 			n = in.read(buffer, offset, bufferSize - offset);
 		}
-		
+
 		// ... and finally copy them together to form a single big buffer
 		int len = buffers.size() * bufferSize + offset;
 		byte[] result = new byte[len];
 		for (int i = 0; i < buffers.size(); i++)
-			System.arraycopy(buffers.get(i), 0, result, i * bufferSize, bufferSize);
+			System.arraycopy(buffers.get(i), 0, result, i * bufferSize,
+					bufferSize);
 		System.arraycopy(buffer, 0, result, buffers.size() * bufferSize, offset);
-		
+
 		return result;
 	}
 
-	private Class<?> findMixinCopyDecl(String name) throws ClassNotFoundException {
+	private Class<?> findMixinCopyDecl(String name)
+			throws ClassNotFoundException {
 		// internal id
 		int index = name.lastIndexOf("$$");
 		int id = Integer.parseInt(name.substring(index + 2));
-		
+
 		// already cached?
 		if (mixins.isCached(id))
 			return mixins.fetch(id);
@@ -139,72 +147,91 @@ public class MixinLoader extends ClassLoader {
 		String superClass = mixins.getSuperClass(id);
 		String outClass = mixins.getOutClass(id);
 		String superOut = mixins.getSuperOut(id);
-		
+
 		// load binary data of base class
-		InputStream in = getResourceAsStream(baseClass.replace('.', '/') + ".cjclass");
+		InputStream in = getResourceAsStream(baseClass.replace('.', '/')
+				+ ".cjclass");
+
+		// TODO constructor analysis & transformation
 
 		// prepare transformation chain
 		ClassWriter writer = new ClassWriter(0);
-		ClassVisitor target = trace ? new TraceClassVisitor(writer, new PrintWriter(System.err)) : writer; 
-		MixinMixer mixer = new MixinMixer(target, name, superClass, outClass, superOut);
+		ClassVisitor target = trace ? new TraceClassVisitor(writer,
+				new PrintWriter(System.err)) : writer;
+		MixinMixer mixer = new MixinMixer(target, name, superClass, outClass,
+				superOut);
 		ClassReader reader = createClassReader(name, in);
-		
+
 		// transform mixin data
 		reader.accept(mixer, attributes, 0);
 		byte[] data = writer.toByteArray();
-		
+
 		// process transformed mixin data
 		Class<?> result = defineClass(name, data, 0, data.length);
 		mixins.cache(id, result);
-		return result;	
+		return result;
 	}
-	
-	private Class<?> findMixinClassDecl(String name) throws ClassNotFoundException {
-		// load binary class data
-		InputStream in = getResourceAsStream(name.replace('.', '/') + ".cjclass");
 
-		// prepare transformation chain
-		ClassReader reader = createClassReader(name, in);		
-		CaesarAttributeVisitor attrVis = new CaesarAttributeVisitor(mixins);
-		reader.accept(attrVis, attributes, 0);
-		
-		ClassWriter writer = new ClassWriter(0);
-		ClassVisitor target = writer;
+	private Class<?> findMixinClassDecl(String name)
+			throws ClassNotFoundException {
+		// load binary class data
+		final InputStream in = getResourceAsStream(name.replace('.', '/')
+				+ ".cjclass");
+
+		final ClassReader reader = createClassReader(name, in);
+
+		// FIRST PASS
+		// prepare transformation chain and analyze conditional constructors
+		final CaesarAttributeVisitor attrVis = new CaesarAttributeVisitor(
+				mixins);
+		final ConstructorAnalyzer constructorAnalyzer = new ConstructorAnalyzer(
+				attrVis);
+		ClassVisitor target = constructorAnalyzer;
+		reader.accept(target, attributes, 0);
+
+		// SECOND PASS
+		// transform classes and write them
+		final ClassWriter writer = new ClassWriter(0);
+		target = writer;
 		if (trace)
 			target = new TraceClassVisitor(target, new PrintWriter(System.err));
-		
+
 		// classes without Caesar attribute do not need transformation
 		if (attrVis.getInfo() != null)
 			target = new ChildMixer(target, attrVis.getInfo());
-		
-		target = new ConstructorMixer(target);
-		
+
+		target = new ConstructorMixer(target,
+				constructorAnalyzer.getConstructorCalls()); // TODO
+
 		reader.accept(target, attributes, 0);
 		byte[] data = writer.toByteArray();
-		
+
 		// process transformed mixin data
 		Class<?> result = defineClass(name, data, 0, data.length);
-		return result;	
+		return result;
 	}
-	
+
 	private Class<?> loadMixinClass(String name) throws ClassNotFoundException {
-		if (name.indexOf("$$") != -1) 
+		if (name.indexOf("$$") != -1)
 			return findMixinCopyDecl(name);
 		else
 			return findMixinClassDecl(name);
 	}
 
-	private ClassReader createClassReader(String name, InputStream in) throws ClassNotFoundException {
+	private ClassReader createClassReader(String name, InputStream in)
+			throws ClassNotFoundException {
 		if (in == null)
-			throw new ClassNotFoundException("i/o problems while loading " + name);
-		
+			throw new ClassNotFoundException("i/o problems while loading "
+					+ name);
+
 		try {
 			return new ClassReader(in);
 		} catch (IOException e) {
-			throw new ClassNotFoundException("i/o problems while loading " + name, e);
+			throw new ClassNotFoundException("i/o problems while loading "
+					+ name, e);
 		}
 	}
-	
+
 	public static void main(String args[]) throws Exception {
 		if (args.length < 1) {
 			System.err.println("usage: java MixinLoader <MainClass>");
@@ -217,7 +244,8 @@ public class MixinLoader extends ClassLoader {
 
 		MixinLoader loader = new MixinLoader();
 		Class<?> main = loader.loadClass(mainClass);
-		Method mainMethod = main.getMethod("main", new Class[] { mainArgs.getClass() });
+		Method mainMethod = main.getMethod("main",
+				new Class[] { mainArgs.getClass() });
 		try {
 			mainMethod.invoke(null, new Object[] { mainArgs });
 		} catch (InvocationTargetException e) {

@@ -128,7 +128,7 @@
         </code>
     </compile-run-->
      
-    <compile-run id="test005" description="apply super constructor access to new super class">
+    <!--compile-run id="test005" description="apply super constructor access to new super class">
     	<test>
     		new DDD("test");
     	</test>
@@ -159,6 +159,86 @@
 			      super(x); // should call BBB(String) which in turn should call CCC(String)?
 			      System.out.println("DDD constructor");
 			   }
+			}
+        </code>
+    </compile-run-->
+    
+    <compile-run id="test006" description="Constructor and desired init method">
+    	<test>
+    		new C("test");
+    	</test>
+        <code>
+        	public cclass A {	
+			   public A(String x) {
+			      System.out.format("A constructor - got value %s%n", x);
+			   }
+			   private void $cj$init(String x) {
+			      System.out.format("A constructor - got value %s%n", x);
+			   }			   
+			}			
+			public cclass B {
+			   public B() {
+			      System.out.println("B constructor #1");
+			   }
+			   private void $cj$init() {
+			      System.out.println("B constructor #1");
+			   }			   
+			   public B(String x) {
+			      super(x);
+			      System.out.println("B constructor #2");
+			   }
+			   private void $cj$init(String x) {
+			      System.out.println("B constructor #2");
+			   }			   
+			}
+			public cclass C extends B &amp; A {
+				public C(String x) {
+					super(x);
+					System.out.println("C constructor #1");
+				}
+			   private void $cj$init(String x) {
+			      System.out.println("C constructor #1");
+			   }			   
+			}
+        </code>
+    </compile-run>
+    
+    <compile-run id="test006b" description="Constructor and desired init method called">
+    	<test>
+    		new C("test");
+    	</test>
+        <code>
+        	public cclass A {	
+			   public A(String x) {
+			      $cj$init(x);
+			   }
+			   private void $cj$init(String x) {
+			      System.out.format("A constructor - got value %s%n", x);
+			   }			   
+			}			
+			public cclass B {
+			   public B() {
+			      $cj$init();
+			   }
+			   private void $cj$init() {
+			      System.out.println("B constructor #1");
+			   }			   
+			   public B(String x) {
+			      super(x);
+			      $cj$init(x);
+			   }
+			   private void $cj$init(String x) {
+			      System.out.println("B constructor #2");
+			   }			   
+			}
+			public cclass C extends B &amp; A {
+				public C(String x) {
+				  super(x);
+			      $cj$init(x);
+				}
+			   private void $cj$init(String x) {
+			      System.out.println("C constructor #1");
+			   }			   
 			}
         </code>
     </compile-run>
