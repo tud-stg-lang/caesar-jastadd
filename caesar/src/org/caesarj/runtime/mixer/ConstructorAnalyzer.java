@@ -74,8 +74,6 @@ public class ConstructorAnalyzer extends ClassVisitor {
 
 		@Override
 		public void visitAttribute(Attribute attr) {
-			// TODO extract parameters of constructor call from appropriate
-			// attribute (to be created)
 			if (attr instanceof ConstructorCallAttribute) {
 				ConstructorCallAttribute constructorCallAttribute = (ConstructorCallAttribute) attr;
 				constructorCalls.put(

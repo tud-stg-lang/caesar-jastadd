@@ -1,20 +1,24 @@
 package org.caesarj.runtime.mixer;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.caesarj.runtime.constructors.ConcreteParameter;
+import org.caesarj.runtime.constructors.ConstructorPatternMatcher;
 import org.caesarj.runtime.mixer.ConstructorAnalyzer.ConstructorCall;
+import org.caesarj.util.ClassAccess;
+import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 public class ConstructorMixer extends ClassVisitor {
 
 	private static class SingleConstructorMixer extends MethodVisitor {
 
-		private String owner;
-		private String name;
 		private String desc;
 
 		private boolean done = false;
@@ -23,17 +27,22 @@ public class ConstructorMixer extends ClassVisitor {
 		 * A mixer which replaces the constructor invocation within a method by
 		 * a call to the constructor with the given name, descriptor and owner.
 		 * 
-		 * @param owner
-		 * @param name
 		 * @param desc
-		 * @param mv
+		 * @param delegateVisitor
 		 */
-		public SingleConstructorMixer(String owner, String name, String desc,
-				MethodVisitor mv) {
-			super(Opcodes.ASM4, mv);
-			this.owner = owner;
-			this.name = name;
+		public SingleConstructorMixer(String desc, MethodVisitor delegateVisitor) {
+			super(Opcodes.ASM4, delegateVisitor);
 			this.desc = desc;
+		}
+
+		@Override
+		public void visitAttribute(Attribute attr) {
+			/*
+			 * ConstructorCallAttributes do not have to be kept after loading
+			 * the class.
+			 */
+			if (!(attr instanceof ConstructorCallAttribute))
+				super.visitAttribute(attr);
 		}
 
 		@Override
@@ -43,22 +52,76 @@ public class ConstructorMixer extends ClassVisitor {
 				super.visitMethodInsn(opcode, owner, name, desc);
 				return;
 			}
-			super.visitMethodInsn(opcode, this.owner, this.name, this.desc);
 			done = true;
+			super.visitMethodInsn(opcode, owner, name, this.desc);
 		}
 
 	}
 
 	private static final String CONSTRUCTOR_METHOD_NAME = "<init>";
 
-	private List<Object> constructors = new ArrayList<Object>();
-
 	private final Map<String, ConstructorCall> constructorCalls;
 
-	public ConstructorMixer(ClassVisitor cv,
-			Map<String, ConstructorCall> constructorCalls) {
+	private final List<List<ConcreteParameter>> existingSuperConstructors = new ArrayList<List<ConcreteParameter>>();
+
+	private final List<List<ConcreteParameter>> existingThisConstructors = new ArrayList<List<ConcreteParameter>>();
+
+	private final ClassLoader classLoader;
+
+	/**
+	 * @param constructorCalls
+	 *            an assignment of constructor calls to constructors of this
+	 *            class (which are identified by a string returned by
+	 *            {@link ConstructorAnalyzer#getIdForConstructor(String)}
+	 * @param classLoader
+	 *            the class loader to be used to load related (super) classes
+	 * @param cv
+	 *            next visitor in chain
+	 * @throws IllegalArgumentException
+	 *             if constructorCalls or classLoader is null
+	 */
+	public ConstructorMixer(Map<String, ConstructorCall> constructorCalls,
+			ClassLoader classLoader, ClassVisitor cv)
+			throws IllegalArgumentException {
 		super(Opcodes.ASM4, cv);
+		if (constructorCalls == null || classLoader == null)
+			throw new IllegalArgumentException(
+					"constructorCalls and classLoader must not be null.");
 		this.constructorCalls = constructorCalls;
+		this.classLoader = classLoader;
+	}
+
+	@Override
+	public void visit(int version, int access, String name, String signature,
+			String superName, String[] interfaces) {
+		Constructor<?>[] superConstructors = null;
+		try {
+			superConstructors = ClassAccess.forName(
+					superName.replace('/', '.'), true, classLoader)
+					.getConstructors();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (superConstructors != null) {
+			for (Constructor<?> constructor : superConstructors) {
+				List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
+				Class<?>[] parameterTypes = constructor.getParameterTypes();
+				/*
+				 * Skip the first type because it is always CjObjectItf (outer
+				 * class type):
+				 */
+				for (int i = 1; i < parameterTypes.length; i++) {
+					Class<?> type = parameterTypes[i];
+					/*
+					 * TODO Set name of parameter (in ConcreteParameter
+					 * constructor). Maybe use annotations for named parameters?
+					 */
+					parameters.add(new ConcreteParameter(type.getName()));
+				}
+				existingSuperConstructors.add(parameters);
+			}
+		}
+		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
@@ -74,90 +137,78 @@ public class ConstructorMixer extends ClassVisitor {
 							name);
 			return null;
 		}
-		// TODO
-		return null;
+		SingleConstructorMixer constructorMixers[] = createSingleConstructorMixers(
+				access, name, desc, signature, exceptions, call);
+		if (constructorMixers == null)
+			return null;
+
+		/*
+		 * TODO Actual arguments of this constructor might later depend on the
+		 * matched constructor.
+		 */
+		Type[] argumentTypes = Type.getArgumentTypes(desc);
+		List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
+		/*
+		 * Skip the first type because it is always CjObjectItf (outer class
+		 * type):
+		 */
+		for (int i = 1; i < argumentTypes.length; i++) {
+			Type type = argumentTypes[i];
+			/*
+			 * TODO Test whether this works for primitive types. TODO Set name
+			 * of parameter. Use annotations for named parameters?
+			 */
+			parameters.add(new ConcreteParameter(type.getClassName()));
+		}
+		existingThisConstructors.add(parameters);
+		return new ListDelegationMethodVisitor(constructorMixers);
+	}
+
+	/**
+	 * @param exceptions
+	 * @param signature
+	 * @param desc
+	 * @param name
+	 * @param access
+	 * @param call
+	 * @return one {@link SingleConstructorMixer} for each matching constructor
+	 *         with respect to the given constructor call, or null if there is
+	 *         no matching called constructor
+	 */
+	private SingleConstructorMixer[] createSingleConstructorMixers(int access,
+			String name, String desc, String signature, String[] exceptions,
+			ConstructorCall call) {
+		List<SingleConstructorMixer> constructorMixers = new ArrayList<ConstructorMixer.SingleConstructorMixer>();
+		List<List<ConcreteParameter>> constructorPool = call.isSuper() ? existingSuperConstructors
+				: existingThisConstructors;
+		constructorLoop: for (List<ConcreteParameter> constructorParameters : constructorPool) {
+			ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
+					constructorParameters, classLoader);
+			call.getParameterPattern().accept(matcher);
+			if (matcher.hasFailed())
+				continue;
+			Type[] argumentTypes = new Type[constructorParameters.size() + 1];
+			argumentTypes[0] = Type
+					.getType("Lorg/caesarj/runtime/CjObjectIfc;");
+			for (int i = 1; i < argumentTypes.length; i++)
+				try {
+					argumentTypes[i] = Type.getType(ClassAccess
+							.forName(constructorParameters.get(i - 1)
+									.getTypeSignature(), false, classLoader));
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+					continue constructorLoop;
+				}
+			constructorMixers.add(new SingleConstructorMixer(Type
+					.getMethodDescriptor(Type.VOID_TYPE, argumentTypes), super
+					.visitMethod(access, name, desc, signature, exceptions)));
+		}
+		return constructorMixers.isEmpty() ? null : constructorMixers
+				.toArray(new SingleConstructorMixer[0]);
 	}
 
 	private static boolean isConstructor(String name) {
 		return CONSTRUCTOR_METHOD_NAME.equals(name);
-	}
-
-	@Override
-	public void visitEnd() {
-		// TODO
-		// for (Object constructor : constructors) {
-		// String calledConstructorTemplate =
-		// getCalledConstructorSignature(constructor);
-		// Object refClass;
-		// if (callsSuperConstructor(constructor))
-		// refClass = getSuperClass();
-		// else
-		// refClass = getThisClass();
-		// List<Object> refConstructorCandidates = getConstructors(refClass);
-		// for (Object refConstructorCandidate : refConstructorCandidates) {
-		// Map<String, String> constructorParameterMapping =
-		// instantiateConstructorTemplate(
-		// calledConstructorTemplate, refConstructorCandidate);
-		// if (constructorParameterMapping != null)
-		// visitConstructor(constructor, refConstructorCandidate);
-		// }
-		// }
-		super.visitEnd();
-	}
-
-	/**
-	 * @param constructor
-	 * @return the signature of the constructor called by the given constructor
-	 */
-	private static String getCalledConstructorSignature(Object constructor) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static boolean callsSuperConstructor(Object constructor) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private Object getSuperClass() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private Object getThisClass() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static List<Object> getConstructors(Object containingClass) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
-	 * @param constructorTemplate
-	 * @param constructor
-	 * @return a mapping of parameters in the given template to parts of the
-	 *         signature of the given concrete constructor, or null if no such
-	 *         mapping exists
-	 */
-	private static Map<String, String> instantiateConstructorTemplate(
-			String constructorTemplate, Object constructor) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
-	 * Writes a concrete constructor instantiating the given template
-	 * constructor with the given referenced constructor.
-	 * 
-	 * @param templateConstructor
-	 * @param referencedConstructor
-	 */
-	private void visitConstructor(Object templateConstructor,
-			Object referencedConstructor) {
-		// TODO Auto-generated method stub
-
 	}
 
 }

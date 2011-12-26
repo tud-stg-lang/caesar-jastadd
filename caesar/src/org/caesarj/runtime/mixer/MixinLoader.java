@@ -196,12 +196,12 @@ public class MixinLoader extends ClassLoader {
 		if (trace)
 			target = new TraceClassVisitor(target, new PrintWriter(System.err));
 
+		target = new ConstructorMixer(constructorAnalyzer.getConstructorCalls(),
+				this, target); // TODO
+
 		// classes without Caesar attribute do not need transformation
 		if (attrVis.getInfo() != null)
 			target = new ChildMixer(target, attrVis.getInfo());
-
-		target = new ConstructorMixer(target,
-				constructorAnalyzer.getConstructorCalls()); // TODO
 
 		reader.accept(target, attributes, 0);
 		byte[] data = writer.toByteArray();

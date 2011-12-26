@@ -22,33 +22,34 @@ aspect CCCreateBCode {
 	class ConstructorCallAttribute extends Attribute {
 	
 		public ConstructorCallAttribute(ConstructorDecl decl) {
-		super(
-				decl.hostType().constantPool(),
-				org.caesarj.runtime.mixer.ConstructorCallAttribute.ATTRIBUTE_NAME);
-		Stmt constructorInvocation = decl.getConstructorInvocation();
-		if (!(constructorInvocation instanceof ExprStmt))
-			return;
-		Expr expr = ((ExprStmt) constructorInvocation).getExpr();
-		if (!(expr instanceof ConstructorAccess))
-			return;
-		ConstructorAccess access = (ConstructorAccess) expr;
-		u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
-		int numArg = access.getNumArg();
-		u1(numArg);
-		ConstantPool pool = decl.hostType().constantPool();
-		int emptyUtf8 = pool.addUtf8("");
-		/*
-		 * Skip the first argument because it is always $cj$outer, the instance
-		 * of the outer class.
-		 */
-		for (int i = 1; i < numArg; i++) {
-			Expr arg = access.getArg(i);
-			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
-			u2(emptyUtf8); // name
-			u2(pool.addUtf8(arg.type().signature())); // type signature
+			super(
+					decl.hostType().constantPool(),
+					org.caesarj.runtime.mixer.ConstructorCallAttribute.ATTRIBUTE_NAME);
+			Stmt constructorInvocation = decl.getConstructorInvocation();
+			if (!(constructorInvocation instanceof ExprStmt))
+				return;
+			Expr expr = ((ExprStmt) constructorInvocation).getExpr();
+			if (!(expr instanceof ConstructorAccess))
+				return;
+			ConstructorAccess access = (ConstructorAccess) expr;
+			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
+			int numArg = access.getNumArg();
+			u1(numArg);
+			ConstantPool pool = decl.hostType().constantPool();
+			int emptyUtf8 = pool.addUtf8("");
+			/*
+			 * Skip the first argument because it is always $cj$outer, the instance
+			 * of the outer class.
+			 */
+			for (int i = 1; i < numArg; i++) {
+				Expr arg = access.getArg(i);
+				u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
+				u2(emptyUtf8); // name
+				u2(pool.addUtf8(arg.type().signature())); // type signature
+			}
+			
+			u1(access instanceof SuperConstructorAccess ? 1 : 0);
 		}
-		
-		u1(access instanceof SuperConstructorAccess ? 1 : 0);
 	}
 
 	// Aspect goal (2)
