@@ -19,9 +19,11 @@ import org.objectweb.asm.Type;
 
 public class ConstructorMixer extends ClassVisitor {
 
-	private class SingleConstructorMixer extends MethodVisitor {
+	private static class SingleConstructorMixer extends MethodVisitor {
 
-		private String desc;
+		private final String owner;
+
+		private final String desc;
 
 		private boolean done = false;
 
@@ -32,8 +34,10 @@ public class ConstructorMixer extends ClassVisitor {
 		 * @param desc
 		 * @param delegateVisitor
 		 */
-		public SingleConstructorMixer(String desc, MethodVisitor delegateVisitor) {
+		public SingleConstructorMixer(String owner, String desc,
+				MethodVisitor delegateVisitor) {
 			super(Opcodes.ASM4, delegateVisitor);
+			this.owner = owner;
 			this.desc = desc;
 		}
 
@@ -55,7 +59,7 @@ public class ConstructorMixer extends ClassVisitor {
 				return;
 			}
 			done = true;
-			super.visitMethodInsn(opcode, superClassName, name, this.desc);
+			super.visitMethodInsn(opcode, this.owner, name, this.desc);
 		}
 
 	}
@@ -73,6 +77,8 @@ public class ConstructorMixer extends ClassVisitor {
 	private final ClassLoader classLoader;
 
 	private String superClassName;
+
+	private String className;
 
 	/**
 	 * @param constructorCalls
@@ -100,6 +106,7 @@ public class ConstructorMixer extends ClassVisitor {
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
+		this.className = name;
 		this.superClassName = superName;
 		Constructor<?>[] superConstructors = null;
 		try {
@@ -202,16 +209,19 @@ public class ConstructorMixer extends ClassVisitor {
 					.getType("Lorg/caesarj/runtime/CjObjectIfc;");
 			for (int i = 1; i < argumentTypes.length; i++)
 				try {
-					argumentTypes[i] = Type.getType(ClassAccess
-							.forName(constructorParameters.get(i - 1)
-									.getTypeSignature(), false, classLoader));
+					argumentTypes[i] = Type.getType(ClassAccess.forName(
+							constructorParameters.get(i - 1).getTypeName(),
+							false, classLoader));
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
 					continue constructorLoop;
 				}
-			constructorMixers.add(new SingleConstructorMixer(Type
-					.getMethodDescriptor(Type.VOID_TYPE, argumentTypes), super
-					.visitMethod(access, name, desc, signature, exceptions)));
+			constructorMixers
+					.add(new SingleConstructorMixer(
+							call.isSuper() ? superClassName : className, Type
+									.getMethodDescriptor(Type.VOID_TYPE,
+											argumentTypes), super.visitMethod(
+									access, name, desc, signature, exceptions)));
 		}
 		return constructorMixers.isEmpty() ? null : constructorMixers
 				.toArray(new SingleConstructorMixer[0]);

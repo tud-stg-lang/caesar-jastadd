@@ -4,7 +4,7 @@ package org.caesarj.runtime.constructors;
  * Parameter pattern which references exactly one concrete parameter by type and
  * optionally also by name
  * <p>
- * Equality of concrete parameters is defined based only on the type signature.
+ * Equality of concrete parameters is defined based only on the type names.
  * 
  * @author Marko Martin
  */
@@ -12,14 +12,14 @@ public class ConcreteParameter implements ParameterPattern {
 
 	private String name;
 
-	private String typeSignature;
+	private String typeName;
 
-	public ConcreteParameter(String typeSignature) {
-		setTypeSignature(typeSignature);
+	public ConcreteParameter(String typeName) {
+		setTypeName(typeName);
 	}
 
-	public ConcreteParameter(String name, String typeSignature) {
-		this(typeSignature);
+	public ConcreteParameter(String name, String typeName) {
+		this(typeName);
 		this.name = name;
 	}
 
@@ -43,8 +43,8 @@ public class ConcreteParameter implements ParameterPattern {
 	/**
 	 * @return the type of the referenced parameter
 	 */
-	public String getTypeSignature() {
-		return typeSignature;
+	public String getTypeName() {
+		return typeName;
 	}
 
 	/**
@@ -52,12 +52,12 @@ public class ConcreteParameter implements ParameterPattern {
 	 * @throws IllegalArgumentException
 	 *             if typeSignature is null
 	 */
-	public void setTypeSignature(String typeSignature)
+	public void setTypeName(String typeSignature)
 			throws IllegalArgumentException {
 		if (typeSignature == null)
 			throw new IllegalArgumentException(
 					"typeSignature must not be null.");
-		this.typeSignature = typeSignature;
+		this.typeName = typeSignature;
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class ConcreteParameter implements ParameterPattern {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((typeSignature == null) ? 0 : typeSignature.hashCode());
+				+ ((typeName == null) ? 0 : typeName.hashCode());
 		return result;
 	}
 
@@ -83,10 +83,10 @@ public class ConcreteParameter implements ParameterPattern {
 		if (getClass() != obj.getClass())
 			return false;
 		ConcreteParameter other = (ConcreteParameter) obj;
-		if (typeSignature == null) {
-			if (other.typeSignature != null)
+		if (typeName == null) {
+			if (other.typeName != null)
 				return false;
-		} else if (!typeSignature.equals(other.typeSignature))
+		} else if (!typeName.equals(other.typeName))
 			return false;
 		return true;
 	}

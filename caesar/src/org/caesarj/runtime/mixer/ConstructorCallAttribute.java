@@ -47,7 +47,7 @@ public class ConstructorCallAttribute extends Attribute {
 		public void visit(ConcreteParameter parameter) {
 			parameter.setName(classReader.readUTF8(offset, buf));
 			offset += 2;
-			parameter.setTypeSignature(classReader.readUTF8(offset, buf));
+			parameter.setTypeName(classReader.readUTF8(offset, buf));
 			offset += 2;
 		}
 
@@ -133,11 +133,10 @@ public class ConstructorCallAttribute extends Attribute {
 	@Override
 	protected Attribute read(ClassReader cr, int off, int len, char[] buf,
 			int codeOff, Label[] labels) {
-		ParameterPatternReader patternReader = new ParameterPatternReader(cr,
-				off, buf);
-		boolean isSuperConstructorCall = cr.readByte(patternReader.getOffset()) != 0;
+		final ParameterPatternReader patternReader = new ParameterPatternReader(
+				cr, off, buf);
 		return new ConstructorCallAttribute(patternReader.readPattern(),
-				isSuperConstructorCall);
+				cr.readByte(patternReader.getOffset()) != 0);
 	}
 
 	@Override

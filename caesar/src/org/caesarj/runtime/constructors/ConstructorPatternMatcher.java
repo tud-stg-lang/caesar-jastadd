@@ -75,8 +75,8 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 			fail();
 			return;
 		}
-		if (!ClassAccess.isAssignableFrom(parameters.get(0).getTypeSignature(),
-				parameter.getTypeSignature(), classLoader)) {
+		if (!ClassAccess.isAssignableFrom(parameters.get(0).getTypeName(),
+				parameter.getTypeName(), classLoader)) {
 			fail();
 			return;
 		}

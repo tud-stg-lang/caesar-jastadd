@@ -34,7 +34,7 @@ aspect CCCreateBCode {
 			ConstructorAccess access = (ConstructorAccess) expr;
 			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
 			int numArg = access.getNumArg();
-			u1(numArg);
+			u1(numArg - 1);
 			ConstantPool pool = decl.hostType().constantPool();
 			int emptyUtf8 = pool.addUtf8("");
 			/*

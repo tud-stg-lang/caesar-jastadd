@@ -142,6 +142,37 @@
         </code>
     </compile-run>
 	
+    <compile-run id="condconstr007" description="test constructor with this invocation">
+    	<test>
+    		new C();
+    	</test>
+        <code>
+        	public cclass A {
+        	   public A() {
+        	      System.out.println("A constructor");
+        	   }
+			   public A(int x) {
+			      super(String.format("int %d", x));
+			      System.out.format("A constructor - got value %d%n", x);
+			   }
+			   public A(float f) {
+			      this((int) f);
+			   }
+			}
+			public cclass B {
+			   public B(String s) {
+			      System.out.format("B constructor - got value %s%n", s);
+			   }
+			}
+			public cclass C extends A &amp; B {
+			   public C() {
+			      super(4.5f);
+			      System.out.println("C constructor");
+			   }
+			}
+        </code>
+    </compile-run>
+	
     <!--compile-check-error id="stcinhfields002" error="VAR_UNKNOWN" 
 		                 description="test not available field">
         <code>
