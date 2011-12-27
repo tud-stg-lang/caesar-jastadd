@@ -2,8 +2,10 @@ package org.caesarj.runtime.mixer;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.caesarj.runtime.constructors.ConcreteParameter;
 import org.caesarj.runtime.constructors.ConstructorPatternMatcher;
@@ -17,7 +19,7 @@ import org.objectweb.asm.Type;
 
 public class ConstructorMixer extends ClassVisitor {
 
-	private static class SingleConstructorMixer extends MethodVisitor {
+	private class SingleConstructorMixer extends MethodVisitor {
 
 		private String desc;
 
@@ -53,26 +55,30 @@ public class ConstructorMixer extends ClassVisitor {
 				return;
 			}
 			done = true;
-			super.visitMethodInsn(opcode, owner, name, this.desc);
+			super.visitMethodInsn(opcode, superClassName, name, this.desc);
 		}
 
 	}
 
 	private static final String CONSTRUCTOR_METHOD_NAME = "<init>";
 
-	private final Map<String, ConstructorCall> constructorCalls;
+	private final List<ConstructorCall> constructorCalls;
+
+	private int nextConstructor = 0;
 
 	private final List<List<ConcreteParameter>> existingSuperConstructors = new ArrayList<List<ConcreteParameter>>();
 
-	private final List<List<ConcreteParameter>> existingThisConstructors = new ArrayList<List<ConcreteParameter>>();
+	private final Set<List<ConcreteParameter>> existingThisConstructors = new HashSet<List<ConcreteParameter>>();
 
 	private final ClassLoader classLoader;
 
+	private String superClassName;
+
 	/**
 	 * @param constructorCalls
-	 *            an assignment of constructor calls to constructors of this
-	 *            class (which are identified by a string returned by
-	 *            {@link ConstructorAnalyzer#getIdForConstructor(String)}
+	 *            the list of constructor calls appearing in the constructors of
+	 *            the visited class in the order in which the constructors are
+	 *            visited
 	 * @param classLoader
 	 *            the class loader to be used to load related (super) classes
 	 * @param cv
@@ -80,7 +86,7 @@ public class ConstructorMixer extends ClassVisitor {
 	 * @throws IllegalArgumentException
 	 *             if constructorCalls or classLoader is null
 	 */
-	public ConstructorMixer(Map<String, ConstructorCall> constructorCalls,
+	public ConstructorMixer(List<ConstructorCall> constructorCalls,
 			ClassLoader classLoader, ClassVisitor cv)
 			throws IllegalArgumentException {
 		super(Opcodes.ASM4, cv);
@@ -94,6 +100,7 @@ public class ConstructorMixer extends ClassVisitor {
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
+		this.superClassName = superName;
 		Constructor<?>[] superConstructors = null;
 		try {
 			superConstructors = ClassAccess.forName(
@@ -129,18 +136,13 @@ public class ConstructorMixer extends ClassVisitor {
 			String signature, String[] exceptions) {
 		if (!isConstructor(name))
 			return super.visitMethod(access, name, desc, signature, exceptions);
-		ConstructorCall call = constructorCalls.get(ConstructorAnalyzer
-				.getIdForConstructor(desc));
+		ConstructorCall call = constructorCalls.get(nextConstructor++);
 		if (call == null) {
 			System.err
 					.format("ConstructorMixer.visitMethod: Expected to have a ConstructorCall object for method %s%n",
 							name);
 			return null;
 		}
-		SingleConstructorMixer constructorMixers[] = createSingleConstructorMixers(
-				access, name, desc, signature, exceptions, call);
-		if (constructorMixers == null)
-			return null;
 
 		/*
 		 * TODO Actual arguments of this constructor might later depend on the
@@ -160,6 +162,14 @@ public class ConstructorMixer extends ClassVisitor {
 			 */
 			parameters.add(new ConcreteParameter(type.getClassName()));
 		}
+		if (existingThisConstructors.contains(parameters))
+			return null;
+
+		SingleConstructorMixer constructorMixers[] = createSingleConstructorMixers(
+				access, name, desc, signature, exceptions, call);
+		if (constructorMixers == null)
+			return null;
+
 		existingThisConstructors.add(parameters);
 		return new ListDelegationMethodVisitor(constructorMixers);
 	}
@@ -179,7 +189,7 @@ public class ConstructorMixer extends ClassVisitor {
 			String name, String desc, String signature, String[] exceptions,
 			ConstructorCall call) {
 		List<SingleConstructorMixer> constructorMixers = new ArrayList<ConstructorMixer.SingleConstructorMixer>();
-		List<List<ConcreteParameter>> constructorPool = call.isSuper() ? existingSuperConstructors
+		Collection<List<ConcreteParameter>> constructorPool = call.isSuper() ? existingSuperConstructors
 				: existingThisConstructors;
 		constructorLoop: for (List<ConcreteParameter> constructorParameters : constructorPool) {
 			ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(

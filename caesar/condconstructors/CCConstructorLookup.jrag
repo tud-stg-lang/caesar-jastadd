@@ -1,0 +1,32 @@
+/*
+ * Adapts and adds constructor lookup features
+ *
+ * (1) Provides easy access to the ConstructorAccess within a ConstructorDecl.
+ * (2) Provides a helper method to check whether two constructor accesses rely on the
+ *     same accessed signature. 
+ */
+aspect CCConstructorLookup {
+
+	// Aspect goal (1)
+	syn ConstructorAccess ConstructorDecl.getConstructorAccess() {
+		Stmt constructorInvocation = getConstructorInvocation();
+		if (!(constructorInvocation instanceof ExprStmt))
+			return null;
+		Expr expr = ((ExprStmt) constructorInvocation).getExpr();
+		if (!(expr instanceof ConstructorAccess))
+			return null;
+		return (ConstructorAccess) expr;
+	}
+
+	// Aspect goal (2)
+	syn lazy boolean ConstructorAccess.sameSignature(ConstructorAccess that) {
+		if (getNumArg() != that.getNumArg())
+			return false;
+		for (int i = 0; i < getNumArg(); i++) {
+			if (!getArg(i).type().equals(that.getArg(i).type()))
+				return false;
+		}
+		return true;
+	}
+
+}

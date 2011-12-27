@@ -151,19 +151,27 @@ public class MixinLoader extends ClassLoader {
 		// load binary data of base class
 		InputStream in = getResourceAsStream(baseClass.replace('.', '/')
 				+ ".cjclass");
-
-		// TODO constructor analysis & transformation
-
-		// prepare transformation chain
-		ClassWriter writer = new ClassWriter(0);
-		ClassVisitor target = trace ? new TraceClassVisitor(writer,
-				new PrintWriter(System.err)) : writer;
-		MixinMixer mixer = new MixinMixer(target, name, superClass, outClass,
-				superOut);
 		ClassReader reader = createClassReader(name, in);
 
+		// FIRST PASS
+		// analyze conditional constructors
+		final ConstructorAnalyzer constructorAnalyzer = new ConstructorAnalyzer(
+				null);
+		ClassVisitor target = constructorAnalyzer;
+		reader.accept(target, attributes, 0);
+
+		// SECOND PASS
+		// transform classes and write them
+		ClassWriter writer = new ClassWriter(0);
+		target = writer;
+		if (trace)
+			target = new TraceClassVisitor(writer, new PrintWriter(System.err));
+		target = new ConstructorMixer(
+				constructorAnalyzer.getConstructorCallList(), this, target);
+		target = new MixinMixer(target, name, superClass, outClass, superOut);
+
 		// transform mixin data
-		reader.accept(mixer, attributes, 0);
+		reader.accept(target, attributes, 0);
 		byte[] data = writer.toByteArray();
 
 		// process transformed mixin data
@@ -196,8 +204,8 @@ public class MixinLoader extends ClassLoader {
 		if (trace)
 			target = new TraceClassVisitor(target, new PrintWriter(System.err));
 
-		target = new ConstructorMixer(constructorAnalyzer.getConstructorCalls(),
-				this, target); // TODO
+		target = new ConstructorMixer(
+				constructorAnalyzer.getConstructorCallList(), this, target);
 
 		// classes without Caesar attribute do not need transformation
 		if (attrVis.getInfo() != null)

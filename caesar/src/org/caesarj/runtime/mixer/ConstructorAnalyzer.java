@@ -1,6 +1,8 @@
 package org.caesarj.runtime.mixer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.caesarj.runtime.constructors.ParameterPattern;
@@ -76,18 +78,21 @@ public class ConstructorAnalyzer extends ClassVisitor {
 		public void visitAttribute(Attribute attr) {
 			if (attr instanceof ConstructorCallAttribute) {
 				ConstructorCallAttribute constructorCallAttribute = (ConstructorCallAttribute) attr;
-				constructorCalls.put(
-						getIdForConstructor(descriptor),
-						new ConstructorCall(constructorCallAttribute
-								.getPattern(), constructorCallAttribute
-								.isSuperConstructorCall()));
+				ConstructorCall constructorCall = new ConstructorCall(
+						constructorCallAttribute.getPattern(),
+						constructorCallAttribute.isSuperConstructorCall());
+				constructorCalls.put(getIdForConstructor(descriptor),
+						constructorCall);
+				constructorCallList.add(constructorCall);
 			} else
 				super.visitAttribute(attr);
 		}
 
 	}
 
-	private Map<String, ConstructorCall> constructorCalls = new HashMap<String, ConstructorCall>();
+	private final Map<String, ConstructorCall> constructorCalls = new HashMap<String, ConstructorCall>();
+
+	private final List<ConstructorCall> constructorCallList = new ArrayList<ConstructorCall>();
 
 	public ConstructorAnalyzer(ClassVisitor cv) {
 		super(Opcodes.ASM4, cv);
@@ -111,6 +116,14 @@ public class ConstructorAnalyzer extends ClassVisitor {
 	 */
 	public Map<String, ConstructorCall> getConstructorCalls() {
 		return constructorCalls;
+	}
+
+	/**
+	 * @return the list of found constructor calls in the order in which the
+	 *         calling constructors are visited
+	 */
+	public List<ConstructorCall> getConstructorCallList() {
+		return constructorCallList;
 	}
 
 }

@@ -10,7 +10,7 @@
 			   public AAA(String x) {
 			      System.out.format("AAA constructor - got value %s%n", x);
 			   }
-			}			
+			}
 			public cclass BBB extends AAA {
 			   public BBB() {
 			      super(4);
@@ -19,6 +19,124 @@
 			   public BBB(String x) {
 			      super(x);
 			      System.out.println("BBB constructor #2");
+			   }
+			}
+        </code>
+    </compile-run>
+    
+    <compile-run id="condconstr002" description="test conversion from byte to int">
+    	<test>
+    		new B((byte) 50);
+    	</test>
+        <code>
+        	public cclass A {	
+			   public A(int x) {
+			      System.out.format("A constructor - got value %d%n", x);
+			   }
+			}
+			public cclass B extends A {
+			   public B(byte b) {
+			      super(b);
+			      System.out.println("B constructor");
+			   }
+			}
+        </code>
+    </compile-run>
+	
+    <compile-run id="condconstr003" description="test find constructor of mixed class">
+    	<test>
+    		new D((byte) 50);
+    	</test>
+        <code>
+        	public cclass A {
+			   public A(int x) {
+			      super((float) x);
+			      System.out.format("A constructor - got value %d%n", x);
+			   }
+			}
+			public cclass C {
+			   public C(float f) {
+			      System.out.format("C constructor - got value %f%n", f);
+			   }
+			}
+			public cclass B extends A {
+			   public B(byte b) {
+			      super(b);
+			      System.out.format("B constructor - got value %d%n", b);
+			   }
+			}
+			public cclass D extends B &amp; C {
+			   public D(byte b) {
+			      super(b);
+			      System.out.format("D constructor - got value %d%n", b);
+			   }
+			}
+        </code>
+    </compile-run>
+	
+    <compile-run id="condconstr004" description="test two constructors with equal signature">
+    	<test>
+    		new A();
+    		new C();
+    	</test>
+        <code>
+        	public cclass A {
+        	   public A() {
+        	      System.out.println("A constructor");
+        	   }
+			   public A() {
+			      super(4);
+			      System.out.println("A constructor (2)");
+			   }
+			}
+			public cclass B {
+			   public B(int x) {
+			      System.out.format("B constructor - got value %d%n", x);
+			   }
+			}
+			public cclass C extends A &amp; B {
+			   public C() {
+			      System.out.println("C constructor");
+			   }
+			}
+        </code>
+    </compile-run>
+	
+    <compile-check-error id="condconstr005" error="DUPLICATE_DECL"
+    		description="test error for two constructors with equal signature and equal super constructor">
+        <code>
+        	public cclass A {
+        	   public A() {
+        	      System.out.println("A constructor");
+        	   }
+			   public A() {
+			      System.out.println("A constructor (2)");
+			   }
+			}
+        </code>
+    </compile-check-error>
+	
+    <compile-run id="condconstr006" description="test take first constructor if two are matching">
+    	<test>
+    		assertEquals(1, new B().constructor);
+    	</test>
+        <code>
+        	public cclass A {
+        	   public A() {
+        	      System.out.println("A constructor");
+        	   }
+			   public A(int x) {
+			      System.out.format("A constructor - got value %d%n", x);
+			   }
+			}
+			public cclass B extends A {
+			   public final int constructor;
+			   public B() {
+        	      constructor = 1;
+			   }
+			   public B() {
+			      super(4);
+        	      constructor = 2;
 			   }
 			}
         </code>

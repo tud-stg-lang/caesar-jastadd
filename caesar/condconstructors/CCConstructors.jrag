@@ -1,0 +1,8 @@
+/*
+ * Adapts constructors for conditional constructors
+ *
+ * 
+ */
+aspect CCConstructors {
+
+}
