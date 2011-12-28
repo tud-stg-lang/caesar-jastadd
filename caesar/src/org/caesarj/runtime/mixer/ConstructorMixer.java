@@ -8,65 +8,28 @@ import java.util.List;
 import java.util.Set;
 
 import org.caesarj.runtime.constructors.ConcreteParameter;
+import org.caesarj.runtime.constructors.ConstructorAnalysisResult;
 import org.caesarj.runtime.constructors.ConstructorPatternMatcher;
-import org.caesarj.runtime.mixer.ConstructorAnalyzer.ConstructorCall;
+import org.caesarj.runtime.constructors.PatternArgumentLoadingInstructionComposer;
 import org.caesarj.util.ClassAccess;
-import org.objectweb.asm.Attribute;
+import org.caesarj.util.Cloner;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 public class ConstructorMixer extends ClassVisitor {
 
-	private static class SingleConstructorMixer extends MethodVisitor {
-
-		private final String owner;
-
-		private final String desc;
-
-		private boolean done = false;
-
-		/**
-		 * A mixer which replaces the constructor invocation within a method by
-		 * a call to the constructor with the given name, descriptor and owner.
-		 * 
-		 * @param desc
-		 * @param delegateVisitor
-		 */
-		public SingleConstructorMixer(String owner, String desc,
-				MethodVisitor delegateVisitor) {
-			super(Opcodes.ASM4, delegateVisitor);
-			this.owner = owner;
-			this.desc = desc;
-		}
-
-		@Override
-		public void visitAttribute(Attribute attr) {
-			/*
-			 * ConstructorCallAttributes do not have to be kept after loading
-			 * the class.
-			 */
-			if (!(attr instanceof ConstructorCallAttribute))
-				super.visitAttribute(attr);
-		}
-
-		@Override
-		public void visitMethodInsn(int opcode, String owner, String name,
-				String desc) {
-			if (done || opcode != Opcodes.INVOKESPECIAL || !isConstructor(name)) {
-				super.visitMethodInsn(opcode, owner, name, desc);
-				return;
-			}
-			done = true;
-			super.visitMethodInsn(opcode, this.owner, name, this.desc);
-		}
-
-	}
+	private static final Type TYPE_CJOBJECTIFC = Type
+			.getType("Lorg/caesarj/runtime/CjObjectIfc;");
 
 	private static final String CONSTRUCTOR_METHOD_NAME = "<init>";
 
-	private final List<ConstructorCall> constructorCalls;
+	private final List<ConstructorAnalysisResult> constructorAnalysisResults;
 
 	private int nextConstructor = 0;
 
@@ -81,7 +44,7 @@ public class ConstructorMixer extends ClassVisitor {
 	private String className;
 
 	/**
-	 * @param constructorCalls
+	 * @param constructorAnalysisResults
 	 *            the list of constructor calls appearing in the constructors of
 	 *            the visited class in the order in which the constructors are
 	 *            visited
@@ -92,14 +55,15 @@ public class ConstructorMixer extends ClassVisitor {
 	 * @throws IllegalArgumentException
 	 *             if constructorCalls or classLoader is null
 	 */
-	public ConstructorMixer(List<ConstructorCall> constructorCalls,
+	public ConstructorMixer(
+			List<ConstructorAnalysisResult> constructorAnalysisResults,
 			ClassLoader classLoader, ClassVisitor cv)
 			throws IllegalArgumentException {
 		super(Opcodes.ASM4, cv);
-		if (constructorCalls == null || classLoader == null)
+		if (constructorAnalysisResults == null || classLoader == null)
 			throw new IllegalArgumentException(
 					"constructorCalls and classLoader must not be null.");
-		this.constructorCalls = constructorCalls;
+		this.constructorAnalysisResults = constructorAnalysisResults;
 		this.classLoader = classLoader;
 	}
 
@@ -143,14 +107,15 @@ public class ConstructorMixer extends ClassVisitor {
 			String signature, String[] exceptions) {
 		if (!isConstructor(name))
 			return super.visitMethod(access, name, desc, signature, exceptions);
-		ConstructorCall call = constructorCalls.get(nextConstructor++);
-		if (call == null) {
+		if (nextConstructor >= constructorAnalysisResults.size()) {
 			System.err
-					.format("ConstructorMixer.visitMethod: Expected to have a ConstructorCall object for method %s%n",
+					.format("ConstructorMixer.visitMethod: No ConstructorAnalysisResult found for method %s%n",
 							name);
 			return null;
 		}
 
+		final ConstructorAnalysisResult analysisResult = constructorAnalysisResults
+				.get(nextConstructor++);
 		/*
 		 * TODO Actual arguments of this constructor might later depend on the
 		 * matched constructor.
@@ -172,59 +137,118 @@ public class ConstructorMixer extends ClassVisitor {
 		if (existingThisConstructors.contains(parameters))
 			return null;
 
-		SingleConstructorMixer constructorMixers[] = createSingleConstructorMixers(
-				access, name, desc, signature, exceptions, call);
-		if (constructorMixers == null)
-			return null;
+		if (createConstructors(access, name, desc, signature, exceptions,
+				analysisResult))
+			existingThisConstructors.add(parameters);
 
-		existingThisConstructors.add(parameters);
-		return new ListDelegationMethodVisitor(constructorMixers);
+		return null;
 	}
 
 	/**
+	 * Creates all instances of the given constructor by inserting instructions
+	 * which call appropriate reference constructors.<br>
+	 * Calls {@link #visitMethod(int, String, String, String, String[])} on
+	 * super for every constructor to be created.
+	 * 
 	 * @param exceptions
 	 * @param signature
 	 * @param desc
 	 * @param name
 	 * @param access
-	 * @param call
-	 * @return one {@link SingleConstructorMixer} for each matching constructor
-	 *         with respect to the given constructor call, or null if there is
-	 *         no matching called constructor
+	 * @param analysisResult
+	 * @return true if at least one constructor was created
 	 */
-	private SingleConstructorMixer[] createSingleConstructorMixers(int access,
-			String name, String desc, String signature, String[] exceptions,
-			ConstructorCall call) {
-		List<SingleConstructorMixer> constructorMixers = new ArrayList<ConstructorMixer.SingleConstructorMixer>();
-		Collection<List<ConcreteParameter>> constructorPool = call.isSuper() ? existingSuperConstructors
+	private boolean createConstructors(int access, String name, String desc,
+			String signature, String[] exceptions,
+			ConstructorAnalysisResult analysisResult) {
+		boolean createdAtLeastOneConstructor = false;
+		final Collection<List<ConcreteParameter>> constructorPool = analysisResult
+				.isSuperInvocation() ? existingSuperConstructors
 				: existingThisConstructors;
-		constructorLoop: for (List<ConcreteParameter> constructorParameters : constructorPool) {
+		// Loop over potential targets of the constructor call:
+		for (List<ConcreteParameter> constructorParameters : constructorPool) {
 			ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
 					constructorParameters, classLoader);
-			call.getParameterPattern().accept(matcher);
+			analysisResult.getConstructorInvocationPattern().accept(matcher);
 			if (matcher.hasFailed())
 				continue;
-			Type[] argumentTypes = new Type[constructorParameters.size() + 1];
-			argumentTypes[0] = Type
-					.getType("Lorg/caesarj/runtime/CjObjectIfc;");
-			for (int i = 1; i < argumentTypes.length; i++)
-				try {
-					argumentTypes[i] = Type.getType(ClassAccess.forName(
-							constructorParameters.get(i - 1).getTypeName(),
-							false, classLoader));
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-					continue constructorLoop;
-				}
-			constructorMixers
-					.add(new SingleConstructorMixer(
-							call.isSuper() ? superClassName : className, Type
-									.getMethodDescriptor(Type.VOID_TYPE,
-											argumentTypes), super.visitMethod(
-									access, name, desc, signature, exceptions)));
+
+			/*
+			 * The potential target constructor does indeed match the call
+			 * pattern. Thus, create a new constructor which actually calls this
+			 * target constructor:
+			 */
+			InsnList instructions = composeInstructions(constructorParameters,
+					analysisResult);
+			if (instructions == null)
+				continue;
+			MethodNode constructorNode = analysisResult.getConstructorNode();
+			constructorNode.instructions = instructions;
+			constructorNode.accept(super.visitMethod(access, name, desc,
+					signature, exceptions));
+			createdAtLeastOneConstructor = true;
 		}
-		return constructorMixers.isEmpty() ? null : constructorMixers
-				.toArray(new SingleConstructorMixer[0]);
+		return createdAtLeastOneConstructor;
+	}
+
+	/**
+	 * @param constructorParameters
+	 * @param analysisResult
+	 * @return instructions for a constructor calling the constructor with the
+	 *         given parameters, or null if no such constructor can be composed
+	 */
+	private InsnList composeInstructions(
+			List<ConcreteParameter> constructorParameters,
+			ConstructorAnalysisResult analysisResult) {
+		InsnList instructions = new InsnList();
+
+		/*
+		 * Load this to the stack which will be the return value.
+		 */
+		instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+
+		/*
+		 * Load outer class instance.
+		 */
+		instructions.add(Cloner.clone(analysisResult
+				.getOuterClassInstanceLoadInstructions()));
+
+		/*
+		 * Load argument values.
+		 */
+		PatternArgumentLoadingInstructionComposer argumentLoadingInstructionComposer = new PatternArgumentLoadingInstructionComposer(
+				analysisResult.getArgumentLoadInstructions());
+		analysisResult.getConstructorInvocationPattern().accept(
+				argumentLoadingInstructionComposer);
+		instructions.add(argumentLoadingInstructionComposer
+				.getInstructionList());
+
+		/*
+		 * Call referenced constructor.
+		 */
+		Type[] argumentTypes = new Type[constructorParameters.size() + 1];
+		argumentTypes[0] = TYPE_CJOBJECTIFC;
+		for (int i = 1; i < argumentTypes.length; i++)
+			try {
+				argumentTypes[i] = Type.getType(ClassAccess.forName(
+						constructorParameters.get(i - 1).getTypeName(), false,
+						classLoader));
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				return null;
+			}
+		instructions
+				.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, analysisResult
+						.isSuperInvocation() ? superClassName : className,
+						CONSTRUCTOR_METHOD_NAME, Type.getMethodDescriptor(
+								Type.VOID_TYPE, argumentTypes)));
+
+		/*
+		 * Append remaining instructions.
+		 */
+		instructions
+				.add(Cloner.clone(analysisResult.getEffectiveInstructions()));
+		return instructions;
 	}
 
 	private static boolean isConstructor(String name) {

@@ -601,10 +601,8 @@ aspect CreateBCode {
       gen.emitLoadReference(index++);
 
     // args
-    for (int i = 0; i < getNumArg(); ++i) {
-      getArg(i).createBCode(gen);
-      getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
-    }
+    for (int i = 0; i < getNumArg(); ++i)
+      emitArgument(gen, i);
     if(decl().isPrivate() && decl().hostType() != hostType()) {
       gen.emit(Bytecode.ACONST_NULL);
       decl().createAccessor().emitInvokeConstructor(gen);
@@ -642,10 +640,8 @@ aspect CreateBCode {
     }
 
     // args
-    for (int i = 0; i < getNumArg(); ++i) {
-      getArg(i).createBCode(gen);
-      emitCastToIthParameterIfPossible(gen, i);
-    }
+    for (int i = 0; i < getNumArg(); ++i)
+      emitArgument(gen, i);
     if(decl().isPrivate() && decl().hostType() != hostType()) {
       gen.emit(Bytecode.ACONST_NULL);
       decl().createAccessor().emitInvokeConstructor(gen);
@@ -654,8 +650,13 @@ aspect CreateBCode {
       decl().emitInvokeConstructor(gen);
     }
   }
+  
+  protected void ConstructorAccess.emitArgument(CodeGeneration gen, int i) {
+    getArg(i).createBCode(gen);
+    emitCastToIthParameterIfPossible(gen, i);
+  }
 
-  private void SuperConstructorAccess.emitCastToIthParameterIfPossible(CodeGeneration gen, int i) {
+  protected void ConstructorAccess.emitCastToIthParameterIfPossible(CodeGeneration gen, int i) {
     getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
   }
 

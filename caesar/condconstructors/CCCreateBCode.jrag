@@ -1,15 +1,17 @@
 /*
  * Adapts byte code creation for conditional constructors
  *
- * (1) In super constructor accesses, don't cast to the target parameter type if there
- *     is no matching super constructor.
+ * (1) In constructor accesses, don't cast to the target parameter type if there is no
+ *     matching constructor.
  * (2) For constructor declarations, save additional information about the invocation of
  *     a "this" or "super" constructor in form of an attribute.
+ * (3) Separate multiple arguments when calling the super or another this constructor by
+ *     NOPs.
  */
 aspect CCCreateBCode {
 
 	// Aspect goal (1)
-	refine CreateBCode private void SuperConstructorAccess.emitCastToIthParameterIfPossible(CodeGeneration gen, int i) {
+	refine CreateBCode protected void ConstructorAccess.emitCastToIthParameterIfPossible(CodeGeneration gen, int i) {
 		if (!decl().equals(unknownConstructor()))
 			getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
 	}
@@ -57,6 +59,13 @@ aspect CCCreateBCode {
 		Collection c = super.attributes();
 		c.add(new ConstructorCallAttribute(this));
 		return c;
+	}
+	
+	// Aspect goal (3)
+	refine CreateBCode protected void ConstructorAccess.emitArgument(CodeGeneration gen, int i) {
+		CreateBCode.ConstructorAccess.emitArgument(gen, i);
+		if (i < getNumArg() - 1)
+			gen.emit(Bytecode.NOP);
 	}
 
 }

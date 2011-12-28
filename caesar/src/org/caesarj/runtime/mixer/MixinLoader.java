@@ -166,8 +166,8 @@ public class MixinLoader extends ClassLoader {
 		target = writer;
 		if (trace)
 			target = new TraceClassVisitor(writer, new PrintWriter(System.err));
-		target = new ConstructorMixer(
-				constructorAnalyzer.getConstructorCallList(), this, target);
+		target = new ConstructorMixer(constructorAnalyzer.getResults(), this,
+				target);
 		target = new MixinMixer(target, name, superClass, outClass, superOut);
 
 		// transform mixin data
@@ -204,8 +204,8 @@ public class MixinLoader extends ClassLoader {
 		if (trace)
 			target = new TraceClassVisitor(target, new PrintWriter(System.err));
 
-		target = new ConstructorMixer(
-				constructorAnalyzer.getConstructorCallList(), this, target);
+		target = new ConstructorMixer(constructorAnalyzer.getResults(), this,
+				target);
 
 		// classes without Caesar attribute do not need transformation
 		if (attrVis.getInfo() != null)

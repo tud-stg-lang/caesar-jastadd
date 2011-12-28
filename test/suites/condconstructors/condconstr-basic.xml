@@ -6,9 +6,9 @@
     		new BBB("test");
     	</test>
         <code>
-        	public cclass AAA {	
-			   public AAA(String x) {
-			      System.out.format("AAA constructor - got value %s%n", x);
+        	public cclass AAA {
+			   public AAA(String x, int i) {
+			      System.out.format("AAA constructor - got values %s, %d%n", x, i);
 			   }
 			}
 			public cclass BBB extends AAA {
@@ -17,7 +17,7 @@
 			      System.out.println("BBB constructor #1");
 			   }
 			   public BBB(String x) {
-			      super(x);
+			      super(x, 5);
 			      System.out.println("BBB constructor #2");
 			   }
 			}
