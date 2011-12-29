@@ -149,33 +149,23 @@ public class MixinLoader extends ClassLoader {
 		String superOut = mixins.getSuperOut(id);
 
 		// load binary data of base class
-		InputStream in = getResourceAsStream(baseClass.replace('.', '/')
-				+ ".cjclass");
-		ClassReader reader = createClassReader(name, in);
+		final ClassReader reader = createClassReader(name,
+				getResourceAsStream(baseClass.replace('.', '/') + ".cjclass"));
 
-		// FIRST PASS
-		// analyze conditional constructors
-		final ConstructorAnalyzer constructorAnalyzer = new ConstructorAnalyzer(
-				null);
-		ClassVisitor target = constructorAnalyzer;
-		reader.accept(target, attributes, 0);
-
-		// SECOND PASS
 		// transform classes and write them
-		ClassWriter writer = new ClassWriter(0);
-		target = writer;
+		final ClassWriter writer = new ClassWriter(0);
+		ClassVisitor target = writer;
 		if (trace)
 			target = new TraceClassVisitor(writer, new PrintWriter(System.err));
-		target = new ConstructorMixer(constructorAnalyzer.getResults(), this,
-				target);
+		target = new ConstructorMixer(this, target);
 		target = new MixinMixer(target, name, superClass, outClass, superOut);
 
 		// transform mixin data
 		reader.accept(target, attributes, 0);
-		byte[] data = writer.toByteArray();
+		final byte[] data = writer.toByteArray();
 
 		// process transformed mixin data
-		Class<?> result = defineClass(name, data, 0, data.length);
+		final Class<?> result = defineClass(name, data, 0, data.length);
 		mixins.cache(id, result);
 		return result;
 	}
@@ -189,34 +179,29 @@ public class MixinLoader extends ClassLoader {
 		final ClassReader reader = createClassReader(name, in);
 
 		// FIRST PASS
-		// prepare transformation chain and analyze conditional constructors
+		// prepare transformation chain
 		final CaesarAttributeVisitor attrVis = new CaesarAttributeVisitor(
 				mixins);
-		final ConstructorAnalyzer constructorAnalyzer = new ConstructorAnalyzer(
-				attrVis);
-		ClassVisitor target = constructorAnalyzer;
-		reader.accept(target, attributes, 0);
+		reader.accept(attrVis, attributes, 0);
 
 		// SECOND PASS
 		// transform classes and write them
 		final ClassWriter writer = new ClassWriter(0);
-		target = writer;
+		ClassVisitor target = writer;
 		if (trace)
 			target = new TraceClassVisitor(target, new PrintWriter(System.err));
 
-		target = new ConstructorMixer(constructorAnalyzer.getResults(), this,
-				target);
+		target = new ConstructorMixer(this, target);
 
 		// classes without Caesar attribute do not need transformation
 		if (attrVis.getInfo() != null)
 			target = new ChildMixer(target, attrVis.getInfo());
 
 		reader.accept(target, attributes, 0);
-		byte[] data = writer.toByteArray();
+		final byte[] data = writer.toByteArray();
 
 		// process transformed mixin data
-		Class<?> result = defineClass(name, data, 0, data.length);
-		return result;
+		return defineClass(name, data, 0, data.length);
 	}
 
 	private Class<?> loadMixinClass(String name) throws ClassNotFoundException {

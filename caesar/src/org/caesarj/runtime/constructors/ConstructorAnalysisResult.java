@@ -2,13 +2,12 @@ package org.caesarj.runtime.constructors;
 
 import java.util.List;
 
-import org.caesarj.runtime.mixer.ConstructorAnalyzer;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
- * Results of analyzing a constructor produced by the
- * {@link ConstructorAnalyzer}
+ * Results of analyzing a constructor produced in the
+ * {@link org.caesarj.runtime.mixer.ConstructorMixer}
  * 
  * @author Marko Martin
  */
