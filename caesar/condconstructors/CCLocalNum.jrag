@@ -1,0 +1,26 @@
+/*
+ * Sets appropriate local nums for variables in conditional constructors.
+ * Specifically, concrete parameters will be assigned nums sequentially whereas
+ * list parameters are not assigned a num (variableSize == 0) because they cannot
+ * be accessed as a variable.
+ */
+aspect CCLocalNum {
+
+	abstract int ConstructorParameterDeclaration.variableSize();
+	
+	syn int FormalConstructorParameterDeclaration.variableSize() =
+		getParameterDeclaration().type().variableSize();
+	syn int ListConstructorParameterDeclaration.variableSize() = 0;
+	
+	inh lazy int ConstructorParameterDeclaration.localNum();
+
+	eq CondConstructorDecl.getConstructorParameter(int index).localNum() = index == 0 ?
+		localNumOfFirstParameter() :
+		getConstructorParameter(index-1).localNum() + getConstructorParameter(index-1).variableSize();
+
+	eq CondConstructorDecl.getBlock().localNum() = getNumConstructorParameter() == 0 ? 
+    	localNumOfFirstParameter() :
+    	getConstructorParameter(getNumConstructorParameter()-1).localNum() +
+    		getConstructorParameterList().getChild(getNumConstructorParameter()-1).variableSize();
+
+}

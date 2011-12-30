@@ -167,7 +167,7 @@ public class ConstructorMixer extends ClassVisitor {
 				continue;
 			ConstructorCallAttribute constructorCallAttribute = (ConstructorCallAttribute) attribute;
 			constructorInvocationPattern = constructorCallAttribute
-					.getPattern();
+					.getCalledPattern();
 			isSuperInvocation = constructorCallAttribute
 					.isSuperConstructorCall();
 			attrIterator.remove();
@@ -180,12 +180,9 @@ public class ConstructorMixer extends ClassVisitor {
 		}
 
 		List<InsnList> argumentLoadInstructions = separateInstructions(constructorNode);
-		InsnList outerClassInstanceLoadInstructions = argumentLoadInstructions
-				.remove(0);
 		return new ConstructorAnalysisResult(constructorNode,
-				outerClassInstanceLoadInstructions, argumentLoadInstructions,
-				constructorNode.instructions, constructorInvocationPattern,
-				isSuperInvocation);
+				argumentLoadInstructions, constructorNode.instructions,
+				constructorInvocationPattern, isSuperInvocation);
 	}
 
 	/**
@@ -199,12 +196,12 @@ public class ConstructorMixer extends ClassVisitor {
 	 *         This method assumes constructors to have the following (pseudo)
 	 *         format:<br>
 	 *         <code>
-	 *         LOAD_A0<br>
-	 *         LOAD_ARGUMENT<br>
-	 *         (NOP, LOAD_ARGUMENT)*<br>
-	 *         CALL_CONSTRUCTOR<br>
-	 *         REST_OF_CONSTRUCTOR<br>
-	 *         </code> Thereby, LOAD_ARGUMENT may not contain NOPs.
+	 *         (LOAD_ARGUMENT, NOP)*<br>
+	 *         NOP<br>
+	 *         REST_OF_CONSTRUCTOR
+	 *         </code><br>
+	 *         Thereby, LOAD_ARGUMENT may not contain NOPs, and
+	 *         REST_OF_CONSTRUCTOR may not contain a constructor invocation.
 	 * @see org.caesarj.ast.ConstructorAccess#emitArgument(org.caesarj.ast.CodeGeneration,
 	 *      int)
 	 */
@@ -216,42 +213,26 @@ public class ConstructorMixer extends ClassVisitor {
 		 */
 		ListIterator<AbstractInsnNode> instructionIterator = constructorNode.instructions
 				.iterator();
-		while (instructionIterator.hasNext()) {
-			AbstractInsnNode node = instructionIterator.next();
-			instructionIterator.remove();
-			if (node.getOpcode() == Opcodes.ALOAD
-					&& node instanceof VarInsnNode
-					&& ((VarInsnNode) node).var == 0)
-				break;
-		}
 		InsnList currentArgument = new InsnList();
-		boolean foundConstructorCall = false;
-		while (instructionIterator.hasNext() && !foundConstructorCall) {
+		boolean allArgumentsPassed = false;
+		do {
 			AbstractInsnNode node = instructionIterator.next();
 			switch (node.getOpcode()) {
 			case Opcodes.NOP:
+				if (currentArgument.size() == 0) {
+					allArgumentsPassed = true;
+					break;
+				}
 				argumentLoadInstructions.add(currentArgument);
 				currentArgument = new InsnList();
 				break;
-			case Opcodes.INVOKESPECIAL:
-				if (CONSTRUCTOR_METHOD_NAME
-						.equals(((MethodInsnNode) node).name)) {
-					if (currentArgument.size() > 0)
-						argumentLoadInstructions.add(currentArgument);
-					foundConstructorCall = true;
-					break;
-				}
 			default:
 				AbstractInsnNode clonedNode = node.clone(Collections.EMPTY_MAP);
 				if (clonedNode != null)
 					currentArgument.add(clonedNode);
 			}
 			instructionIterator.remove();
-		}
-		if (!foundConstructorCall)
-			System.err
-					.format("ConstructorAnalyzer.: Did not find constructor call during method analysis of method %s.%n",
-							constructorNode.name);
+		} while (instructionIterator.hasNext() && !allArgumentsPassed);
 		return argumentLoadInstructions;
 	}
 
@@ -317,10 +298,9 @@ public class ConstructorMixer extends ClassVisitor {
 		instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
 
 		/*
-		 * Load outer class instance.
+		 * Load outer class instance to pass it to the other constructor.
 		 */
-		instructions.add(Cloner.clone(analysisResult
-				.getOuterClassInstanceLoadInstructions()));
+		instructions.add(new VarInsnNode(Opcodes.ALOAD, 1));
 
 		/*
 		 * Load argument values.

@@ -1,0 +1,14 @@
+abstract ConstructorParameterDeclaration;
+FormalConstructorParameterDeclaration : ConstructorParameterDeclaration
+	::= ParameterDeclaration;
+ListConstructorParameterDeclaration : ConstructorParameterDeclaration
+	::= <ID> <Length:int>;
+
+CondConstructorDecl : CjConstructorDecl ::= ConstructorParameter:ConstructorParameterDeclaration*;
+
+CondConstructorAccess : Access ::= <ID> Arg:CondConstructorArgument*;
+CondSuperConstructorAccess : CondConstructorAccess;
+
+abstract CondConstructorArgument;
+ExprCondConstructorArgument : CondConstructorArgument ::= Expr;
+ListCondConstructorArgument : CondConstructorArgument ::= <ID>;

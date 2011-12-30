@@ -1,0 +1,51 @@
+/*
+ * Adapt name checks to conditional constructors.
+ *
+ * (1) Don't check ParameterDeclarations contained in FormalConstructorParameterDeclarations
+ *     the usual way.
+ * (2) Make sure that constructor parameters are not assigned names which are already
+ *     existing.
+ */
+aspect CCNameCheck {
+
+	// Aspect goal (1)
+	refine NameCheck public void ParameterDeclaration.nameCheck() {
+		if (!(getParent() instanceof FormalConstructorParameterDeclaration))
+			NameCheck.ParameterDeclaration.nameCheck();
+	}
+	
+	inh BodyDecl ConstructorParameterDeclaration.enclosingBodyDecl();
+	
+	inh VariableScope ConstructorParameterDeclaration.outerScope();
+	
+	// Aspect goal (2)
+	public void ConstructorParameterDeclaration.nameCheck() {
+		/*
+		 * This is very similar to ParameterDeclaration.nameCheck() as defined by NameCheck.
+		 * Additionally, ConstructorParameterDeclarations are considered.
+		 */
+		SimpleSet decls = outerScope().lookupVariable(name());
+		for (Iterator iter = decls.iterator(); iter.hasNext();) {
+			Variable var = (Variable) iter.next();
+			if (var instanceof VariableDeclaration) {
+				VariableDeclaration decl = (VariableDeclaration) var;
+				if (decl.enclosingBodyDecl() == enclosingBodyDecl())
+					error("duplicate declaration of local variable " + name());
+			} else if (var instanceof ParameterDeclaration) {
+				ParameterDeclaration decl = (ParameterDeclaration) var;
+				if (decl.enclosingBodyDecl() == enclosingBodyDecl())
+					error("duplicate declaration of local variable " + name());
+			} else if (var instanceof ConstructorParameterDeclaration) {
+				ConstructorParameterDeclaration decl = (ConstructorParameterDeclaration) var;
+				if (decl.enclosingBodyDecl() == enclosingBodyDecl())
+					error("duplicate declaration of local variable " + name());
+			}
+		}
+
+		// 8.4.1
+		if (!lookupVariable(name()).contains(this)) {
+			error("duplicate declaration of parameter " + name());
+		}
+	}
+
+}

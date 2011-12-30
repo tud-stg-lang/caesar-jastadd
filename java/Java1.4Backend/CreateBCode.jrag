@@ -601,8 +601,8 @@ aspect CreateBCode {
       gen.emitLoadReference(index++);
 
     // args
-    for (int i = 0; i < getNumArg(); ++i)
-      emitArgument(gen, i);
+   emitArgs(gen);
+   
     if(decl().isPrivate() && decl().hostType() != hostType()) {
       gen.emit(Bytecode.ACONST_NULL);
       decl().createAccessor().emitInvokeConstructor(gen);
@@ -612,6 +612,11 @@ aspect CreateBCode {
     }
   }
   
+  protected void ConstructorAccess.emitArgs(CodeGeneration gen) {
+	  for (int i = 0; i < getNumArg(); ++i)
+	      emitArgument(gen, i);
+  }
+
   public void SuperConstructorAccess.createBCode(CodeGeneration gen) {
     ConstructorDecl c = decl();
     

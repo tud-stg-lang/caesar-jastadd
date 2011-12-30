@@ -52,6 +52,12 @@ public class PatternArgumentLoadingInstructionComposer implements
 
 	}
 
+	@Override
+	public void visit(ParameterListPattern pattern) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	/**
 	 * @return the number of concrete parameters loaded within the visited
 	 *         pattern

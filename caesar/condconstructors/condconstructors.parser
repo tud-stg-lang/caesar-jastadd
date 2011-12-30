@@ -1,0 +1,53 @@
+List constructor_parameter_list =
+    constructor_parameter.p										  {: return new List().add(p); :}
+  | constructor_parameter_list.l COMMA constructor_parameter.p    {: return l.add(p); :}
+  ;
+
+ConstructorParameterDeclaration constructor_parameter =
+    modifiers.m? type.t IDENTIFIER dims.d?
+    	{: return new FormalConstructorParameterDeclaration(
+    		new ParameterDeclaration(new Modifiers(m), t.addArrayDims(d), IDENTIFIER)); :}
+  | IDENTIFIER MULT	   {: return new ListConstructorParameterDeclaration(IDENTIFIER, -1); :}
+  | IDENTIFIER MULT LBRACK INTEGER_LITERAL RBRACK
+  		{: return new ListConstructorParameterDeclaration(IDENTIFIER, Integer.parseInt((String) INTEGER_LITERAL.value)); :}
+  ;
+
+ConstructorDecl constructor_declaration =
+    modifiers.m? QUESTION IDENTIFIER LPAREN constructor_parameter_list.pl? RPAREN throws.tl? 
+		LBRACE explicit_condconstructor_invocation.c? block_statements.l? RBRACE
+    {: Block b = new Block(l); l.setStart(LBRACE.getStart() + 1); b.setStart(LBRACE.getStart()); b.setEnd(RBRACE.getEnd());
+       return new CondConstructorDecl(new Modifiers(m), IDENTIFIER, new List(), tl, c, b, pl); :}
+ ;
+
+ExprStmt explicit_condconstructor_invocation =
+    THIS LPAREN constructor_argument_list.l? RPAREN SEMICOLON 
+    {: CondConstructorAccess c = new CondConstructorAccess("this", l);
+       c.setStart(THIS.getStart());
+       c.setEnd(RPAREN.getEnd());
+       return new ExprStmt(c); :}
+  | SUPER LPAREN constructor_argument_list.l? RPAREN SEMICOLON 
+    {: CondSuperConstructorAccess c = new CondSuperConstructorAccess("super", l);
+       c.setStart(SUPER.getStart());
+       c.setEnd(RPAREN.getEnd());
+       return new ExprStmt(c); :}
+  | primary.p DOT SUPER LPAREN constructor_argument_list.l? RPAREN SEMICOLON
+    {: CondSuperConstructorAccess c = new CondSuperConstructorAccess("super", l);
+       c.setStart(SUPER.getStart());
+       c.setEnd(RPAREN.getEnd());
+       return new ExprStmt(p.qualifiesAccess(c)); :}
+  | name.n DOT SUPER LPAREN constructor_argument_list.l? RPAREN SEMICOLON
+    {: CondSuperConstructorAccess c = new CondSuperConstructorAccess("super", l);
+       c.setStart(SUPER.getStart());
+       c.setEnd(RPAREN.getEnd());
+       return new ExprStmt(n.qualifiesAccess(c)); :}
+  ;
+
+List constructor_argument_list =
+    constructor_argument.a                       {: return new List().add(a); :}
+  | constructor_argument_list.l COMMA constructor_argument.a {: return l.add(a); :}
+  ;
+
+CondConstructorArgument constructor_argument =
+    expression.e            {: return new ExprCondConstructorArgument(e); :}
+  | IDENTIFIER MULT         {: return new ListCondConstructorArgument(IDENTIFIER); :}
+  ;

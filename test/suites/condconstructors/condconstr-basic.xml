@@ -172,6 +172,25 @@
 			}
         </code>
     </compile-run>
+    
+    <compile id="condconstr008" description="test forward parameter types">
+    	<test>
+    		new B(50);
+    	</test>
+        <code>
+        	public cclass A {	
+			   public A(int a, int x) {
+			      System.out.format("A constructor - values %d, %d%n", a, x);
+			   }
+			}
+			public cclass B extends A {
+			   public ? B(int a, l*, int b) {
+			      super(a, l*);
+			      System.out.format("B constructor - values %d, %d%n", a, b);
+			   }
+			}
+        </code>
+    </compile>
 	
     <!--compile-check-error id="stcinhfields002" error="VAR_UNKNOWN" 
 		                 description="test not available field">

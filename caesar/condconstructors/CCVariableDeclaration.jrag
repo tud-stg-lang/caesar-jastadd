@@ -1,0 +1,34 @@
+/*
+ * Introduces ConstructorParameterDeclarations as variables.
+ */
+aspect CCVariableDeclaration {
+
+	ConstructorParameterDeclaration implements Variable;
+	syn boolean ConstructorParameterDeclaration.isClassVariable() = false;
+	syn boolean ConstructorParameterDeclaration.isInstanceVariable() = false;
+	syn boolean ConstructorParameterDeclaration.isMethodParameter() = false;
+	syn boolean ConstructorParameterDeclaration.isConstructorParameter() = true;
+	syn boolean ConstructorParameterDeclaration.isExceptionHandlerParameter() = false;
+	syn boolean ConstructorParameterDeclaration.isLocalVariable() = false;
+	
+	syn boolean FormalConstructorParameterDeclaration.isFinal() = getParameterDeclaration().isFinal();
+	syn boolean ListConstructorParameterDeclaration.isFinal() = true;
+	syn boolean ConstructorParameterDeclaration.isBlank() = true;
+	syn boolean ConstructorParameterDeclaration.isStatic() = false;
+	
+	syn String FormalConstructorParameterDeclaration.name() = getParameterDeclaration().getID();
+	syn String ListConstructorParameterDeclaration.name() = getID();
+	syn boolean ConstructorParameterDeclaration.hasInit() = false;
+	syn Expr ConstructorParameterDeclaration.getInit() { throw new UnsupportedOperationException(); }
+	syn Constant ConstructorParameterDeclaration.constant() { throw new UnsupportedOperationException(); }
+	
+	syn boolean FormalConstructorParameterDeclaration.isSynthetic() = getParameterDeclaration().isSynthetic();
+	syn boolean ListConstructorParameterDeclaration.isSynthetic() = false;
+	inh TypeDecl ConstructorParameterDeclaration.hostType();
+	syn TypeDecl FormalConstructorParameterDeclaration.type() = getParameterDeclaration().type();
+	inh TypeDecl ListConstructorParameterDeclaration.unknownType();
+	syn TypeDecl ListConstructorParameterDeclaration.type() = unknownType();
+	eq ConstructorParameterDeclaration.sourceVariableDecl() = this;
+	
+
+}

@@ -21,17 +21,12 @@ public class ConstructorAnalysisResult {
 
 	private final boolean isSuperInvocation;
 
-	private final InsnList outerClassInstanceLoadInstructions;
-
 	private final InsnList effectiveInstructions;
 
 	/**
 	 * @param constructorNode
 	 *            the method node which is unchanged except for its instructions
 	 *            which MUST be reset
-	 * @param outerClassInstanceLoadInstructions
-	 *            instructions to push the instance of the outer class (or null,
-	 *            respectively) onto the stack
 	 * @param argumentLoadInstructions
 	 *            instructions to push arguments for the constructor invocation
 	 *            onto the stack
@@ -46,13 +41,11 @@ public class ConstructorAnalysisResult {
 	 *            ("this") class
 	 */
 	public ConstructorAnalysisResult(MethodNode constructorNode,
-			InsnList outerClassInstanceLoadInstructions,
 			List<InsnList> argumentLoadInstructions,
 			InsnList effectiveInstructions,
 			ParameterPattern constructorInvocationPattern,
 			boolean isSuperInvocation) {
 		this.constructorNode = constructorNode;
-		this.outerClassInstanceLoadInstructions = outerClassInstanceLoadInstructions;
 		this.argumentLoadInstructions = argumentLoadInstructions;
 		this.effectiveInstructions = effectiveInstructions;
 		this.constructorInvocationPattern = constructorInvocationPattern;
@@ -73,10 +66,6 @@ public class ConstructorAnalysisResult {
 
 	public boolean isSuperInvocation() {
 		return isSuperInvocation;
-	}
-
-	public InsnList getOuterClassInstanceLoadInstructions() {
-		return outerClassInstanceLoadInstructions;
 	}
 
 	public InsnList getEffectiveInstructions() {

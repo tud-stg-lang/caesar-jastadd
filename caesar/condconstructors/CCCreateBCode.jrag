@@ -6,7 +6,9 @@
  * (2) For constructor declarations, save additional information about the invocation of
  *     a "this" or "super" constructor in form of an attribute.
  * (3) Separate multiple arguments when calling the super or another this constructor by
- *     NOPs.
+ *     NOPs. Don't write anything but the arguments to the bytecode for the constructor
+ *     access. Anything else that is needed will be generated during loading.
+ * (4) Write accesses to concrete constructor parameters correctly. 
  */
 aspect CCCreateBCode {
 
@@ -23,49 +25,117 @@ aspect CCCreateBCode {
 	 */
 	class ConstructorCallAttribute extends Attribute {
 	
-		public ConstructorCallAttribute(ConstructorDecl decl) {
+		public ConstructorCallAttribute(CondConstructorDecl decl) {
 			super(
-					decl.hostType().constantPool(),
-					org.caesarj.runtime.mixer.ConstructorCallAttribute.ATTRIBUTE_NAME);
+				decl.hostType().constantPool(),
+				org.caesarj.runtime.mixer.ConstructorCallAttribute.ATTRIBUTE_NAME);
 			Stmt constructorInvocation = decl.getConstructorInvocation();
 			if (!(constructorInvocation instanceof ExprStmt))
 				return;
 			Expr expr = ((ExprStmt) constructorInvocation).getExpr();
-			if (!(expr instanceof ConstructorAccess))
+			if (!(expr instanceof CondConstructorAccess))
 				return;
-			ConstructorAccess access = (ConstructorAccess) expr;
-			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
-			int numArg = access.getNumArg();
-			u1(numArg - 1);
-			ConstantPool pool = decl.hostType().constantPool();
-			int emptyUtf8 = pool.addUtf8("");
+	
+			final ConstantPool pool = decl.hostType().constantPool();
+	
 			/*
-			 * Skip the first argument because it is always $cj$outer, the instance
-			 * of the outer class.
+			 * Write formal parameters of this constructor:
 			 */
-			for (int i = 1; i < numArg; i++) {
-				Expr arg = access.getArg(i);
-				u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
-				u2(emptyUtf8); // name
-				u2(pool.addUtf8(arg.type().signature())); // type signature
+			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
+			int numArg = decl.getConstructorParameters().getNumChild();
+			u1(numArg);
+			final java.util.List<String> listIds = new ArrayList<String>();
+			for (ConstructorParameterDeclaration param : decl
+					.getConstructorParameters()) {
+				param.writeToAttribute(this, pool);
+				if (param instanceof ListConstructorParameterDeclaration)
+					listIds.add(((ListConstructorParameterDeclaration) param).getID());
 			}
-			
-			u1(access instanceof SuperConstructorAccess ? 1 : 0);
+	
+			/*
+			 * Write argument pattern which is passed to the other constructor:
+			 */
+			CondConstructorAccess access = (CondConstructorAccess) expr;
+			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
+			numArg = access.getNumArg();
+			u1(numArg);
+			for (CondConstructorArgument arg : access.getArgs())
+				arg.writeToAttribute(this, pool, listIds);
+	
+			u1(access instanceof CondSuperConstructorAccess ? 1 : 0);
 		}
 	}
 
 	// Aspect goal (2)
-	eq CjConstructorDecl.attributes() {
+	eq CondConstructorDecl.attributes() {
 		Collection c = super.attributes();
 		c.add(new ConstructorCallAttribute(this));
 		return c;
 	}
 	
-	// Aspect goal (3)
-	refine CreateBCode protected void ConstructorAccess.emitArgument(CodeGeneration gen, int i) {
-		CreateBCode.ConstructorAccess.emitArgument(gen, i);
-		if (i < getNumArg() - 1)
-			gen.emit(Bytecode.NOP);
+	// Aspect goal (2)
+	protected abstract void CondConstructorArgument.writeToAttribute(Attribute attribute,
+			ConstantPool pool, java.util.List<String> listNames);
+	
+	// Aspect goal (2)
+	protected void ExprCondConstructorArgument.writeToAttribute(Attribute attribute,
+			ConstantPool pool, java.util.List<String> listNames) {
+		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
+		attribute.u2(pool.addUtf8("")); // name
+		attribute.u2(pool.addUtf8(getExpr().type().signature())); // type signature
 	}
+	
+	// Aspect goal (2)
+	protected void ListCondConstructorArgument.writeToAttribute(Attribute attribute,
+			ConstantPool pool, java.util.List<String> listNames) {
+		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_LIST_PATTERN);
+		attribute.u1(listNames.indexOf(getID())); // index of referenced formal parameter, unused here
+	}
+	
+	// Aspect goal (2)
+	protected abstract void ConstructorParameterDeclaration.writeToAttribute(Attribute attribute,
+			ConstantPool pool);
+	
+	// Aspect goal (2)
+	protected void FormalConstructorParameterDeclaration.writeToAttribute(Attribute attribute,
+			ConstantPool pool) {
+		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
+		attribute.u2(pool.addUtf8(getParameterDeclaration().getID())); // name
+		attribute.u2(pool.addUtf8(getParameterDeclaration().getTypeAccess().type().signature())); // type signature
+	}
+	
+	// Aspect goal (2)
+	protected void ListConstructorParameterDeclaration.writeToAttribute(Attribute attribute,
+			ConstantPool pool) {
+		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_LIST_PATTERN);
+		attribute.u1(0); // index of referenced formal parameter, unused here
+	}
+	
+	// Aspect goal (3)
+	public void CondConstructorAccess.createBCode(CodeGeneration gen) {
+		// args
+		for (CondConstructorArgument arg : getArgs()) {
+			if (!(arg instanceof ExprCondConstructorArgument))
+				continue;
+			((ExprCondConstructorArgument) arg).getExpr().createBCode(gen);
+			gen.emit(Bytecode.NOP);
+		}
+		gen.emit(Bytecode.NOP);
+	}
+	
+	// Aspect goal (4)
+	refine MCFieldAccess public void VarAccess.createBCode(CodeGeneration gen) {
+		Variable v = decl();
+		if (!(v instanceof FormalConstructorParameterDeclaration)) {
+			MCFieldAccess.VarAccess.createBCode(gen);
+			return;
+		}
+		if (v.hostType() == hostType())
+			v.type().emitLoadLocal(gen,
+					((FormalConstructorParameterDeclaration) v).localNum());
+		else
+			emitLoadLocalInNestedClass(gen, v);
+	}
+	
 
 }

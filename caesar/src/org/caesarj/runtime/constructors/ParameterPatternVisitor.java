@@ -7,5 +7,7 @@ public interface ParameterPatternVisitor {
 	void visit(CompositeParameterPattern compositePattern);
 	
 	void visit(ParameterPatternList list);
+	
+	void visit(ParameterListPattern pattern);
 
 }

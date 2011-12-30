@@ -1,0 +1,18 @@
+/*
+ * Ensures that ConstructorParameterDeclarations are accessible as variables.
+ */
+aspect CCLookupVariable {
+
+	eq CondConstructorDecl.getConstructorParameter().lookupVariable(String name) =
+		parameterDeclaration(name);
+
+	syn lazy SimpleSet CondConstructorDecl.parameterDeclaration(String name) {
+		for (ConstructorParameterDeclaration param : getConstructorParameters())
+			if (param.name().equals(name))
+				return new SimpleSet.SimpleSetImpl().add(param);
+		return SimpleSet.emptySet;
+	}
+	
+	inh SimpleSet ConstructorParameterDeclaration.lookupVariable(String name);
+
+}

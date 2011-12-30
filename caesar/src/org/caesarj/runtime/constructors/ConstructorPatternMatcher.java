@@ -177,6 +177,17 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 		this.parameterToPatternList = Arrays.asList(parameterToPatternList);
 	}
 
+	@Override
+	public void visit(ParameterListPattern pattern) {
+		parameterToPatternList = Collections.nCopies(parameters.size(),
+				(ParameterPattern) pattern);
+		Set<Integer> indexes = new HashSet<Integer>();
+		for (int i = parameters.size() - 1; i >= 0; i--)
+			indexes.add(i);
+		patternToParametersMap = Collections.singletonMap(
+				(ParameterPattern) pattern, indexes);
+	}
+
 	private void handleCaseOfEmptyPatternList() {
 		if (parameters.size() > 0)
 			fail();
