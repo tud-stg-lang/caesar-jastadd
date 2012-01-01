@@ -18,7 +18,7 @@ public class MixinLoader extends ClassLoader {
 	private boolean trace = false;
 
 	private static final Attribute[] attributes = new Attribute[] {
-			new MixerConfigAttribute(), new ConstructorCallAttribute() };
+			new MixerConfigAttribute(), new ConditionalConstructorAttribute() };
 
 	private final MixinRegistry mixins = new MixinRegistry();
 
@@ -153,6 +153,8 @@ public class MixinLoader extends ClassLoader {
 				getResourceAsStream(baseClass.replace('.', '/') + ".cjclass"));
 
 		// transform classes and write them
+		// TODO compute frames if necessary
+		//final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 		final ClassWriter writer = new ClassWriter(0);
 		ClassVisitor target = writer;
 		if (trace)
@@ -186,6 +188,8 @@ public class MixinLoader extends ClassLoader {
 
 		// SECOND PASS
 		// transform classes and write them
+		// TODO compute frames if necessary
+		//final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 		final ClassWriter writer = new ClassWriter(0);
 		ClassVisitor target = writer;
 		if (trace)

@@ -3,30 +3,106 @@
  *
  * (1) Provides easy access to the ConstructorAccess within a ConstructorDecl.
  * (2) Provides a helper method to check whether two constructor accesses rely on the
- *     same accessed signature. 
+ *     same accessed signature.
+ * (3) Correctly compare CondConstructorDecls.
+ * (4) Provide default constructor access for CondConstructorDecls.
  */
 aspect CCConstructorLookup {
 
 	// Aspect goal (1)
-	syn ConstructorAccess ConstructorDecl.getConstructorAccess() {
+	syn ConstructorAccessIfc ConstructorDecl.getConstructorAccess() {
 		Stmt constructorInvocation = getConstructorInvocation();
 		if (!(constructorInvocation instanceof ExprStmt))
 			return null;
 		Expr expr = ((ExprStmt) constructorInvocation).getExpr();
-		if (!(expr instanceof ConstructorAccess))
-			return null;
-		return (ConstructorAccess) expr;
+		if (expr instanceof ConstructorAccessIfc)
+			return (ConstructorAccessIfc) expr;
+		return null;
 	}
-
+	
 	// Aspect goal (2)
-	syn lazy boolean ConstructorAccess.sameSignature(ConstructorAccess that) {
-		if (getNumArg() != that.getNumArg())
+	interface ConstructorAccessIfc {
+		boolean sameSignature(ConstructorAccessIfc that);
+	}
+	
+	ConstructorAccess implements ConstructorAccessIfc;
+	CondConstructorAccess implements ConstructorAccessIfc;
+	
+	// Aspect goal (2)
+	syn lazy boolean CondConstructorAccess.sameSignature(ConstructorAccessIfc that) {
+		if (!(that instanceof CondConstructorAccess))
+			return false;
+		CondConstructorAccess ac = (CondConstructorAccess) that;
+		if (getNumArg() != ac.getNumArg())
 			return false;
 		for (int i = 0; i < getNumArg(); i++) {
-			if (!getArg(i).type().equals(that.getArg(i).type()))
+			CondConstructorArgument thisArg = getArg(i);
+			CondConstructorArgument thatArg = ac.getArg(i);
+			if (!thisArg.getClass().equals(thatArg.getClass()))
 				return false;
+			if (thisArg instanceof ExprCondConstructorArgument) {
+				// TODO also consider name
+				if (!((ExprCondConstructorArgument) thisArg)
+						.getExpr()
+						.type()
+						.equals(((ExprCondConstructorArgument) thatArg)
+								.getExpr().type()))
+					return false;
+			} else if (thisArg instanceof ListCondConstructorArgument) {
+				if (!((ListCondConstructorArgument) thisArg).getID().equals(
+						((ListCondConstructorArgument) thatArg).getID()))
+					return false;
+			}
 		}
 		return true;
 	}
 
+	// Aspect goal (2)
+	syn lazy boolean ConstructorAccess.sameSignature(ConstructorAccessIfc that) {
+		if (!(that instanceof ConstructorAccess))
+			return false;
+		ConstructorAccess ac = (ConstructorAccess) that;
+		if (getNumArg() != ac.getNumArg())
+			return false;
+		for (int i = 0; i < getNumArg(); i++) {
+			if (!getArg(i).type().equals(ac.getArg(i).type()))
+				return false;
+		}
+		return true;
+	}
+	
+	// Aspect goal (3)
+	syn lazy boolean CondConstructorDecl.sameSignature(ConstructorDecl decl) {
+		if (!(decl instanceof CondConstructorDecl))
+			return false;
+		CondConstructorDecl that = (CondConstructorDecl) decl;
+		if (getNumConstructorParameter() != that.getNumConstructorParameter())
+			return false;
+		for (int i = 0; i < getNumConstructorParameter(); i++)
+			if (!getConstructorParameter(i).equals(
+					that.getConstructorParameter(i)))
+				return false;
+		return true;
+	}
+	
+	public boolean FormalConstructorParameterDeclaration.equals(Object o) {
+		if (!(o instanceof FormalConstructorParameterDeclaration))
+			return false;
+		return type().equals(((FormalConstructorParameterDeclaration) o).type());
+	}
+	
+	public boolean ListConstructorParameterDeclaration.equals(Object o) {
+		return o instanceof ListConstructorParameterDeclaration;
+	}
+
+	// Aspect goal (4)	
+	rewrite CondConstructorDecl {
+		when(!hasConstructorInvocation())
+		to CondConstructorDecl {
+			setConstructorInvocation(new ExprStmt(new CondSuperConstructorAccess(
+				"super", new List())));
+			return this;
+		}
+	}
+	
 }

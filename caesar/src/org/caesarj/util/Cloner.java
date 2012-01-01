@@ -10,16 +10,19 @@ import org.objectweb.asm.tree.LabelNode;
 
 public class Cloner {
 
+	@SuppressWarnings("unchecked")
 	public static InsnList clone(InsnList insnList) {
 		InsnList instructionList = new InsnList();
-		@SuppressWarnings("unchecked")
 		ListIterator<AbstractInsnNode> iterator = insnList.iterator();
 		Map<LabelNode, LabelNode> labelMap = new HashMap<LabelNode, LabelNode>();
 		while (iterator.hasNext()) {
 			AbstractInsnNode node = iterator.next();
 			if (node instanceof LabelNode)
 				labelMap.put((LabelNode) node, new LabelNode());
-			AbstractInsnNode clone = node.clone(labelMap);
+		}
+		iterator = insnList.iterator();
+		while (iterator.hasNext()) {
+			AbstractInsnNode clone = iterator.next().clone(labelMap);
 			if (clone != null)
 				instructionList.add(clone);
 		}

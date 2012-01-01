@@ -8,22 +8,30 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
+import org.caesarj.runtime.constructors.APosterioriConstructorAnalysisResult;
+import org.caesarj.runtime.constructors.CallingConstructorParameterPatternAnalyzer;
 import org.caesarj.runtime.constructors.ConcreteParameter;
-import org.caesarj.runtime.constructors.ConstructorAnalysisResult;
-import org.caesarj.runtime.constructors.ConstructorPatternMatcher;
+import org.caesarj.runtime.constructors.APrioriConstructorAnalysisResult;
+import org.caesarj.runtime.constructors.PatternToParameterMatcher;
 import org.caesarj.runtime.constructors.ParameterPattern;
 import org.caesarj.runtime.constructors.PatternArgumentLoadingInstructionComposer;
 import org.caesarj.util.ClassAccess;
 import org.caesarj.util.Cloner;
+import org.caesarj.util.InstructionTransformer;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.LabelNode;
+import org.objectweb.asm.tree.LineNumberNode;
+import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
@@ -55,6 +63,11 @@ public class ConstructorMixer extends ClassVisitor {
 			.getType("Lorg/caesarj/runtime/CjObjectIfc;");
 
 	private static final String CONSTRUCTOR_METHOD_NAME = "<init>";
+
+	/**
+	 * variable index of the first parameter after $cj$outer
+	 */
+	private static final int FIRST_PARAMETER_INDEX = 2;
 
 	private final List<List<ConcreteParameter>> existingSuperConstructors = new ArrayList<List<ConcreteParameter>>();
 
@@ -95,26 +108,36 @@ public class ConstructorMixer extends ClassVisitor {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		if (superConstructors != null) {
-			for (Constructor<?> constructor : superConstructors) {
-				List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
-				Class<?>[] parameterTypes = constructor.getParameterTypes();
-				/*
-				 * Skip the first type because it is always CjObjectItf (outer
-				 * class type):
-				 */
-				for (int i = 1; i < parameterTypes.length; i++) {
-					Class<?> type = parameterTypes[i];
-					/*
-					 * TODO Set name of parameter (in ConcreteParameter
-					 * constructor). Maybe use annotations for named parameters?
-					 */
-					parameters.add(new ConcreteParameter(type.getName()));
-				}
-				existingSuperConstructors.add(parameters);
-			}
-		}
+		if (superConstructors != null)
+			saveSuperConstructors(superConstructors);
 		super.visit(version, access, name, signature, superName, interfaces);
+	}
+
+	/**
+	 * Saves the given super constructor in the necessary list representation in
+	 * {@link #existingSuperConstructors}.
+	 * 
+	 * @param superConstructors
+	 *            the super constructors, not null
+	 */
+	private void saveSuperConstructors(Constructor<?>[] superConstructors) {
+		for (Constructor<?> constructor : superConstructors) {
+			List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
+			Class<?>[] parameterTypes = constructor.getParameterTypes();
+			/*
+			 * Skip the first type because it is always CjObjectItf (outer class
+			 * type):
+			 */
+			for (int i = 1; i < parameterTypes.length; i++) {
+				Class<?> type = parameterTypes[i];
+				/*
+				 * TODO Set name of parameter (in ConcreteParameter
+				 * constructor). Maybe use annotations for named parameters?
+				 */
+				parameters.add(new ConcreteParameter(type.getName()));
+			}
+			existingSuperConstructors.add(parameters);
+		}
 	}
 
 	@Override
@@ -129,7 +152,15 @@ public class ConstructorMixer extends ClassVisitor {
 			return new ConstructorNode(access, name, desc, signature,
 					exceptions);
 		else
+			/*
+			 * Just forward this method to the next class visitor if it is not a
+			 * constructor and, thus, does not need to be changed.
+			 */
 			return super.visitMethod(access, name, desc, signature, exceptions);
+	}
+
+	private static boolean isConstructor(String name) {
+		return CONSTRUCTOR_METHOD_NAME.equals(name);
 	}
 
 	/**
@@ -139,33 +170,47 @@ public class ConstructorMixer extends ClassVisitor {
 	 * @param constructorNode
 	 */
 	private void process(ConstructorNode constructorNode) {
-		final ConstructorAnalysisResult analysisResult = analyze(constructorNode);
-		if (analysisResult != null)
-			createConstructors(analysisResult);
+		final APrioriConstructorAnalysisResult constructorCallAnalysisResult = analyze(constructorNode);
+		if (constructorCallAnalysisResult == null)
+			/*
+			 * This is a "normal" constructor because there is no
+			 * ConstructorCallAttribute associated with it. Hence, just create
+			 * the constructor without change.
+			 */
+			createConstructorForNode(constructorNode);
+		else
+			/*
+			 * This is a conditional constructor. Proceed with further analysis
+			 * and create appropriate concrete constructors.
+			 */
+			createConstructors(constructorCallAnalysisResult);
 	}
 
 	/**
 	 * Extracts information from the given constructor about the contained
 	 * constructor call. This is saved in the attribute
-	 * {@link ConstructorCallAttribute} which will be removed from the
+	 * {@link ConditionalConstructorAttribute} which will be removed from the
 	 * constructor node if it is found.<br>
 	 * Also, separates instructions of the constructor node into different
 	 * arguments and remaining code.
 	 * 
 	 * @param constructorNode
 	 * @return the results of analysis, or null if no
-	 *         {@link ConstructorCallAttribute} is found
+	 *         {@link ConditionalConstructorAttribute} is found
 	 */
-	private ConstructorAnalysisResult analyze(ConstructorNode constructorNode) {
+	private APrioriConstructorAnalysisResult analyze(
+			ConstructorNode constructorNode) {
+		ParameterPattern constructorPattern = null;
 		ParameterPattern constructorInvocationPattern = null;
 		boolean isSuperInvocation = true;
 		@SuppressWarnings("unchecked")
 		Iterator<Attribute> attrIterator = constructorNode.attrs.iterator();
 		while (attrIterator.hasNext()) {
 			Attribute attribute = attrIterator.next();
-			if (!(attribute instanceof ConstructorCallAttribute))
+			if (!(attribute instanceof ConditionalConstructorAttribute))
 				continue;
-			ConstructorCallAttribute constructorCallAttribute = (ConstructorCallAttribute) attribute;
+			ConditionalConstructorAttribute constructorCallAttribute = (ConditionalConstructorAttribute) attribute;
+			constructorPattern = constructorCallAttribute.getPattern();
 			constructorInvocationPattern = constructorCallAttribute
 					.getCalledPattern();
 			isSuperInvocation = constructorCallAttribute
@@ -173,24 +218,23 @@ public class ConstructorMixer extends ClassVisitor {
 			attrIterator.remove();
 			break;
 		}
-		if (constructorInvocationPattern == null) {
-			System.err
-					.println("ConstructorAnalyzer.analyze: Expected to find ConstructorCallAttribute for constructor.");
+		if (constructorPattern == null)
 			return null;
-		}
 
 		List<InsnList> argumentLoadInstructions = separateInstructions(constructorNode);
-		return new ConstructorAnalysisResult(constructorNode,
+		return new APrioriConstructorAnalysisResult(constructorNode,
 				argumentLoadInstructions, constructorNode.instructions,
-				constructorInvocationPattern, isSuperInvocation);
+				constructorNode.maxLocals, constructorNode.maxStack,
+				constructorPattern, constructorInvocationPattern,
+				isSuperInvocation);
 	}
 
 	/**
 	 * @param constructorNode
 	 *            the constructor node to be analyzed<br>
-	 *            Also, the instructions of this node will be modified by
-	 *            deleting all instructions preceding the constructor invocation
-	 *            and the constructor invocation itself.
+	 *            The instructions of this node will be modified by deleting all
+	 *            instructions which are used for loading arguments for a
+	 *            constructor invocation.
 	 * @return instructions used to push constructor call arguments onto the
 	 *         stack, separated per argument<br>
 	 *         This method assumes constructors to have the following (pseudo)
@@ -201,9 +245,9 @@ public class ConstructorMixer extends ClassVisitor {
 	 *         REST_OF_CONSTRUCTOR
 	 *         </code><br>
 	 *         Thereby, LOAD_ARGUMENT may not contain NOPs, and
-	 *         REST_OF_CONSTRUCTOR may not contain a constructor invocation.
-	 * @see org.caesarj.ast.ConstructorAccess#emitArgument(org.caesarj.ast.CodeGeneration,
-	 *      int)
+	 *         REST_OF_CONSTRUCTOR may not contain a constructor invocation.<br>
+	 *         TODO Can we separate the arguments in a less fragile way?
+	 * @see org.caesarj.ast.CondConstructorAccess#createBCode(CodeGeneration)
 	 */
 	private List<InsnList> separateInstructions(MethodNode constructorNode) {
 		final List<InsnList> argumentLoadInstructions = new ArrayList<InsnList>();
@@ -215,25 +259,38 @@ public class ConstructorMixer extends ClassVisitor {
 				.iterator();
 		InsnList currentArgument = new InsnList();
 		boolean allArgumentsPassed = false;
+		boolean sawArgumentInstruction = false;
 		do {
 			AbstractInsnNode node = instructionIterator.next();
+			instructionIterator.remove();
 			switch (node.getOpcode()) {
 			case Opcodes.NOP:
-				if (currentArgument.size() == 0) {
+				if (!sawArgumentInstruction) {
 					allArgumentsPassed = true;
 					break;
 				}
 				argumentLoadInstructions.add(currentArgument);
 				currentArgument = new InsnList();
+				sawArgumentInstruction = false;
 				break;
 			default:
-				AbstractInsnNode clonedNode = node.clone(Collections.EMPTY_MAP);
-				if (clonedNode != null)
-					currentArgument.add(clonedNode);
+				currentArgument.add(node);
+				if (!(node instanceof LabelNode || node instanceof LineNumberNode))
+					sawArgumentInstruction = true;
 			}
-			instructionIterator.remove();
 		} while (instructionIterator.hasNext() && !allArgumentsPassed);
 		return argumentLoadInstructions;
+	}
+
+	private void createConstructorForNode(MethodNode constructorNode) {
+		@SuppressWarnings("unchecked")
+		final MethodVisitor methodVisitor = super.visitMethod(
+				constructorNode.access, constructorNode.name,
+				constructorNode.desc, constructorNode.signature,
+				((List<String>) constructorNode.exceptions)
+						.toArray(new String[0]));
+		if (methodVisitor != null)
+			constructorNode.accept(methodVisitor);
 	}
 
 	/**
@@ -242,23 +299,40 @@ public class ConstructorMixer extends ClassVisitor {
 	 * Calls {@link #visitMethod(int, String, String, String, String[])} on
 	 * super for every constructor to be created.
 	 * 
-	 * @param analysisResult
+	 * @param aPrioriAnalysisResult
 	 */
-	private void createConstructors(ConstructorAnalysisResult analysisResult) {
-		final Collection<List<ConcreteParameter>> constructorPool = analysisResult
+	private void createConstructors(
+			APrioriConstructorAnalysisResult aPrioriAnalysisResult) {
+		final Collection<List<ConcreteParameter>> constructorPool = aPrioriAnalysisResult
 				.isSuperInvocation() ? existingSuperConstructors
 				: existingThisConstructors;
-		final MethodNode constructorNode = analysisResult.getConstructorNode();
-		@SuppressWarnings("unchecked")
-		final String[] exceptions = ((List<String>) constructorNode.exceptions)
-				.toArray(new String[0]);
+		final MethodNode constructorNode = aPrioriAnalysisResult
+				.getConstructorNode();
 		// Loop over potential targets of the constructor call:
-		for (List<ConcreteParameter> constructorParameters : constructorPool) {
-			final ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
-					constructorParameters, classLoader);
-			analysisResult.getConstructorInvocationPattern().accept(matcher);
-			if (matcher.hasFailed())
+		for (List<ConcreteParameter> calledConstructorParameters : constructorPool) {
+			/*
+			 * Match the call pattern against the concrete parameters of the
+			 * currently considered target constructor:
+			 */
+			final Map<ParameterPattern, List<Integer>> callPatternToParametersMap = matchPatternWithParameters(
+					aPrioriAnalysisResult.getConstructorInvocationPattern(),
+					calledConstructorParameters);
+			if (callPatternToParametersMap == null)
 				continue;
+
+			/*
+			 * Analyze the constructor with respect to the matching with the
+			 * called constructor:
+			 */
+			final CallingConstructorParameterPatternAnalyzer aPosterioriAnalysisResult = new CallingConstructorParameterPatternAnalyzer(
+					calledConstructorParameters, callPatternToParametersMap,
+					FIRST_PARAMETER_INDEX, classLoader);
+			aPrioriAnalysisResult.getConstructorPattern().accept(
+					aPosterioriAnalysisResult);
+
+			final List<Type> parameterTypes = aPosterioriAnalysisResult
+					.getParameterTypes();
+			parameterTypes.add(0, TYPE_CJOBJECTIFC);
 
 			/*
 			 * The potential target constructor does indeed match the call
@@ -266,30 +340,96 @@ public class ConstructorMixer extends ClassVisitor {
 			 * target constructor:
 			 */
 			final InsnList instructions = composeInstructions(
-					constructorParameters, analysisResult);
+					calledConstructorParameters, aPrioriAnalysisResult,
+					aPosterioriAnalysisResult, callPatternToParametersMap);
 			if (instructions == null)
 				continue;
-			if (!saveConstructor(constructorNode))
+
+			if (!saveConstructor(parameterTypes))
 				continue;
+
+			/*
+			 * Set constructorNode properties.
+			 */
 			constructorNode.instructions = instructions;
-			final MethodVisitor methodVisitor = super
-					.visitMethod(constructorNode.access, constructorNode.name,
-							constructorNode.desc, constructorNode.signature,
-							exceptions);
-			if (methodVisitor != null)
-				constructorNode.accept(methodVisitor);
+			constructorNode.desc = Type.getMethodDescriptor(Type.VOID_TYPE,
+					parameterTypes.toArray(new Type[0]));
+			constructorNode.localVariables = createLocalVariablesList(
+					instructions, parameterTypes,
+					(LocalVariableNode) constructorNode.localVariables.get(0));
+			constructorNode.maxLocals = aPrioriAnalysisResult.getMaxLocals()
+					+ aPosterioriAnalysisResult.getNewVariableIndexShift();
+			/*
+			 * This is a safe approximation for the necessary stack size because
+			 * each new variable as well as $cj$outer ("+1") must be pushed onto
+			 * the stack:
+			 */
+			constructorNode.maxStack = aPrioriAnalysisResult.getMaxStack() + 1
+					+ aPosterioriAnalysisResult.getNewVariableIndexShift();
+			createConstructorForNode(constructorNode);
 		}
 	}
 
 	/**
-	 * @param constructorParameters
-	 * @param analysisResult
+	 * @param parameterPattern
+	 * @param calledConstructorParameters
+	 * @return a map which maps patterns of the matched pattern to concrete
+	 *         matching parameters of the given list, or null if there is no
+	 *         such match
+	 */
+	private Map<ParameterPattern, List<Integer>> matchPatternWithParameters(
+			ParameterPattern parameterPattern,
+			List<ConcreteParameter> calledConstructorParameters) {
+		final PatternToParameterMatcher matcher = new PatternToParameterMatcher(
+				calledConstructorParameters, classLoader);
+		parameterPattern.accept(matcher);
+		if (matcher.hasFailed())
+			return null;
+		Map<ParameterPattern, List<Integer>> callPatternToParametersMap = matcher
+				.getPatternToParametersMap();
+		return callPatternToParametersMap;
+	}
+
+	/**
+	 * @param constructorNode
+	 * @return the start LabelNode in the given instruction list which will be
+	 *         inserted if it does not exist yet
+	 */
+	private static LabelNode getOrCreateStartLabel(InsnList instructions) {
+		if (instructions.size() == 0
+				|| !(instructions.getFirst() instanceof LabelNode))
+			instructions.insert(new LabelNode(new Label()));
+		return (LabelNode) instructions.getFirst();
+	}
+
+	/**
+	 * @param constructorNode
+	 * @return the end LabelNode in the given instruction list which will be
+	 *         added if it does not exist yet
+	 */
+	private static LabelNode getOrCreateEndLabel(InsnList instructions) {
+		if (instructions.size() == 0
+				|| !(instructions.getLast() instanceof LabelNode))
+			instructions.add(new LabelNode(new Label()));
+		return (LabelNode) instructions.getLast();
+	}
+
+	/**
+	 * @param calledConstructorParameters
+	 * @param aPrioriAnalysisResult
+	 * @param aPosterioriAnalysisResult
+	 * @param callPatternToParametersMap
+	 *            Maps patterns of the constructor call to the index of the
+	 *            concrete parameters such as defined by the list
+	 *            calledConstructorParameters.
 	 * @return instructions for a constructor calling the constructor with the
 	 *         given parameters, or null if no such constructor can be composed
 	 */
 	private InsnList composeInstructions(
-			List<ConcreteParameter> constructorParameters,
-			ConstructorAnalysisResult analysisResult) {
+			List<ConcreteParameter> calledConstructorParameters,
+			APrioriConstructorAnalysisResult aPrioriAnalysisResult,
+			APosterioriConstructorAnalysisResult aPosterioriAnalysisResult,
+			Map<ParameterPattern, List<Integer>> callPatternToParametersMap) {
 		InsnList instructions = new InsnList();
 
 		/*
@@ -306,8 +446,11 @@ public class ConstructorMixer extends ClassVisitor {
 		 * Load argument values.
 		 */
 		PatternArgumentLoadingInstructionComposer argumentLoadingInstructionComposer = new PatternArgumentLoadingInstructionComposer(
-				analysisResult.getArgumentLoadInstructions());
-		analysisResult.getConstructorInvocationPattern().accept(
+				calledConstructorParameters,
+				aPrioriAnalysisResult.getArgumentLoadInstructions(),
+				aPosterioriAnalysisResult, callPatternToParametersMap,
+				classLoader);
+		aPrioriAnalysisResult.getConstructorInvocationPattern().accept(
 				argumentLoadingInstructionComposer);
 		instructions.add(argumentLoadingInstructionComposer
 				.getInstructionList());
@@ -315,63 +458,99 @@ public class ConstructorMixer extends ClassVisitor {
 		/*
 		 * Call referenced constructor.
 		 */
-		Type[] argumentTypes = new Type[constructorParameters.size() + 1];
+		Type[] argumentTypes = new Type[calledConstructorParameters.size() + 1];
 		argumentTypes[0] = TYPE_CJOBJECTIFC;
 		for (int i = 1; i < argumentTypes.length; i++)
 			try {
 				argumentTypes[i] = Type.getType(ClassAccess.forName(
-						constructorParameters.get(i - 1).getTypeName(), false,
-						classLoader));
+						calledConstructorParameters.get(i - 1).getTypeName(),
+						false, classLoader));
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 				return null;
 			}
-		instructions
-				.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, analysisResult
-						.isSuperInvocation() ? superClassName : className,
-						CONSTRUCTOR_METHOD_NAME, Type.getMethodDescriptor(
-								Type.VOID_TYPE, argumentTypes)));
+		instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL,
+				aPrioriAnalysisResult.isSuperInvocation() ? superClassName
+						: className, CONSTRUCTOR_METHOD_NAME, Type
+						.getMethodDescriptor(Type.VOID_TYPE, argumentTypes)));
 
 		/*
-		 * Append remaining instructions.
+		 * Apply the remaining instructions of the constructor.
 		 */
-		instructions
-				.add(Cloner.clone(analysisResult.getEffectiveInstructions()));
+		final InsnList effectiveInstructions = Cloner
+				.clone(aPrioriAnalysisResult.getEffectiveInstructions());
+		new InstructionTransformer(
+				aPosterioriAnalysisResult.getVariableIndexMap(),
+				aPosterioriAnalysisResult.getNewVariableIndexShift())
+				.transformVariableIndexes(effectiveInstructions);
+		instructions.add(effectiveInstructions);
 		return instructions;
 	}
 
 	/**
-	 * Adds the specified constructor to the list
+	 * Adds the constructor with the specified parameter types to
 	 * {@link #existingThisConstructors}.
 	 * 
-	 * @param constructorNode
+	 * @param parameterTypes
+	 *            the parameter types of the calling constructor, including
+	 *            $cj$outer
 	 * @return true if no constructor with the given parameters was existing
 	 *         before
 	 */
-	private boolean saveConstructor(MethodNode constructorNode) {
-		/*
-		 * TODO Actual arguments of this constructor might later depend on the
-		 * matched constructor.
-		 */
-		Type[] argumentTypes = Type.getArgumentTypes(constructorNode.desc);
+	private boolean saveConstructor(List<Type> parameterTypes) {
 		List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
 		/*
 		 * Skip the first type because it is always CjObjectItf (outer class
 		 * type):
 		 */
-		for (int i = 1; i < argumentTypes.length; i++) {
-			Type type = argumentTypes[i];
+		for (int i = 1; i < parameterTypes.size(); i++) {
 			/*
 			 * TODO Test whether this works for primitive types. TODO Set name
 			 * of parameter. Use annotations for named parameters?
 			 */
-			parameters.add(new ConcreteParameter(type.getClassName()));
+			parameters.add(new ConcreteParameter(parameterTypes.get(i)
+					.getClassName()));
 		}
 		return existingThisConstructors.add(parameters);
 	}
 
-	private static boolean isConstructor(String name) {
-		return CONSTRUCTOR_METHOD_NAME.equals(name);
+	/**
+	 * Creates a description of local variables in the scope of the method. If
+	 * necessary, start and end labels are added to the instructions to define
+	 * the scope.
+	 * 
+	 * @param instructions
+	 * @param parameterTypes
+	 * @param thisVariable
+	 *            the "this" variable of the constructor which is initially
+	 *            always the first local variable
+	 * @return a list of local variables such as defined at the beginning of the
+	 *         constructor with the given parameter types and instructions
+	 */
+	private static List<LocalVariableNode> createLocalVariablesList(
+			InsnList instructions, List<Type> parameterTypes,
+			LocalVariableNode thisVariable) {
+		/*
+		 * localVariables initially contains only one parameter, namely "this"
+		 * with index 0.
+		 */
+		// TODO Is it right that local variables for arguments always reach
+		// from start label to end label?
+		final LabelNode startLabel = getOrCreateStartLabel(instructions);
+		final LabelNode endLabel = getOrCreateEndLabel(instructions);
+		thisVariable.start = startLabel;
+		thisVariable.end = endLabel;
+		final List<LocalVariableNode> localVariables = new ArrayList<LocalVariableNode>(
+				Collections.singleton(thisVariable));
+		int index = 1;
+		for (Type type : parameterTypes) {
+			// TODO assign actual variable names
+			localVariables.add(new LocalVariableNode(String
+					.format("l%d", index), type.getDescriptor(), null,
+					startLabel, endLabel, index));
+			index += type.getSize();
+		}
+		return localVariables;
 	}
 
 }

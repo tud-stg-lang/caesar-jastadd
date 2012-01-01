@@ -1,12 +1,11 @@
 package org.caesarj.runtime.constructors;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 import org.caesarj.util.ClassAccess;
@@ -19,7 +18,7 @@ import org.caesarj.util.ClassAccess;
  * 
  * @author Marko Martin
  */
-public class ConstructorPatternMatcher implements ParameterPatternVisitor {
+public class PatternToParameterMatcher implements ParameterPatternVisitor {
 
 	private final List<ConcreteParameter> parameters;
 
@@ -31,7 +30,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 	/**
 	 * @see #getPatternToParametersMap()
 	 */
-	private Map<ParameterPattern, Set<Integer>> patternToParametersMap;
+	private Map<ParameterPattern, List<Integer>> patternToParametersMap;
 
 	private final ClassLoader classLoader;
 
@@ -45,7 +44,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 	 * @throws IllegalArgumentException
 	 *             if parameters or classLoader is null
 	 */
-	public ConstructorPatternMatcher(List<ConcreteParameter> parameters,
+	public PatternToParameterMatcher(List<ConcreteParameter> parameters,
 			ClassLoader classLoader) throws IllegalArgumentException {
 		if (parameters == null || classLoader == null)
 			throw new IllegalArgumentException(
@@ -64,7 +63,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 	 * @throws IllegalArgumentException
 	 *             if parameters is null
 	 */
-	public ConstructorPatternMatcher(List<ConcreteParameter> parameters)
+	public PatternToParameterMatcher(List<ConcreteParameter> parameters)
 			throws IllegalArgumentException {
 		this(parameters, ClassLoader.getSystemClassLoader());
 	}
@@ -82,7 +81,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 		}
 		parameterToPatternList = Arrays.asList((ParameterPattern) parameter);
 		patternToParametersMap = Collections.singletonMap(
-				(ParameterPattern) parameter, Collections.singleton(0));
+				(ParameterPattern) parameter, Collections.singletonList(0));
 	}
 
 	@Override
@@ -108,7 +107,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 		ParameterPattern[] parameterToPatternList = new ParameterPattern[parameters
 				.size()];
 		@SuppressWarnings("unchecked")
-		Map<ParameterPattern, Set<Integer>>[] patternToParameterMaps = new Map[countListPatterns];
+		Map<ParameterPattern, List<Integer>>[] patternToParameterMaps = new Map[countListPatterns];
 		int curListPattern = 0;
 		/*
 		 * firstMappedParameters[i] is the index of the first parameter (list
@@ -137,7 +136,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 				continue;
 			}
 			while (true) {
-				ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
+				PatternToParameterMatcher matcher = new PatternToParameterMatcher(
 						parameters.subList(fromIndex, toIndex), classLoader);
 				list.getComponents().get(curListPattern).accept(matcher);
 				if (matcher.hasFailed()) {
@@ -163,16 +162,16 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 		}
 
 		// Set the results:
-		patternToParametersMap = new HashMap<ParameterPattern, Set<Integer>>();
+		patternToParametersMap = new HashMap<ParameterPattern, List<Integer>>();
 		patternToParametersMap.putAll(patternToParameterMaps[0]);
 		for (int i = 1; i < countListPatterns; i++)
-			for (Entry<ParameterPattern, Set<Integer>> entry : patternToParameterMaps[i]
+			for (Entry<ParameterPattern, List<Integer>> entry : patternToParameterMaps[i]
 					.entrySet()) {
-				Set<Integer> transformedSet = new HashSet<Integer>();
+				List<Integer> transformedList = new ArrayList<Integer>();
 				for (int parameterIndex : entry.getValue())
-					transformedSet.add(parameterIndex
+					transformedList.add(parameterIndex
 							+ firstMappedParameters[i - 1]);
-				patternToParametersMap.put(entry.getKey(), transformedSet);
+				patternToParametersMap.put(entry.getKey(), transformedList);
 			}
 		this.parameterToPatternList = Arrays.asList(parameterToPatternList);
 	}
@@ -181,9 +180,9 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 	public void visit(ParameterListPattern pattern) {
 		parameterToPatternList = Collections.nCopies(parameters.size(),
 				(ParameterPattern) pattern);
-		Set<Integer> indexes = new HashSet<Integer>();
+		List<Integer> indexes = new ArrayList<Integer>();
 		for (int i = parameters.size() - 1; i >= 0; i--)
-			indexes.add(i);
+			indexes.add(0, i);
 		patternToParametersMap = Collections.singletonMap(
 				(ParameterPattern) pattern, indexes);
 	}
@@ -231,7 +230,7 @@ public class ConstructorPatternMatcher implements ParameterPatternVisitor {
 	 *         assigned by this matcher<br>
 	 *         This is null if there is no match.
 	 */
-	public Map<ParameterPattern, Set<Integer>> getPatternToParametersMap() {
+	public Map<ParameterPattern, List<Integer>> getPatternToParametersMap() {
 		return patternToParametersMap;
 	}
 

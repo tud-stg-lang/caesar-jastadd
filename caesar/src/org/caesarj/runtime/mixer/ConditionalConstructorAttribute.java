@@ -14,15 +14,15 @@ import org.objectweb.asm.Label;
 
 /**
  * This attribute is used with constructor methods in order to provide
- * information on the constructor call inside this method. This is necessary
- * because the patterns we use for constructor calls cannot be encoded in the
- * default code of the method.
+ * information on the constructor call inside this method and on the parameter
+ * pattern of this constructor. This is necessary because the patterns we use
+ * for constructor calls cannot be encoded in the default code of the method.
  * 
  * @author Marko Martin
  */
-public class ConstructorCallAttribute extends Attribute {
+public class ConditionalConstructorAttribute extends Attribute {
 
-	public static final String ATTRIBUTE_NAME = "de.tud.caesarj.constructorcall";
+	public static final String ATTRIBUTE_NAME = "de.tud.caesarj.conditionalconstructor";
 
 	public static final byte PARAMETER_PATTERN_CONCRETE = 0;
 
@@ -118,7 +118,7 @@ public class ConstructorCallAttribute extends Attribute {
 	 *            true indicates that this call refers a constructor of the
 	 *            super class (and not of "this")
 	 */
-	public ConstructorCallAttribute(ParameterPattern pattern,
+	public ConditionalConstructorAttribute(ParameterPattern pattern,
 			ParameterPattern calledPattern, boolean isSuperConstructorCall) {
 		super(ATTRIBUTE_NAME);
 		this.pattern = pattern;
@@ -129,7 +129,7 @@ public class ConstructorCallAttribute extends Attribute {
 	/**
 	 * Constructor for instances which should read the attribute
 	 */
-	public ConstructorCallAttribute() {
+	public ConditionalConstructorAttribute() {
 		this(null, null, true);
 	}
 
@@ -155,7 +155,7 @@ public class ConstructorCallAttribute extends Attribute {
 			int codeOff, Label[] labels) {
 		final ParameterPatternReader patternReader = new ParameterPatternReader(
 				cr, off, buf);
-		return new ConstructorCallAttribute(patternReader.readPattern(),
+		return new ConditionalConstructorAttribute(patternReader.readPattern(),
 				patternReader.readPattern(), cr.readByte(patternReader
 						.getOffset()) != 0);
 	}
@@ -164,7 +164,7 @@ public class ConstructorCallAttribute extends Attribute {
 	protected ByteVector write(ClassWriter cw, byte[] code, int len,
 			int maxStack, int maxLocals) {
 		throw new UnsupportedOperationException(
-				"Writing ConstructorCallAttributes is currently not supported.");
+				"Writing ConditionalConstructorAttributes is currently not supported.");
 	}
 
 }

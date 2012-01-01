@@ -163,7 +163,7 @@
         </code>
     </compile-run-->
     
-    <compile-run id="test006" description="Constructor and desired init method">
+    <!--compile-run id="test006" description="Constructor and desired init method">
     	<test>
     		new C("test");
     	</test>
@@ -201,9 +201,9 @@
 			   }			   
 			}
         </code>
-    </compile-run>
+    </compile-run-->
     
-    <compile-run id="test006b" description="Constructor and desired init method called">
+    <!--compile-run id="test006b" description="Constructor and desired init method called">
     	<test>
     		new C("test");
     	</test>
@@ -241,6 +241,6 @@
 			   }			   
 			}
         </code>
-    </compile-run>
+    </compile-run-->
 	
 </testsuite>

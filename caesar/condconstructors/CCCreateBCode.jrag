@@ -8,7 +8,11 @@
  * (3) Separate multiple arguments when calling the super or another this constructor by
  *     NOPs. Don't write anything but the arguments to the bytecode for the constructor
  *     access. Anything else that is needed will be generated during loading.
- * (4) Write accesses to concrete constructor parameters correctly. 
+ * (4) Write accesses to concrete constructor parameters correctly.
+ * (5) Don't cast arguments in calls to CJ constructors because they might be unknown at
+ *     compile time.
+ * (6) For constructor calls due to class instance expressions, just assume existence of
+ *     matching constructor and write an appropriate constructor call.
  */
 aspect CCCreateBCode {
 
@@ -20,15 +24,15 @@ aspect CCCreateBCode {
 
 	// Aspect goal (2)
 	/**
-	 * Attribute to be added to constructors in order to save constructor call patterns
-	 * @see org.caesarj.runtime.mixer.ConstructorCallAttribute
+	 * Attribute to be added to constructors in order to save constructor parameter patterns
+	 * @see org.caesarj.runtime.mixer.ConditionalConstructorAttribute
 	 */
-	class ConstructorCallAttribute extends Attribute {
+	class ConditionalConstructorAttribute extends Attribute {
 	
-		public ConstructorCallAttribute(CondConstructorDecl decl) {
+		public ConditionalConstructorAttribute(CondConstructorDecl decl) {
 			super(
 				decl.hostType().constantPool(),
-				org.caesarj.runtime.mixer.ConstructorCallAttribute.ATTRIBUTE_NAME);
+				org.caesarj.runtime.mixer.ConditionalConstructorAttribute.ATTRIBUTE_NAME);
 			Stmt constructorInvocation = decl.getConstructorInvocation();
 			if (!(constructorInvocation instanceof ExprStmt))
 				return;
@@ -41,7 +45,7 @@ aspect CCCreateBCode {
 			/*
 			 * Write formal parameters of this constructor:
 			 */
-			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
+			u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_PATTERN_LIST);
 			int numArg = decl.getConstructorParameters().getNumChild();
 			u1(numArg);
 			final java.util.List<String> listIds = new ArrayList<String>();
@@ -56,12 +60,15 @@ aspect CCCreateBCode {
 			 * Write argument pattern which is passed to the other constructor:
 			 */
 			CondConstructorAccess access = (CondConstructorAccess) expr;
-			u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_LIST);
+			u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_PATTERN_LIST);
 			numArg = access.getNumArg();
 			u1(numArg);
 			for (CondConstructorArgument arg : access.getArgs())
 				arg.writeToAttribute(this, pool, listIds);
 	
+			/*
+			 * Write 1 if a super constructor is called, 0 if a this constructor is called.
+			 */
 			u1(access instanceof CondSuperConstructorAccess ? 1 : 0);
 		}
 	}
@@ -69,7 +76,7 @@ aspect CCCreateBCode {
 	// Aspect goal (2)
 	eq CondConstructorDecl.attributes() {
 		Collection c = super.attributes();
-		c.add(new ConstructorCallAttribute(this));
+		c.add(new ConditionalConstructorAttribute(this));
 		return c;
 	}
 	
@@ -80,7 +87,7 @@ aspect CCCreateBCode {
 	// Aspect goal (2)
 	protected void ExprCondConstructorArgument.writeToAttribute(Attribute attribute,
 			ConstantPool pool, java.util.List<String> listNames) {
-		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
+		attribute.u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_PATTERN_CONCRETE);
 		attribute.u2(pool.addUtf8("")); // name
 		attribute.u2(pool.addUtf8(getExpr().type().signature())); // type signature
 	}
@@ -88,7 +95,7 @@ aspect CCCreateBCode {
 	// Aspect goal (2)
 	protected void ListCondConstructorArgument.writeToAttribute(Attribute attribute,
 			ConstantPool pool, java.util.List<String> listNames) {
-		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_LIST_PATTERN);
+		attribute.u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_LIST_PATTERN);
 		attribute.u1(listNames.indexOf(getID())); // index of referenced formal parameter, unused here
 	}
 	
@@ -99,7 +106,7 @@ aspect CCCreateBCode {
 	// Aspect goal (2)
 	protected void FormalConstructorParameterDeclaration.writeToAttribute(Attribute attribute,
 			ConstantPool pool) {
-		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_PATTERN_CONCRETE);
+		attribute.u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_PATTERN_CONCRETE);
 		attribute.u2(pool.addUtf8(getParameterDeclaration().getID())); // name
 		attribute.u2(pool.addUtf8(getParameterDeclaration().getTypeAccess().type().signature())); // type signature
 	}
@@ -107,11 +114,12 @@ aspect CCCreateBCode {
 	// Aspect goal (2)
 	protected void ListConstructorParameterDeclaration.writeToAttribute(Attribute attribute,
 			ConstantPool pool) {
-		attribute.u1(org.caesarj.runtime.mixer.ConstructorCallAttribute.PARAMETER_LIST_PATTERN);
+		attribute.u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_LIST_PATTERN);
 		attribute.u1(0); // index of referenced formal parameter, unused here
 	}
 	
 	// Aspect goal (3)
+	// also see org.caesarj.runtime.mixer.ConstructorMixer#separateInstructions(MethodNode)
 	public void CondConstructorAccess.createBCode(CodeGeneration gen) {
 		// args
 		for (CondConstructorArgument arg : getArgs()) {
@@ -123,6 +131,8 @@ aspect CCCreateBCode {
 		gen.emit(Bytecode.NOP);
 	}
 	
+	eq CondConstructorAccess.needsPop() = false;
+
 	// Aspect goal (4)
 	refine MCFieldAccess public void VarAccess.createBCode(CodeGeneration gen) {
 		Variable v = decl();
@@ -137,5 +147,43 @@ aspect CCCreateBCode {
 			emitLoadLocalInNestedClass(gen, v);
 	}
 	
+	// Aspect goal (5)
+	refine MCConstructors private void CjClassInstanceExpr.emitArg(CodeGeneration gen, int i) {
+		getArg(i).createBCode(gen);
+		// don't cast to target method
+	}
+	
+	// Aspect goal (6)
+	refine MCConstructors public void CjClassInstanceExpr.createBCode(CodeGeneration gen) {
+		type().emitNew(gen);
+		type().emitDup(gen);
+
+		for (int i = 0; i < getNumArg(); ++i)
+			emitArg(gen, i);
+
+		int size = -1;
+		for (int i = 0; i < getNumArg(); i++)
+			size -= getArg(i).type().variableSize();
+		int index = gen.constantPool().addMethodref(type().constantPoolName(),
+				"<init>", constructorDesc());
+		gen.emit(Bytecode.INVOKESPECIAL, size).add2(index);
+  	}
+  	
+  	syn lazy String CjClassInstanceExpr.constructorDesc() {
+		StringBuffer b = new StringBuffer();
+		b.append("(");
+		// this$0
+		// args
+		b.append("Lorg/caesarj/runtime/CjObjectIfc;");
+		for (int i = 1; i < getNumArg(); i++) {
+			TypeDecl type = getArg(i).type();
+			if (type.isNull())
+				b.append("Ljava/lang/Object;");
+			else
+				b.append(type.typeDescriptor());
+		}
+		b.append(")V");
+		return b.toString();
+	}
 
 }

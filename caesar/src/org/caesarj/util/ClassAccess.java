@@ -16,20 +16,20 @@ public class ClassAccess {
 				char.class, short.class, int.class, float.class, double.class,
 				long.class })
 			BUILT_IN_MAP.put(c.getName(), c);
-		PRIMITIVES_ASSIGNABLE_TO.put(float.class, double.class);
-		PRIMITIVES_ASSIGNABLE_TO.put(long.class, float.class);
-		PRIMITIVES_ASSIGNABLE_TO.put(int.class, long.class);
+//		PRIMITIVES_ASSIGNABLE_TO.put(float.class, double.class);
+//		PRIMITIVES_ASSIGNABLE_TO.put(long.class, float.class);
+//		PRIMITIVES_ASSIGNABLE_TO.put(int.class, long.class);
 		PRIMITIVES_ASSIGNABLE_TO.put(short.class, int.class);
 		PRIMITIVES_ASSIGNABLE_TO.put(char.class, short.class);
 		PRIMITIVES_ASSIGNABLE_TO.put(byte.class, short.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Boolean.class, boolean.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Byte.class, byte.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Character.class, char.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Short.class, short.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Integer.class, int.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Long.class, long.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Float.class, float.class);
-		PRIMITIVES_UNBOXED_TYPES.put(Double.class, double.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Boolean.class, boolean.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Byte.class, byte.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Character.class, char.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Short.class, short.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Integer.class, int.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Long.class, long.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Float.class, float.class);
+//		PRIMITIVES_UNBOXED_TYPES.put(Double.class, double.class);
 	}
 
 	public static Class<?> forName(String name, boolean initialize,

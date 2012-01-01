@@ -78,10 +78,8 @@ aspect MCConstructors {
     	type().emitNew(gen);
     	type().emitDup(gen);
     
-    	for (int i = 0; i < getNumArg(); ++i) {
-      		getArg(i).createBCode(gen);
-      		getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
-    	}
+    	for (int i = 0; i < getNumArg(); ++i)
+      		emitArg(gen, i);
 
     	if(decl().isPrivate() && type() != hostType()) {
      		gen.emit(Bytecode.ACONST_NULL);
@@ -90,8 +88,13 @@ aspect MCConstructors {
     	else {
       		decl().emitInvokeConstructor(gen);
     	}
-  	}	
- 		
+  	}
+  	
+  	private void CjClassInstanceExpr.emitArg(CodeGeneration gen, int i) {
+		getArg(i).createBCode(gen);
+		getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
+	}
+  	
 	/**********************************************************************************
      * 
      *  Transforming Constructor Declarations   

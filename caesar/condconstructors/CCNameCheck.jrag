@@ -5,6 +5,8 @@
  *     the usual way.
  * (2) Make sure that constructor parameters are not assigned names which are already
  *     existing.
+ * (3) Don't throw an error if there is no matching constructor for instantiating a class at
+ *     compile time.
  */
 aspect CCNameCheck {
 
@@ -46,6 +48,11 @@ aspect CCNameCheck {
 		if (!lookupVariable(name()).contains(this)) {
 			error("duplicate declaration of parameter " + name());
 		}
+	}
+	
+	// Aspect goal (3)
+	public void CjClassInstanceExpr.nameCheck() {
+		// TODO throw an error if no matching constructor can ever be generated during runtime
 	}
 
 }

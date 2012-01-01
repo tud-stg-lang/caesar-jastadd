@@ -12,11 +12,11 @@
 			   }
 			}
 			public cclass BBB extends AAA {
-			   public BBB() {
+			   public ? BBB() {
 			      super(4);
 			      System.out.println("BBB constructor #1");
 			   }
-			   public BBB(String x) {
+			   public ? BBB(String x) {
 			      super(x, 5);
 			      System.out.println("BBB constructor #2");
 			   }
@@ -35,7 +35,7 @@
 			   }
 			}
 			public cclass B extends A {
-			   public B(byte b) {
+			   public ? B(byte b) {
 			      super(b);
 			      System.out.println("B constructor");
 			   }
@@ -49,7 +49,7 @@
     	</test>
         <code>
         	public cclass A {
-			   public A(int x) {
+			   public ? A(int x) {
 			      super((float) x);
 			      System.out.format("A constructor - got value %d%n", x);
 			   }
@@ -60,13 +60,13 @@
 			   }
 			}
 			public cclass B extends A {
-			   public B(byte b) {
+			   public ? B(byte b) {
 			      super(b);
 			      System.out.format("B constructor - got value %d%n", b);
 			   }
 			}
 			public cclass D extends B &amp; C {
-			   public D(byte b) {
+			   public ? D(byte b) {
 			      super(b);
 			      System.out.format("D constructor - got value %d%n", b);
 			   }
@@ -81,21 +81,21 @@
     	</test>
         <code>
         	public cclass A {
-        	   public A() {
+        	   public ? A() {
         	      System.out.println("A constructor");
         	   }
-			   public A() {
+			   public ? A() {
 			      super(4);
 			      System.out.println("A constructor (2)");
 			   }
 			}
 			public cclass B {
-			   public B(int x) {
+			   public ? B(int x) {
 			      System.out.format("B constructor - got value %d%n", x);
 			   }
 			}
 			public cclass C extends A &amp; B {
-			   public C() {
+			   public ? C() {
 			      System.out.println("C constructor");
 			   }
 			}
@@ -106,10 +106,10 @@
     		description="test error for two constructors with equal signature and equal super constructor">
         <code>
         	public cclass A {
-        	   public A() {
+        	   public ? A() {
         	      System.out.println("A constructor");
         	   }
-			   public A() {
+			   public ? A() {
 			      System.out.println("A constructor (2)");
 			   }
 			}
@@ -131,10 +131,10 @@
 			}
 			public cclass B extends A {
 			   public final int constructor;
-			   public B() {
+			   public ? B() {
         	      constructor = 1;
 			   }
-			   public B() {
+			   public ? B() {
 			      super(4);
         	      constructor = 2;
 			   }
@@ -148,24 +148,24 @@
     	</test>
         <code>
         	public cclass A {
-        	   public A() {
+        	   public ? A() {
         	      System.out.println("A constructor");
         	   }
-			   public A(int x) {
+			   public ? A(int x) {
 			      super(String.format("int %d", x));
 			      System.out.format("A constructor - got value %d%n", x);
 			   }
-			   public A(float f) {
+			   public ? A(float f) {
 			      this((int) f);
 			   }
 			}
 			public cclass B {
-			   public B(String s) {
+			   public ? B(String s) {
 			      System.out.format("B constructor - got value %s%n", s);
 			   }
 			}
 			public cclass C extends A &amp; B {
-			   public C() {
+			   public ? C() {
 			      super(4.5f);
 			      System.out.println("C constructor");
 			   }
@@ -173,24 +173,92 @@
         </code>
     </compile-run>
     
-    <compile id="condconstr008" description="test forward parameter types">
+    <compile-run id="condconstr008" description="test parameter list pattern - match 1 int">
     	<test>
-    		new B(50);
+    		assertEquals(0, new B(1, 2, 3).a);
     	</test>
         <code>
-        	public cclass A {	
+        	public cclass A {
+        	   public final int a;	
 			   public A(int a, int x) {
+			      this.a = a;
 			      System.out.format("A constructor - values %d, %d%n", a, x);
 			   }
 			}
 			public cclass B extends A {
 			   public ? B(int a, l*, int b) {
-			      super(a, l*);
+			      super(a - 1, l*);
 			      System.out.format("B constructor - values %d, %d%n", a, b);
 			   }
 			}
         </code>
-    </compile>
+    </compile-run>
+	
+    <compile-run id="condconstr009" description="test parameter list pattern - match all 2">
+    	<test>
+    		new B(1, "the string");
+    	</test>
+        <code>
+        	public cclass A {	
+			   public A(int i, String s) {
+			      System.out.format("A constructor - values %d, %s%n", i, s);
+			   }
+			}
+			public cclass B extends A {
+			   public ? B(l*) {
+			      super(l*);
+			      System.out.println("B constructor");
+			   }
+			}
+        </code>
+    </compile-run>
+	
+    <compile-run id="condconstr010" description="test parameter list pattern - match two constructors">
+    	<test>
+    		new B(1, "the string");
+    		new B(0.5f, 1.5);
+    	</test>
+        <code>
+        	public cclass A {	
+			   public A(int i, String s) {
+			      System.out.format("A constructor 1 - values %d, %s%n", i, s);
+			   }
+			   public A(float f, double d) {
+			      System.out.format("A constructor 2 - values %f, %f%n", f, d);
+			   }
+			}
+			public cclass B extends A {
+			   public ? B(l*) {
+			      super(l*);
+			      System.out.println("B constructor");
+			   }
+			}
+        </code>
+    </compile-run>
+	
+    <compile-run id="condconstr011" description="test conditional in constructor call">
+    	<test>
+    		B b = new B(true, false);
+    		assertEquals(1, b.i);
+    		assertEquals(2, b.j);
+    	</test>
+        <code>
+        	public cclass A {
+        	   public int i, j;	
+			   public A(int i, int j) {
+			      this.i = i;
+			      this.j = j;
+			      System.out.format("A constructor - values %d, %s%n", i, j);
+			   }
+			}
+			public cclass B extends A {
+			   public ? B(boolean b1, boolean b2) {
+			      super(b1 ? 1 : 0, b2 ? 3 : 2);
+			      System.out.println("B constructor");
+			   }
+			}
+        </code>
+    </compile-run>
 	
     <!--compile-check-error id="stcinhfields002" error="VAR_UNKNOWN" 
 		                 description="test not available field">

@@ -1,5 +1,8 @@
 package org.caesarj.runtime.constructors;
 
+import org.caesarj.util.ClassAccess;
+import org.objectweb.asm.Type;
+
 /**
  * Parameter pattern which references exactly one concrete parameter by type and
  * optionally also by name
@@ -89,6 +92,20 @@ public class ConcreteParameter implements ParameterPattern {
 		} else if (!typeName.equals(other.typeName))
 			return false;
 		return true;
+	}
+
+	/**
+	 * @param classLoader
+	 * @return the type of the parameter, or null if it cannot be obtained
+	 */
+	public Type getType(ClassLoader classLoader) {
+		try {
+			return Type.getType(ClassAccess.forName(getTypeName(), false,
+					classLoader));
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }

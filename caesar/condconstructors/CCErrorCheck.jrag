@@ -34,7 +34,9 @@ aspect CCErrorCheck {
 		// 8.8.2
 		ConstructorDecl thatConstructor = hostType().lookupConstructor(this);
 		if (thatConstructor != this
-				&& (!(this instanceof CjConstructorDecl) || getConstructorAccess()
+				&& (!(this instanceof CondConstructorDecl) ||
+				    getConstructorAccess() == null && thatConstructor.getConstructorAccess() == null ||
+				    getConstructorAccess() != null && getConstructorAccess()
 						.sameSignature(thatConstructor.getConstructorAccess())))
 			error("constructor with signature " + signature()
 					+ " is multiply declared in type " + hostType().typeName());

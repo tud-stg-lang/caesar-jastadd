@@ -4,12 +4,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import junit.framework.TestCase;
 
 /**
- * Tests the {@link ConstructorPatternMatcher}.
+ * Tests the {@link PatternToParameterMatcher}.
  * 
  * @author Marko Martin
  */
@@ -21,7 +20,7 @@ public class ConstructorPatternMatcherTest extends TestCase {
 							.getName()));
 
 	public void test_fail_wrongNumberOfParameters() {
-		ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
+		PatternToParameterMatcher matcher = new PatternToParameterMatcher(
 				DUMMY_PARAMETERS_1);
 		new ConcreteParameter(String.class.getName()).accept(matcher);
 
@@ -31,7 +30,7 @@ public class ConstructorPatternMatcherTest extends TestCase {
 	}
 
 	public void test_fail_wrongTypeOfParameters() {
-		ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
+		PatternToParameterMatcher matcher = new PatternToParameterMatcher(
 				DUMMY_PARAMETERS_1);
 		ParameterPatternList list = new ParameterPatternList();
 		list.getComponents().add(new ConcreteParameter(String.class.getName()));
@@ -44,14 +43,14 @@ public class ConstructorPatternMatcherTest extends TestCase {
 	}
 
 	public void test_success_parameters1() {
-		ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
+		PatternToParameterMatcher matcher = new PatternToParameterMatcher(
 				DUMMY_PARAMETERS_1);
 		ParameterPatternList list = new ParameterPatternList();
 		ConcreteParameter stringParameter = new ConcreteParameter(
 				String.class.getName());
 		list.getComponents().add(stringParameter);
 		ConcreteParameter visitorParameter = new ConcreteParameter(
-				ConstructorPatternMatcher.class.getName());
+				PatternToParameterMatcher.class.getName());
 		list.getComponents().add(visitorParameter);
 		list.accept(matcher);
 
@@ -60,15 +59,17 @@ public class ConstructorPatternMatcherTest extends TestCase {
 		assertEquals(2, resultList.size());
 		assertEquals(stringParameter, resultList.get(0));
 		assertEquals(visitorParameter, resultList.get(1));
-		Map<ParameterPattern, Set<Integer>> resultMap = matcher
+		Map<ParameterPattern, List<Integer>> resultMap = matcher
 				.getPatternToParametersMap();
 		assertEquals(2, resultMap.size());
-		assertEquals(Collections.singleton(0), resultMap.get(stringParameter));
-		assertEquals(Collections.singleton(1), resultMap.get(visitorParameter));
+		assertEquals(Collections.singletonList(0),
+				resultMap.get(stringParameter));
+		assertEquals(Collections.singletonList(1),
+				resultMap.get(visitorParameter));
 	}
 
 	public void test_success_emptyParameters() {
-		ConstructorPatternMatcher matcher = new ConstructorPatternMatcher(
+		PatternToParameterMatcher matcher = new PatternToParameterMatcher(
 				Collections.<ConcreteParameter> emptyList());
 		new ParameterPatternList().accept(matcher);
 
