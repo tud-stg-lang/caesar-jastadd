@@ -306,6 +306,7 @@ public class ConstructorMixer extends ClassVisitor {
 		final Collection<List<ConcreteParameter>> constructorPool = aPrioriAnalysisResult
 				.isSuperInvocation() ? existingSuperConstructors
 				: existingThisConstructors;
+		final Set<List<ConcreteParameter>> newThisConstructors = new HashSet<List<ConcreteParameter>>();
 		final MethodNode constructorNode = aPrioriAnalysisResult
 				.getConstructorNode();
 		// Loop over potential targets of the constructor call:
@@ -345,7 +346,7 @@ public class ConstructorMixer extends ClassVisitor {
 			if (instructions == null)
 				continue;
 
-			if (!saveConstructor(parameterTypes))
+			if (!addThisConstructorIfNew(newThisConstructors, parameterTypes))
 				continue;
 
 			/*
@@ -368,6 +369,7 @@ public class ConstructorMixer extends ClassVisitor {
 					+ aPosterioriAnalysisResult.getNewVariableIndexShift();
 			createConstructorForNode(constructorNode);
 		}
+		existingThisConstructors.addAll(newThisConstructors);
 	}
 
 	/**
@@ -491,13 +493,17 @@ public class ConstructorMixer extends ClassVisitor {
 	 * Adds the constructor with the specified parameter types to
 	 * {@link #existingThisConstructors}.
 	 * 
+	 * @param newThisConstructors
+	 *            the set in which new this constructors are collected
 	 * @param parameterTypes
 	 *            the parameter types of the calling constructor, including
 	 *            $cj$outer
 	 * @return true if no constructor with the given parameters was existing
 	 *         before
 	 */
-	private boolean saveConstructor(List<Type> parameterTypes) {
+	private boolean addThisConstructorIfNew(
+			Set<List<ConcreteParameter>> newThisConstructors,
+			List<Type> parameterTypes) {
 		List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
 		/*
 		 * Skip the first type because it is always CjObjectItf (outer class
@@ -511,7 +517,10 @@ public class ConstructorMixer extends ClassVisitor {
 			parameters.add(new ConcreteParameter(parameterTypes.get(i)
 					.getClassName()));
 		}
-		return existingThisConstructors.add(parameters);
+		if (existingThisConstructors.contains(parameters))
+			return false;
+		else
+			return newThisConstructors.add(parameters);
 	}
 
 	/**

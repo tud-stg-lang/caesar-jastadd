@@ -127,7 +127,7 @@ public class PatternArgumentLoadingInstructionComposer implements
 			localNum += type.getSize();
 		}
 
-		countConcreteParameters = calledParameters.size();
+		countConcreteParameters = 0;
 	}
 
 	/**
