@@ -10,5 +10,5 @@ CondConstructorAccess : Access ::= <ID> Arg:CondConstructorArgument*;
 CondSuperConstructorAccess : CondConstructorAccess;
 
 abstract CondConstructorArgument;
-ExprCondConstructorArgument : CondConstructorArgument ::= Expr;
+ExprCondConstructorArgument : CondConstructorArgument ::= <Name> Expr;
 ListCondConstructorArgument : CondConstructorArgument ::= <ID>;

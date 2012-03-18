@@ -1,0 +1,107 @@
+<testsuite name="Use Cases for Conditional Constructors" package="condconstructors.usecases">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="condconstr_uc001" description="Equal signatures and different super calls">
+		<test>
+			new ShapeWithSimpleText();
+			new ShapeWithTextAndTitle();
+		</test>
+		<code>
+			public cclass TitledShape {
+				public ? TitledShape(String title) {
+					System.out.format("Title is \"%s\".%n", title);
+				}
+			}
+			public cclass LabeledShape {
+				public ? LabeledShape(String title, String text) {
+					setText(String.format("%s - %s", title, text));
+				}
+				public ? LabeledShape(String title, String text) {
+					super(title);
+					setText(text);
+				}
+				public void setText(String text) {
+					System.out.format("Text is \"%s\".%n", text);
+				}
+			}
+			public cclass ShapeWithSimpleText extends LabeledShape {
+				public ? ShapeWithSimpleText() {
+					super("THE TITLE", "The other text...");
+				}
+			}
+			public cclass ShapeWithTextAndTitle extends ShapeWithSimpleText &amp; TitledShape {
+			}
+		</code>
+	</compile-run>
+	
+	<compile-run id="condconstr_uc002" description="Forward without change">
+		<test>
+			new LoggedCircle(1, 2, 3).draw();
+		</test>
+		<code>
+			public abstract cclass Shape {
+				public void draw() {}
+			}
+			public cclass DrawLogging extends Shape {
+				public ? DrawLogging(l*) {
+					super(l*);
+				}
+				public mixin void draw() {
+					System.out.println("Begin drawing...");
+					long time = System.nanoTime();
+					super.draw();
+					System.out.format("Draw time: %d ns%n", System.nanoTime() - time);
+				}
+			}
+			public cclass Circle extends Shape {
+				public ? Circle(int x, int y, int radius) {
+					System.out.format("New Circle (x: %d; y: %d; radius: %d)%n", x, y, radius);
+				}
+				public void draw() {
+					System.out.println("Drawing shape...");
+				}
+			}
+			public cclass LoggedCircle extends DrawLogging &amp; Circle {
+				public ? LoggedCircle(l*) {
+					super(l*);
+				}
+			}
+		</code>
+	</compile-run>
+
+	<compile-run id="condconstr_uc003_1" description="Set one parameter, forward others: By index (first)">
+		<test>
+			new RedCircle(1, 2, 3);
+			new RedCircle2(4, 5, 6);
+		</test>
+		<code>
+			public abstract cclass Shape {
+				public ? Shape(int r, int g, int b) {
+					System.out.format("New shape(red: %d; green: %d; blue: %d)%n", r, g, b);
+				}
+			}
+			public cclass RedShape extends Shape {
+				public ? RedShape(l*) {
+					super(255, 0, 0, l*);
+				}
+			}
+			public cclass Circle extends Shape {
+				public ? Circle(l*, int x, int y, int radius) {
+					super(l*);
+					System.out.format("New Circle (x: %d; y: %d; radius: %d)%n", x, y, radius);
+				}
+			}
+			public cclass RedCircle extends RedShape &amp; Circle {
+				public ? RedCircle(l*) {
+					super(l*);
+				}
+			}
+			public cclass RedCircle2 extends Circle &amp; RedShape {
+				public ? RedCircle2(l*) {
+					super(l*);
+				}
+			}
+		</code>
+	</compile-run>
+	
+</testsuite>

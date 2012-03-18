@@ -43,11 +43,12 @@ ExprStmt explicit_condconstructor_invocation =
   ;
 
 List constructor_argument_list =
-    constructor_argument.a                       {: return new List().add(a); :}
+    constructor_argument.a                                   {: return new List().add(a); :}
   | constructor_argument_list.l COMMA constructor_argument.a {: return l.add(a); :}
   ;
 
 CondConstructorArgument constructor_argument =
-    expression.e            {: return new ExprCondConstructorArgument(e); :}
-  | IDENTIFIER MULT         {: return new ListCondConstructorArgument(IDENTIFIER); :}
+    expression.e                  {: return new ExprCondConstructorArgument("", e); :}
+  | IDENTIFIER COLON expression.e {: return new ExprCondConstructorArgument(IDENTIFIER, e); :}
+  | IDENTIFIER MULT               {: return new ListCondConstructorArgument(IDENTIFIER); :}
   ;

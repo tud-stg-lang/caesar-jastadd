@@ -74,8 +74,14 @@ public class PatternToParameterMatcher implements ParameterPatternVisitor {
 			fail();
 			return;
 		}
-		if (!ClassAccess.isAssignableFrom(parameters.get(0).getTypeName(),
+		ConcreteParameter concreteParameter = parameters.get(0);
+		if (!ClassAccess.isAssignableFrom(concreteParameter.getTypeName(),
 				parameter.getTypeName(), classLoader)) {
+			fail();
+			return;
+		}
+		final String name = parameter.getName();
+		if (name != null && !(name.equals(concreteParameter.getName()))) {
 			fail();
 			return;
 		}

@@ -23,7 +23,7 @@ public class ConcreteParameter implements ParameterPattern {
 
 	public ConcreteParameter(String name, String typeName) {
 		this(typeName);
-		this.name = name;
+		setName(name);
 	}
 
 	public ConcreteParameter() {

@@ -66,6 +66,11 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	private final List<Type> parameterTypes = new ArrayList<Type>();
 
 	/**
+	 * @see #getParameterNames()
+	 */
+	private final List<String> parameterNames = new ArrayList<String>();
+
+	/**
 	 * @see #getVariableIndexMap()
 	 */
 	private final Map<Integer, Integer> variableIndexMap = new HashMap<Integer, Integer>();
@@ -110,7 +115,7 @@ public class CallingConstructorParameterPatternAnalyzer implements
 		variableIndexMap.put(nextLocalNumBeforeConversion, nextLocalNum);
 		final Type type = parameter.getType(classLoader);
 		nextLocalNumBeforeConversion += type.getSize();
-		setNextParameter(type);
+		setNextParameter(type, parameter.getName());
 	}
 
 	private void linkPattern(ParameterPattern pattern) {
@@ -128,7 +133,7 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	 */
 	private void setNextParameter(ConcreteParameter parameter) {
 		final Type type = parameter.getType(classLoader);
-		setNextParameter(type);
+		setNextParameter(type, parameter.getName());
 	}
 
 	/**
@@ -137,9 +142,10 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	 * 
 	 * @param type
 	 */
-	private void setNextParameter(final Type type) {
+	private void setNextParameter(final Type type, final String name) {
 		nextLocalNum += getAssumedVariableSize(type);
 		parameterTypes.add(type);
+		parameterNames.add(name);
 	}
 
 	/**
@@ -245,6 +251,11 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	@Override
 	public List<Type> getParameterTypes() {
 		return parameterTypes;
+	}
+
+	@Override
+	public List<String> getParameterNames() {
+		return parameterNames;
 	}
 
 	/*

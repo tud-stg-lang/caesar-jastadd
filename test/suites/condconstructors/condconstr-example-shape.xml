@@ -1,0 +1,76 @@
+<testsuite name="Use Cases for Conditional Constructors" package="condconstructors.usecases">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+	<compile-run id="condconstr_ex_shape" description="From Shape to ColoredRectangle">
+		<test>
+			new ColoredRectangle(1, 2, 3, 4, 5, 6, 7);
+			new ColoredRectangle(1, 2, new Dimension(3, 4), 5, 6, 7);
+		</test>
+		<code>
+			public class Point {
+				public int x, y;
+				public Point(int x, int y) {
+					this.x = x;
+					this.y = y;
+				}
+			}
+			public class Dimension {
+				public int width, height;
+				public Dimension(int width, int height) {
+					this.width = width;
+					this.height = height;
+				}
+			}
+			public class Color {
+				public int red, green, blue;
+				public Color(int red, int green, int blue) {
+					this.red = red;
+					this.green = green;
+					this.blue = blue;
+				}
+			}
+			public cclass Shape {
+				private int x, y;
+				public ? Shape(int x, int y) {
+					this.x = x;
+					this.y = y;
+					System.out.format("Shape (x = %d, y = %d)%n", x, y);
+				}
+				public ? Shape(Point point) {
+					this(point.x, point.y);
+				}
+			}
+			public cclass Rectangle extends Shape {
+				private int width, height;
+				public ? Rectangle(p*, int width, int height) {
+					super(p*);
+					this.width = width;
+					this.height = height;
+					System.out.format("Rectangle (width = %d, height = %d)%n", width, height);
+				}
+				public ? Rectangle(p*, Dimension dimension) {
+					this(p*, dimension.width, dimension.height);
+				}
+			}
+			public cclass ColoredShape extends Shape {
+				private int red, green, blue;
+				public ? ColoredShape(p*, int red, int green, int blue) {
+					super(p*);
+					this.red = red;
+					this.green = green;
+					this.blue = blue;
+					System.out.format("ColoredShape (red = %d, green = %d, blue = %d)%n", red, green, blue);
+				}
+				public ? ColoredShape(p*, Color color) {
+					this(p*, color.red, color.green, color.blue);
+				}
+			}
+			public cclass ColoredRectangle extends ColoredShape &amp; Rectangle {
+				public ? ColoredRectangle(p*) {
+					super(p*);
+				}
+			}
+		</code>
+	</compile-run>
+
+</testsuite>

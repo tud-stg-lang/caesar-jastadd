@@ -41,12 +41,15 @@ aspect CCConstructorLookup {
 			if (!thisArg.getClass().equals(thatArg.getClass()))
 				return false;
 			if (thisArg instanceof ExprCondConstructorArgument) {
-				// TODO also consider name
-				if (!((ExprCondConstructorArgument) thisArg)
-						.getExpr()
-						.type()
-						.equals(((ExprCondConstructorArgument) thatArg)
-								.getExpr().type()))
+				ExprCondConstructorArgument thisExprArg = (ExprCondConstructorArgument) thisArg;
+				ExprCondConstructorArgument thatExprArg = (ExprCondConstructorArgument) thatArg;
+				if (!thisExprArg.getExpr().type()
+						.equals(thatExprArg.getExpr().type()))
+					return false;
+				if (thisExprArg.getName() == null) {
+					if (thatExprArg.getName() != null)
+						return false;
+				} else if (!thisExprArg.getName().equals(thatExprArg.getName()))
 					return false;
 			} else if (thisArg instanceof ListCondConstructorArgument) {
 				if (!((ListCondConstructorArgument) thisArg).getID().equals(

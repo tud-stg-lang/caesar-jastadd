@@ -1,7 +1,10 @@
 package org.caesarj.runtime.mixer;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,13 +14,15 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.caesarj.ast.CodeGeneration;
 import org.caesarj.runtime.constructors.APosterioriConstructorAnalysisResult;
+import org.caesarj.runtime.constructors.APrioriConstructorAnalysisResult;
 import org.caesarj.runtime.constructors.CallingConstructorParameterPatternAnalyzer;
 import org.caesarj.runtime.constructors.ConcreteParameter;
-import org.caesarj.runtime.constructors.APrioriConstructorAnalysisResult;
-import org.caesarj.runtime.constructors.PatternToParameterMatcher;
+import org.caesarj.runtime.constructors.ParameterName;
 import org.caesarj.runtime.constructors.ParameterPattern;
 import org.caesarj.runtime.constructors.PatternArgumentLoadingInstructionComposer;
+import org.caesarj.runtime.constructors.PatternToParameterMatcher;
 import org.caesarj.util.ClassAccess;
 import org.caesarj.util.Cloner;
 import org.caesarj.util.InstructionTransformer;
@@ -28,6 +33,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.LineNumberNode;
@@ -122,19 +128,37 @@ public class ConstructorMixer extends ClassVisitor {
 	 */
 	private void saveSuperConstructors(Constructor<?>[] superConstructors) {
 		for (Constructor<?> constructor : superConstructors) {
-			List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
-			Class<?>[] parameterTypes = constructor.getParameterTypes();
+			final List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
+			final Class<?>[] parameterTypes = constructor.getParameterTypes();
+			final Annotation[][] parameterAnnotations = constructor
+					.getParameterAnnotations();
 			/*
 			 * Skip the first type because it is always CjObjectItf (outer class
 			 * type):
 			 */
 			for (int i = 1; i < parameterTypes.length; i++) {
 				Class<?> type = parameterTypes[i];
-				/*
-				 * TODO Set name of parameter (in ConcreteParameter
-				 * constructor). Maybe use annotations for named parameters?
-				 */
-				parameters.add(new ConcreteParameter(type.getName()));
+				String name = null;
+				for (Annotation annotation : parameterAnnotations[i]) {
+					if (annotation.annotationType().equals(ParameterName.class)) {
+						name = ((ParameterName) annotation).value();
+						break;
+					} else if (annotation instanceof Proxy
+							&& annotation.annotationType().getName()
+									.equals(ParameterName.class.getName())) {
+						try {
+							name = (String) Proxy.getInvocationHandler(
+									annotation).invoke(annotation,
+									ParameterName.class.getMethod("value"),
+									null);
+						} catch (Throwable e) {
+							e.printStackTrace();
+							continue;
+						}
+						break;
+					}
+				}
+				parameters.add(new ConcreteParameter(name, type.getName()));
 			}
 			existingSuperConstructors.add(parameters);
 		}
@@ -331,8 +355,8 @@ public class ConstructorMixer extends ClassVisitor {
 			aPrioriAnalysisResult.getConstructorPattern().accept(
 					aPosterioriAnalysisResult);
 
-			final List<Type> parameterTypes = aPosterioriAnalysisResult
-					.getParameterTypes();
+			final List<Type> parameterTypes = new ArrayList<Type>(
+					aPosterioriAnalysisResult.getParameterTypes());
 			parameterTypes.add(0, TYPE_CJOBJECTIFC);
 
 			/*
@@ -346,7 +370,8 @@ public class ConstructorMixer extends ClassVisitor {
 			if (instructions == null)
 				continue;
 
-			if (!addThisConstructorIfNew(newThisConstructors, parameterTypes))
+			if (!addThisConstructorIfNew(newThisConstructors,
+					aPosterioriAnalysisResult))
 				continue;
 
 			/*
@@ -367,6 +392,8 @@ public class ConstructorMixer extends ClassVisitor {
 			 */
 			constructorNode.maxStack = aPrioriAnalysisResult.getMaxStack() + 1
 					+ aPosterioriAnalysisResult.getNewVariableIndexShift();
+			// TODO save parameter names in annotation
+			constructorNode.visibleParameterAnnotations = createParameterNameAnnotations(aPosterioriAnalysisResult);
 			createConstructorForNode(constructorNode);
 		}
 		existingThisConstructors.addAll(newThisConstructors);
@@ -390,30 +417,6 @@ public class ConstructorMixer extends ClassVisitor {
 		Map<ParameterPattern, List<Integer>> callPatternToParametersMap = matcher
 				.getPatternToParametersMap();
 		return callPatternToParametersMap;
-	}
-
-	/**
-	 * @param constructorNode
-	 * @return the start LabelNode in the given instruction list which will be
-	 *         inserted if it does not exist yet
-	 */
-	private static LabelNode getOrCreateStartLabel(InsnList instructions) {
-		if (instructions.size() == 0
-				|| !(instructions.getFirst() instanceof LabelNode))
-			instructions.insert(new LabelNode(new Label()));
-		return (LabelNode) instructions.getFirst();
-	}
-
-	/**
-	 * @param constructorNode
-	 * @return the end LabelNode in the given instruction list which will be
-	 *         added if it does not exist yet
-	 */
-	private static LabelNode getOrCreateEndLabel(InsnList instructions) {
-		if (instructions.size() == 0
-				|| !(instructions.getLast() instanceof LabelNode))
-			instructions.add(new LabelNode(new Label()));
-		return (LabelNode) instructions.getLast();
 	}
 
 	/**
@@ -495,27 +498,27 @@ public class ConstructorMixer extends ClassVisitor {
 	 * 
 	 * @param newThisConstructors
 	 *            the set in which new this constructors are collected
-	 * @param parameterTypes
-	 *            the parameter types of the calling constructor, including
-	 *            $cj$outer
+	 * @param aPosterioriAnalysisResult
+	 *            results of constructor analysis wrt a concrete called
+	 *            constructor
 	 * @return true if no constructor with the given parameters was existing
 	 *         before
 	 */
 	private boolean addThisConstructorIfNew(
 			Set<List<ConcreteParameter>> newThisConstructors,
-			List<Type> parameterTypes) {
-		List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
-		/*
-		 * Skip the first type because it is always CjObjectItf (outer class
-		 * type):
-		 */
-		for (int i = 1; i < parameterTypes.size(); i++) {
+			APosterioriConstructorAnalysisResult aPosterioriAnalysisResult) {
+		final List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
+		final List<Type> parameterTypes = aPosterioriAnalysisResult
+				.getParameterTypes();
+		final List<String> parameterNames = aPosterioriAnalysisResult
+				.getParameterNames();
+		final int countParameters = parameterTypes.size();
+		for (int i = 0; i < countParameters; i++) {
 			/*
-			 * TODO Test whether this works for primitive types. TODO Set name
-			 * of parameter. Use annotations for named parameters?
+			 * TODO Test whether this works for primitive types.
 			 */
-			parameters.add(new ConcreteParameter(parameterTypes.get(i)
-					.getClassName()));
+			parameters.add(new ConcreteParameter(parameterNames.get(i),
+					parameterTypes.get(i).getClassName()));
 		}
 		if (existingThisConstructors.contains(parameters))
 			return false;
@@ -560,6 +563,56 @@ public class ConstructorMixer extends ClassVisitor {
 			index += type.getSize();
 		}
 		return localVariables;
+	}
+
+	/**
+	 * @param constructorNode
+	 * @return the start LabelNode in the given instruction list which will be
+	 *         inserted if it does not exist yet
+	 */
+	private static LabelNode getOrCreateStartLabel(InsnList instructions) {
+		if (instructions.size() == 0
+				|| !(instructions.getFirst() instanceof LabelNode))
+			instructions.insert(new LabelNode(new Label()));
+		return (LabelNode) instructions.getFirst();
+	}
+
+	/**
+	 * @param constructorNode
+	 * @return the end LabelNode in the given instruction list which will be
+	 *         added if it does not exist yet
+	 */
+	private static LabelNode getOrCreateEndLabel(InsnList instructions) {
+		if (instructions.size() == 0
+				|| !(instructions.getLast() instanceof LabelNode))
+			instructions.add(new LabelNode(new Label()));
+		return (LabelNode) instructions.getLast();
+	}
+
+	/**
+	 * @param aPosterioriAnalysisResult
+	 * @return an array of parameter annotation lists such that each annotation
+	 *         list contains a {@link ParameterName} annotation with the name of
+	 *         the associated parameter if the name is available
+	 */
+	private static List<?>[] createParameterNameAnnotations(
+			final APosterioriConstructorAnalysisResult aPosterioriAnalysisResult) {
+		final List<List<AnnotationNode>> nodes = new ArrayList<List<AnnotationNode>>();
+		final List<AnnotationNode> emptyList = Collections.emptyList();
+		nodes.add(emptyList); // no annotation for $cj$outer
+		final List<String> parameterNames = aPosterioriAnalysisResult
+				.getParameterNames();
+		final int size = parameterNames.size();
+		for (int i = 0; i < size; i++) {
+			final String name = parameterNames.get(i);
+			if (name == null)
+				continue;
+			AnnotationNode annotationNode = new AnnotationNode(
+					Type.getDescriptor(ParameterName.class));
+			annotationNode.values = Arrays.asList("value", name);
+			nodes.add(Collections.singletonList(annotationNode));
+		}
+		return nodes.toArray(new List[0]);
 	}
 
 }

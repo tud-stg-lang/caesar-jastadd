@@ -88,7 +88,7 @@ aspect CCCreateBCode {
 	protected void ExprCondConstructorArgument.writeToAttribute(Attribute attribute,
 			ConstantPool pool, java.util.List<String> listNames) {
 		attribute.u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_PATTERN_CONCRETE);
-		attribute.u2(pool.addUtf8("")); // name
+		attribute.u2(pool.addUtf8(getName())); // name
 		attribute.u2(pool.addUtf8(getExpr().type().signature())); // type signature
 	}
 	
