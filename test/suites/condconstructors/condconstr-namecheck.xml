@@ -1,0 +1,142 @@
+<testsuite name="Test Conditional Constructors" package="condconstructors.namecheck">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="condconstr_namecheck001" error="CTOR_NOT_FOUND" description="one non-matching argument">
+        <code>
+        	public cclass A {
+			   public ? A(String x) {
+			      System.out.format("A constructor - got values %s, %d%n", x, i);
+			   }
+			}
+			public class Main {
+				public static void main(String[] args) {
+					new A(5);
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <compile id="condconstr_namecheck002" description="use default constructor">
+        <code>
+        	public cclass A {
+			}
+			public class Main {
+				public static void main(String[] args) {
+					new A();
+				}
+			}
+        </code>
+    </compile>
+    
+    <compile id="condconstr_namecheck003" description="compile also without matching constructor">
+        <code>
+        	public cclass A {
+			   public ? A() {
+			      super("text");
+			      System.out.format("A1()%n");
+			   }
+			}
+			public cclass B {
+				public ? B(int i) {
+					System.out.format("B1(%d)%n", i);
+				}
+			}
+			public cclass C extends A &amp; B {
+				public ? C() {
+				}
+			}
+        </code>
+    </compile>
+    
+    <compile-check-error id="condconstr_namecheck004" error="CONSTRUCTOR_NOTFOUND" description="no matching superclass constructor">
+        <code>
+        	public cclass A {
+			   public ? A() {
+			      super("text");
+			      System.out.format("A1()%n");
+			   }
+			}
+			public cclass B {
+				public ? B(int i) {
+					System.out.format("B1(%d)%n", i);
+				}
+			}
+			public cclass C extends A &amp; B {
+			}
+        </code>
+    </compile-check-error>
+    
+    <compile-check-error id="condconstr_namecheck005" error="CTOR_NOT_FOUND" description="no matching constructor inherited">
+        <code>
+        	public cclass A {
+			   public ? A() {
+			      super("text");
+			      System.out.format("A1()%n");
+			   }
+			}
+			public cclass B {
+				public ? B(int i) {
+					System.out.format("B1(%d)%n", i);
+				}
+			}
+			public cclass C extends A &amp; B {
+				public ? C() {
+				}
+			}
+			public class Main {
+				public static void main(String[] args) {
+					new C();
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <compile id="condconstr_namecheck006" error="CTOR_NOT_FOUND" description="matching constructor inherited">
+        <code>
+        	public cclass A {
+			   public ? A() {
+			      super("text");
+			      System.out.format("A1()%n");
+			   }
+			}
+			public cclass B {
+				public ? B(String s) {
+					System.out.format("B1(%s)%n", s);
+				}
+			}
+			public cclass C extends A &amp; B {
+				public ? C() {
+				}
+			}
+			public class Main {
+				public static void main(String[] args) {
+					new C();
+				}
+			}
+        </code>
+    </compile>
+    
+    <!--compile-check-error id="condconstr_namecheck001" error="CTOR_NOT_FOUND" description="one non-matching argument">
+        <code>
+        	public cclass A {
+			   public ? A() {
+			      super("text");
+			      System.out.format("A1()%n");
+			   }
+			}
+			public cclass B {
+				public ? B(int i) {
+					System.out.format("B1(%d)%n", i);
+				}
+			}
+			public cclass C {
+				public ? C(String s) {
+					System.out.format("C1(%s)%n", s);
+				}
+			}
+			public cclass D extends A &amp; B {
+			}
+        </code>
+    </compile-check-error-->
+    
+</testsuite>

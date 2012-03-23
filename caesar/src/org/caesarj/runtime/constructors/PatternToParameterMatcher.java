@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.caesarj.util.ClassAccess;
-
 /**
  * Matches {@link ParameterPattern}s against actual formal parameters given as a
- * list of classes in the constructor. Results can be obtained with
+ * list of concrete parameters in the constructor. Results can be obtained with
  * {@link #getParameterToPatternList()} and {@link #getPatternToParametersMap()}
  * .
  * 
@@ -32,30 +30,31 @@ public class PatternToParameterMatcher implements ParameterPatternVisitor {
 	 */
 	private Map<ParameterPattern, List<Integer>> patternToParametersMap;
 
-	private final ClassLoader classLoader;
+	private final SubtypeChecker subtypeChecker;
 
 	/**
 	 * @param parameters
 	 *            the formal parameter list against which to match the visited
 	 *            pattern
-	 * @param classLoader
-	 *            the loader to be used to load classes in order to access their
-	 *            type hierarchy
+	 * @param subtypeChecker
+	 *            the {@link SubtypeChecker} to be used to check whether a type
+	 *            is subtype of another one
 	 * @throws IllegalArgumentException
 	 *             if parameters or classLoader is null
 	 */
 	public PatternToParameterMatcher(List<ConcreteParameter> parameters,
-			ClassLoader classLoader) throws IllegalArgumentException {
-		if (parameters == null || classLoader == null)
+			SubtypeChecker subtypeChecker) throws IllegalArgumentException {
+		if (parameters == null || subtypeChecker == null)
 			throw new IllegalArgumentException(
-					"parameters and classLoader must not be null.");
+					"parameters and subtypeChecker must not be null.");
 		this.parameters = parameters;
-		this.classLoader = classLoader;
+		this.subtypeChecker = subtypeChecker;
 	}
 
 	/**
 	 * This is equivalent to {@code ConstructorPatternMatcher(parameters,
-	 * ClassLoader.getSystemClassLoader())}.
+	 *  new SubtypeChecker.ClassAccessSubtypeChecker(ClassLoader.getSystemClassLoader()))}
+	 * .
 	 * 
 	 * @param parameters
 	 *            the formal parameter list against which to match the visited
@@ -65,7 +64,8 @@ public class PatternToParameterMatcher implements ParameterPatternVisitor {
 	 */
 	public PatternToParameterMatcher(List<ConcreteParameter> parameters)
 			throws IllegalArgumentException {
-		this(parameters, ClassLoader.getSystemClassLoader());
+		this(parameters, new SubtypeChecker.ClassAccessSubtypeChecker(
+				ClassLoader.getSystemClassLoader()));
 	}
 
 	@Override
@@ -75,8 +75,8 @@ public class PatternToParameterMatcher implements ParameterPatternVisitor {
 			return;
 		}
 		ConcreteParameter concreteParameter = parameters.get(0);
-		if (!ClassAccess.isAssignableFrom(concreteParameter.getTypeName(),
-				parameter.getTypeName(), classLoader)) {
+		if (!subtypeChecker.isSubtype(concreteParameter.getTypeName(),
+				parameter.getTypeName())) {
 			fail();
 			return;
 		}
@@ -143,7 +143,7 @@ public class PatternToParameterMatcher implements ParameterPatternVisitor {
 			}
 			while (true) {
 				PatternToParameterMatcher matcher = new PatternToParameterMatcher(
-						parameters.subList(fromIndex, toIndex), classLoader);
+						parameters.subList(fromIndex, toIndex), subtypeChecker);
 				list.getComponents().get(curListPattern).accept(matcher);
 				if (matcher.hasFailed()) {
 					if (fromIndex >= toIndex

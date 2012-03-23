@@ -23,6 +23,7 @@ import org.caesarj.runtime.constructors.ParameterName;
 import org.caesarj.runtime.constructors.ParameterPattern;
 import org.caesarj.runtime.constructors.PatternArgumentLoadingInstructionComposer;
 import org.caesarj.runtime.constructors.PatternToParameterMatcher;
+import org.caesarj.runtime.constructors.SubtypeChecker.ClassAccessSubtypeChecker;
 import org.caesarj.util.ClassAccess;
 import org.caesarj.util.Cloner;
 import org.caesarj.util.InstructionTransformer;
@@ -392,7 +393,6 @@ public class ConstructorMixer extends ClassVisitor {
 			 */
 			constructorNode.maxStack = aPrioriAnalysisResult.getMaxStack() + 1
 					+ aPosterioriAnalysisResult.getNewVariableIndexShift();
-			// TODO save parameter names in annotation
 			constructorNode.visibleParameterAnnotations = createParameterNameAnnotations(aPosterioriAnalysisResult);
 			createConstructorForNode(constructorNode);
 		}
@@ -410,7 +410,8 @@ public class ConstructorMixer extends ClassVisitor {
 			ParameterPattern parameterPattern,
 			List<ConcreteParameter> calledConstructorParameters) {
 		final PatternToParameterMatcher matcher = new PatternToParameterMatcher(
-				calledConstructorParameters, classLoader);
+				calledConstructorParameters, new ClassAccessSubtypeChecker(
+						classLoader));
 		parameterPattern.accept(matcher);
 		if (matcher.hasFailed())
 			return null;
@@ -507,19 +508,22 @@ public class ConstructorMixer extends ClassVisitor {
 	private boolean addThisConstructorIfNew(
 			Set<List<ConcreteParameter>> newThisConstructors,
 			APosterioriConstructorAnalysisResult aPosterioriAnalysisResult) {
-		final List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
-		final List<Type> parameterTypes = aPosterioriAnalysisResult
-				.getParameterTypes();
-		final List<String> parameterNames = aPosterioriAnalysisResult
-				.getParameterNames();
-		final int countParameters = parameterTypes.size();
-		for (int i = 0; i < countParameters; i++) {
-			/*
-			 * TODO Test whether this works for primitive types.
-			 */
-			parameters.add(new ConcreteParameter(parameterNames.get(i),
-					parameterTypes.get(i).getClassName()));
-		}
+		// final List<ConcreteParameter> parameters = new
+		// ArrayList<ConcreteParameter>();
+		// final List<Type> parameterTypes = aPosterioriAnalysisResult
+		// .getParameterTypes();
+		// final List<String> parameterNames = aPosterioriAnalysisResult
+		// .getParameterNames();
+		// final int countParameters = parameterTypes.size();
+		// for (int i = 0; i < countParameters; i++) {
+		// /*
+		// * TODO Test whether this works for primitive types.
+		// */
+		// parameters.add(new ConcreteParameter(parameterNames.get(i),
+		// parameterTypes.get(i).getClassName()));
+		// }
+		final List<ConcreteParameter> parameters = aPosterioriAnalysisResult
+				.getConcreteParameters();
 		if (existingThisConstructors.contains(parameters))
 			return false;
 		else
@@ -600,13 +604,13 @@ public class ConstructorMixer extends ClassVisitor {
 		final List<List<AnnotationNode>> nodes = new ArrayList<List<AnnotationNode>>();
 		final List<AnnotationNode> emptyList = Collections.emptyList();
 		nodes.add(emptyList); // no annotation for $cj$outer
-		final List<String> parameterNames = aPosterioriAnalysisResult
-				.getParameterNames();
-		final int size = parameterNames.size();
-		for (int i = 0; i < size; i++) {
-			final String name = parameterNames.get(i);
-			if (name == null)
+		for (final ConcreteParameter parameter : aPosterioriAnalysisResult
+				.getConcreteParameters()) {
+			final String name = parameter.getName();
+			if (name == null) {
+				nodes.add(emptyList);
 				continue;
+			}
 			AnnotationNode annotationNode = new AnnotationNode(
 					Type.getDescriptor(ParameterName.class));
 			annotationNode.values = Arrays.asList("value", name);

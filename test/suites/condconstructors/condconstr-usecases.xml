@@ -30,6 +30,8 @@
 				}
 			}
 			public cclass ShapeWithTextAndTitle extends ShapeWithSimpleText &amp; TitledShape {
+				public ? ShapeWithTextAndTitle() {
+				}
 			}
 		</code>
 	</compile-run>

@@ -12,7 +12,7 @@ import junit.framework.TestCase;
  * 
  * @author Marko Martin
  */
-public class ConstructorPatternMatcherTest extends TestCase {
+public class PatternToParameterMatcherTest extends TestCase {
 
 	private static final List<ConcreteParameter> DUMMY_PARAMETERS_1 = Arrays
 			.asList(new ConcreteParameter(String.class.getName()),

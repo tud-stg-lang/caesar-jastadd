@@ -45,10 +45,7 @@
         </code>
     </compile-run>
     
-    <!--compile-run id="condconstr_namedarg003" description="one argument with non-matching name">
-    	<test>
-    		new B();
-    	</test>
+    <compile-check-error id="condconstr_namedarg003" error="CTOR_NOT_FOUND" description="one argument with non-matching name">
         <code>
         	public cclass A {
 			   public ? A(String x, int i) {
@@ -61,8 +58,13 @@
 			      System.out.println("B constructor #1");
 			   }
 			}
+			public class Main {
+				public static void main(String[] args) {
+					new B();
+				}
+			}
         </code>
-    </compile-run-->
+    </compile-check-error>
     
     <compile-run id="condconstr_namedarg004" description="two arguments, one named">
     	<test>

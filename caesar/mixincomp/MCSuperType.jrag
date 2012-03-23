@@ -46,11 +46,13 @@ aspect MCSuperType {
 	}
 		
 	syn lazy Opt CjClassDecl.getSuperTypeOpt() {
-		return new Opt(
-				new CjSuperType(
+		return new Opt(createCjSuperType());
+	}
+	
+	private CjSuperType CjClassDecl.createCjSuperType() {
+		return new CjSuperType(
 						new Modifiers(new List().add(new Modifier("public"))),
-						getID()+"$super",new List(),new List(),new List(),this)
-		);
+						getID()+"$super",new List(),new List(),new List(),this);
 	}
 	
 	// instead of instanceof CjSuperType

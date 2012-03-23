@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.objectweb.asm.Type;
 
@@ -14,13 +13,16 @@ import org.objectweb.asm.Type;
  * pattern for the "called" constructor.
  * <p>
  * Each instance of this visitor must be used only once.
+ * <p>
+ * This class extends the
+ * {@link SimpleCallingConstructorParameterPatternAnalyzer} with additional
+ * analyses concerning the resulting code for loading arguments.
  * 
  * @author Marko Martin
  */
-public class CallingConstructorParameterPatternAnalyzer implements
-		ParameterPatternVisitor, APosterioriConstructorAnalysisResult {
-
-	private final Map<Integer, List<ConcreteParameter>> listIndexToConcreteParameterMap = new HashMap<Integer, List<ConcreteParameter>>();
+public class CallingConstructorParameterPatternAnalyzer extends
+		SimpleCallingConstructorParameterPatternAnalyzer implements
+		APosterioriConstructorAnalysisResult {
 
 	private final ClassLoader classLoader;
 
@@ -39,11 +41,6 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	 * counter {@link #nextLocalNum}.
 	 */
 	private int nextLocalNumBeforeConversion;
-
-	/**
-	 * the index the next visited list will have
-	 */
-	private int nextListIndex = 0;
 
 	/**
 	 * @see #getPatternToLocalNumMap()
@@ -66,11 +63,6 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	private final List<Type> parameterTypes = new ArrayList<Type>();
 
 	/**
-	 * @see #getParameterNames()
-	 */
-	private final List<String> parameterNames = new ArrayList<String>();
-
-	/**
 	 * @see #getVariableIndexMap()
 	 */
 	private final Map<Integer, Integer> variableIndexMap = new HashMap<Integer, Integer>();
@@ -89,6 +81,7 @@ public class CallingConstructorParameterPatternAnalyzer implements
 			List<ConcreteParameter> concreteParameters,
 			Map<ParameterPattern, List<Integer>> calledPatternToParametersMap,
 			int firstVariableIndex, ClassLoader classLoader) {
+		super(concreteParameters, calledPatternToParametersMap);
 		nextLocalNum = firstVariableIndex;
 		/*
 		 * $cj$outer is NOT a parameter in the original constructor. Therefore,
@@ -96,16 +89,6 @@ public class CallingConstructorParameterPatternAnalyzer implements
 		 */
 		nextLocalNumBeforeConversion = firstVariableIndex - 1;
 		this.classLoader = classLoader;
-		for (Entry<ParameterPattern, List<Integer>> entry : calledPatternToParametersMap
-				.entrySet()) {
-			if (!(entry.getKey() instanceof ParameterListPattern))
-				continue;
-			List<ConcreteParameter> parameters = new ArrayList<ConcreteParameter>();
-			for (int i : entry.getValue())
-				parameters.add(concreteParameters.get(i));
-			listIndexToConcreteParameterMap.put(((ParameterListPattern) entry
-					.getKey()).getReferencedListIndex(), parameters);
-		}
 	}
 
 	@Override
@@ -113,9 +96,9 @@ public class CallingConstructorParameterPatternAnalyzer implements
 		linkPattern(parameter);
 		patternToLocalNumMap.put(parameter, nextLocalNum);
 		variableIndexMap.put(nextLocalNumBeforeConversion, nextLocalNum);
-		final Type type = parameter.getType(classLoader);
-		nextLocalNumBeforeConversion += type.getSize();
-		setNextParameter(type, parameter.getName());
+		nextLocalNumBeforeConversion += parameter.getType(classLoader)
+				.getSize();
+		super.visit(parameter);
 	}
 
 	private void linkPattern(ParameterPattern pattern) {
@@ -124,16 +107,10 @@ public class CallingConstructorParameterPatternAnalyzer implements
 		lastPattern = pattern;
 	}
 
-	/**
-	 * Sets the given parameter as next parameter of the calling constructor.
-	 * Adapts {@link #nextLocalNum} and {@link #parameterTypes} appropriately by
-	 * invoking {@link #setNextParameter(Type)}.
-	 * 
-	 * @param parameter
-	 */
-	private void setNextParameter(ConcreteParameter parameter) {
-		final Type type = parameter.getType(classLoader);
-		setNextParameter(type, parameter.getName());
+	@Override
+	protected void setNextParameter(ConcreteParameter parameter) {
+		super.setNextParameter(parameter);
+		setNextParameterType(parameter.getType(classLoader));
 	}
 
 	/**
@@ -142,10 +119,9 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	 * 
 	 * @param type
 	 */
-	private void setNextParameter(final Type type, final String name) {
+	private void setNextParameterType(final Type type) {
 		nextLocalNum += getAssumedVariableSize(type);
 		parameterTypes.add(type);
-		parameterNames.add(name);
 	}
 
 	/**
@@ -157,24 +133,11 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	}
 
 	@Override
-	public void visit(CompositeParameterPattern compositePattern) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void visit(ParameterPatternList list) {
-		for (ParameterPattern pattern : list.getComponents())
-			pattern.accept(this);
-	}
-
-	@Override
 	public void visit(ParameterListPattern pattern) {
 		linkPattern(pattern);
 		patternToLocalNumMap.put(pattern, nextLocalNum);
-		indexToListPatternMap.put(nextListIndex, pattern);
-		for (ConcreteParameter param : listIndexToConcreteParameterMap
-				.get(nextListIndex++))
-			setNextParameter(param);
+		indexToListPatternMap.put(getNextListIndex(), pattern);
+		super.visit(pattern);
 	}
 
 	/*
@@ -251,11 +214,6 @@ public class CallingConstructorParameterPatternAnalyzer implements
 	@Override
 	public List<Type> getParameterTypes() {
 		return parameterTypes;
-	}
-
-	@Override
-	public List<String> getParameterNames() {
-		return parameterNames;
 	}
 
 	/*

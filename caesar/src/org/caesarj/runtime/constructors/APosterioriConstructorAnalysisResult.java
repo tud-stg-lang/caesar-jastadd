@@ -17,7 +17,18 @@ import org.objectweb.asm.Type;
  * 
  * @author Marko Martin
  */
-public interface APosterioriConstructorAnalysisResult {
+public interface APosterioriConstructorAnalysisResult extends
+		SimpleAPosterioriConstructorAnalysisResult {
+
+	/**
+	 * @return the actual parameter types of the calling constructor which match
+	 *         the main PPC (parameter pattern of the calling constructor)
+	 *         according to the considered called constructor<br>
+	 *         This list does NOT contain the type {@link CjObjectIfc} as first
+	 *         type.
+	 * @see #getParameterNames()
+	 */
+	List<Type> getParameterTypes();
 
 	/**
 	 * @return a map which maps PPCs (sub-patterns of the calling constructor
@@ -49,26 +60,6 @@ public interface APosterioriConstructorAnalysisResult {
 	 *         the number of variable slots which have dynamically been added)
 	 */
 	int getNewVariableIndexShift();
-
-	/**
-	 * @return the actual parameter types of the calling constructor which match
-	 *         the main PPC (parameter pattern of the calling constructor)
-	 *         according to the considered called constructor<br>
-	 *         This list does NOT contain the type {@link CjObjectIfc} as first type.
-	 * @see #getParameterNames()
-	 */
-	List<Type> getParameterTypes();
-
-	/**
-	 * @return the actual parameter names of the calling constructor associated
-	 *         with the matching PPCs (parameter pattern of the calling
-	 *         constructor) according to the considered called constructor<br>
-	 *         If the name of a parameter is unknown, the list contains null at
-	 *         the respective index.<br>
-	 *         The list returned by this method has the same number of elements
-	 *         as the list returned by {@link #getParameterTypes()}.
-	 */
-	List<String> getParameterNames();
 
 	/**
 	 * @return a map which maps old variable indexes to new ones

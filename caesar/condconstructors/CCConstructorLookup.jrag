@@ -6,6 +6,16 @@
  *     same accessed signature.
  * (3) Correctly compare CondConstructorDecls.
  * (4) Provide default constructor access for CondConstructorDecls.
+ * (5) Convert conditional constructor arguments and parameters to parameter patterns
+ *     in order to use the constructor generation algorithm.
+ * (6) Provide easy access to the names of list parameters in the parameter list of a
+ *     conditional constructor.
+ * (7) Do constructor matching for conditional constructors and provide access to the
+ *     generated concrete constructors.
+ * (8) Provide a list of dummy ConstructorDecls in a CjClassInstanceExpr which contains
+ *     the available constructors after constructor matching.
+ * (9) Use the dummy list from (8) for finding matching constructor declarations during
+ *     name check.
  */
 aspect CCConstructorLookup {
 
@@ -106,6 +116,284 @@ aspect CCConstructorLookup {
 				"super", new List())));
 			return this;
 		}
+	}
+	
+	// Aspect goal (5)
+	/**
+	 * @param typeNameToDeclMap
+	 * 		Required type name-to-decl mappings are added to this map. Must not be null.
+	 * @return a parameter pattern which represents this argument
+	 */
+	protected abstract org.caesarj.runtime.constructors.ParameterPattern CondConstructorArgument.convertToParameterPattern(
+			Map<String, TypeDecl> typeNameToDeclMap);
+	
+	protected org.caesarj.runtime.constructors.ParameterPattern ExprCondConstructorArgument.convertToParameterPattern(
+			Map<String, TypeDecl> typeNameToDeclMap) {
+		final Expr expr = getExpr();
+		final TypeDecl type = expr.type();
+		final String typeName = type.fullName();
+		typeNameToDeclMap.put(typeName, type);
+		return new org.caesarj.runtime.constructors.ConcreteParameter(getName(), typeName);
+	}
+	
+	protected org.caesarj.runtime.constructors.ParameterPattern ListCondConstructorArgument.convertToParameterPattern(
+			Map<String, TypeDecl> typeNameToDeclMap) {
+		return new org.caesarj.runtime.constructors.ParameterListPattern(listParameterNames().indexOf(getID()));
+	}
+	
+	protected abstract org.caesarj.runtime.constructors.ParameterPattern ConstructorParameterDeclaration.convertToParameterPattern(
+			Map<String, TypeDecl> typeNameToDeclMap);
+	
+	protected org.caesarj.runtime.constructors.ParameterPattern FormalConstructorParameterDeclaration.convertToParameterPattern(
+			Map<String, TypeDecl> typeNameToDeclMap) {
+		final TypeDecl type = type();
+		final String typeName = type.fullName();
+		typeNameToDeclMap.put(typeName, type);
+		return new org.caesarj.runtime.constructors.ConcreteParameter(name(), typeName);
+	}
+	
+	protected org.caesarj.runtime.constructors.ParameterPattern ListConstructorParameterDeclaration.convertToParameterPattern(
+			Map<String, TypeDecl> typeNameToDeclMap) {
+		return new org.caesarj.runtime.constructors.ParameterListPattern();
+	}
+	
+	// Aspect goal (6)
+	syn java.util.List<String> CondConstructorDecl.listParameterNames() {
+		final java.util.List<String> listIds = new ArrayList<String>();
+		for (ConstructorParameterDeclaration param : getConstructorParameters()) {
+			if (param instanceof ListConstructorParameterDeclaration)
+				listIds.add(((ListConstructorParameterDeclaration) param).getID());
+		}
+		return listIds;
+	}
+	
+	private java.util.List<String> ListCondConstructorArgument.listParameterNames() {
+		ASTNode<?> node = this;
+		do {
+			node = node.getParent();
+			if (node == null)
+				return Collections.emptyList();
+		} while (!(node instanceof CondConstructorDecl));
+		return ((CondConstructorDecl) node).listParameterNames();
+	}
+	
+	
+	// Aspect goal (7)
+	/**
+	 * @param superHierarchy
+	 *            the super hierarchy to be supposed for the mixin<br>
+	 *            This is a list of {@link CjClassDecl}s where the first element
+	 *            is assumed to be the direct superclass in the linearized
+	 *            hierarchy. CjObject is not contained as the root (last)
+	 *            element.
+	 * @return a list of concrete constructors of this class after constructor
+	 *         generation<br>
+	 *         (Concrete constructors are default Java constructors contained in
+	 *         the class and instantiated conditional constructors which depend
+	 *         on the constructors available in superclasses.) TODO Is the
+	 *         $cj$outer parameter contained in each list? --> no
+	 */
+	syn lazy java.util.List<ConstructorDecl> CjClassDecl.concreteConstructors(
+			java.util.List<CjClassDecl> superHierarchy) {
+		final java.util.List<ConstructorDecl> superclassConstructors;
+		if (superHierarchy == null || superHierarchy.isEmpty())
+			superclassConstructors = Collections
+					.singletonList(createDefaultConstructorDummy(getBodyDeclsNoTransform()));
+		else
+			superclassConstructors = superHierarchy.get(0)
+					.concreteConstructors(
+							superHierarchy.subList(1, superHierarchy.size()));
+		return generateConstructors(superclassConstructors);
+	}
+
+	/**
+	 * @param superclassConstructors
+	 * @return all concrete constructors of this class provided that the
+	 *         superclass provides the given superclass constructors<br>
+	 *         These returned constructors are only "dummy" constructors. They
+	 *         only contain 1. modifiers, 2. a parameter list, and 3.
+	 *         exceptions, but not a code block etc.
+	 */
+	private java.util.List<ConstructorDecl> CjClassDecl.generateConstructors(
+			java.util.List<ConstructorDecl> superclassConstructors) {
+		final java.util.List<ConstructorDecl> concreteConstructors = new ArrayList<ConstructorDecl>();
+		final Collection<ConstructorDecl> constructors = constructors();
+		if (constructors.isEmpty()) {
+			concreteConstructors
+					.add(createDefaultConstructorDummy((List<BodyDecl>) (superclassConstructors
+							.isEmpty() ? getBodyDeclsNoTransform()
+							: superclassConstructors.get(0).getParent())));
+			return concreteConstructors;
+		}
+		for (ConstructorDecl constructor : constructors) {
+			if (constructor instanceof CondConstructorDecl)
+				concreteConstructors
+						.addAll(generateConcreteFromConditionalConstructor(
+								concreteConstructors, superclassConstructors,
+								constructor));
+			else {
+				/*
+				 * Normal constructors contain, after transformation, $cj$outer
+				 * as the first parameter. Remove this as it is not part of
+				 * constructor matching:
+				 */
+				final ConstructorDecl concreteConstructor = new ConstructorDecl(
+						constructor.getModifiers().fullCopy(),
+						constructor.getID(), constructor.getParameters()
+								.copyAndRemove(0), null, null, null);
+				concreteConstructor.setParent(getBodyDeclsNoTransform());
+				concreteConstructors.add(concreteConstructor);
+			}
+		}
+		return concreteConstructors;
+	}
+	
+	public List<T> List.copyAndRemove(int i) {
+		final List<T> copy = fullCopy();
+		copy.removeChild(i);
+		return copy;
+	}
+	
+	private ConstructorDecl CjClassDecl.createDefaultConstructorDummy(List<BodyDecl> bodyDeclsContainer) {
+		final List<Modifier> modifiers = new List<Modifier>();
+		modifiers.add(new Modifier("public"));
+		final ConstructorDecl constructor = new ConstructorDecl(new Modifiers(
+				modifiers), (String) null, new List<ParameterDeclaration>(),
+				new List<Access>(), null, null);
+		constructor.setParent(bodyDeclsContainer);
+		return constructor;
+	}
+
+	private java.util.List<ConstructorDecl> CjClassDecl.generateConcreteFromConditionalConstructor(
+			final java.util.List<ConstructorDecl> previousThisConstructors,
+			java.util.List<ConstructorDecl> superclassConstructors,
+			final ConstructorDecl constructor) {
+		final java.util.List<ConstructorDecl> concreteConstructors = new ArrayList<ConstructorDecl>();
+		final ConstructorAccessIfc constructorAccess = constructor
+				.getConstructorAccess();
+		if (!(constructorAccess instanceof CondConstructorAccess))
+			return concreteConstructors;
+		final CondConstructorAccess access = (CondConstructorAccess) constructorAccess;
+		final org.caesarj.runtime.constructors.ParameterPatternList argumentList = new org.caesarj.runtime.constructors.ParameterPatternList();
+		final Map<String, TypeDecl> typeNameToDeclMap = new HashMap<String, TypeDecl>();
+		for (CondConstructorArgument arg : access.getArgs())
+			argumentList.getComponents().add(
+					arg.convertToParameterPattern(typeNameToDeclMap));
+		for (ConstructorDecl calledConstructor : access instanceof CondSuperConstructorAccess ? superclassConstructors
+				: previousThisConstructors) {
+			final List<ParameterDeclaration> concreteConstructorParameters = matchConditionalAgainstConcreteConstructor(
+					((CondConstructorDecl) constructor)
+							.getConstructorParameters(),
+					argumentList, calledConstructor.getParameterList(),
+					typeNameToDeclMap);
+			if (concreteConstructorParameters == null)
+				continue;
+			final ConstructorDecl concreteConstructor = new ConstructorDecl(
+					constructor.getModifiers().fullCopy(), constructor.getID(),
+					concreteConstructorParameters, constructor.getExceptions()
+							.fullCopy(), null, null);
+			concreteConstructor.setParent(getBodyDeclsNoTransform());
+			concreteConstructors.add(concreteConstructor);
+		}
+		return concreteConstructors;
+	}
+
+	/**
+	 * @param parameters
+	 * @param arguments
+	 * @param concreteConstructor
+	 * @param typeNameToDeclMap
+	 * @return the concrete constructor parameters resulting from the matching,
+	 *         or null if matching fails
+	 */
+	private List<ParameterDeclaration> CjClassDecl.matchConditionalAgainstConcreteConstructor(
+			final List<ConstructorParameterDeclaration> parameters,
+			final org.caesarj.runtime.constructors.ParameterPatternList arguments,
+			final List<ParameterDeclaration> concreteConstructor,
+			final Map<String, TypeDecl> typeNameToDeclMap) {
+		final java.util.List<org.caesarj.runtime.constructors.ConcreteParameter> calledConstructorParameters = getConstructorParameters(
+				concreteConstructor, typeNameToDeclMap);
+		final org.caesarj.runtime.constructors.SubtypeChecker.TypeDeclSuptypeChecker subtypeChecker = new org.caesarj.runtime.constructors.SubtypeChecker.TypeDeclSuptypeChecker(
+				typeNameToDeclMap);
+		final org.caesarj.runtime.constructors.PatternToParameterMatcher patternToParameterMatcher = new org.caesarj.runtime.constructors.PatternToParameterMatcher(
+				calledConstructorParameters, subtypeChecker);
+		arguments.accept(patternToParameterMatcher);
+		final String errors = subtypeChecker.getErrors();
+		if (errors != null) {
+			error(errors);
+			return null;
+		}
+		if (patternToParameterMatcher.hasFailed())
+			return null;
+
+		final org.caesarj.runtime.constructors.SimpleCallingConstructorParameterPatternAnalyzer analyzer = new org.caesarj.runtime.constructors.SimpleCallingConstructorParameterPatternAnalyzer(
+				calledConstructorParameters,
+				patternToParameterMatcher.getPatternToParametersMap());
+		final org.caesarj.runtime.constructors.ParameterPatternList parameterList = new org.caesarj.runtime.constructors.ParameterPatternList();
+		for (ConstructorParameterDeclaration param : parameters)
+			parameterList.getComponents().add(
+					param.convertToParameterPattern(typeNameToDeclMap));
+
+		parameterList.accept(analyzer);
+		final List<ParameterDeclaration> concreteParameters = new List<ParameterDeclaration>();
+		for (org.caesarj.runtime.constructors.ConcreteParameter parameter : analyzer
+				.getConcreteParameters())
+			concreteParameters.add(new ParameterDeclaration(typeNameToDeclMap
+					.get(parameter.getTypeName()), parameter.getName()));
+		return concreteParameters;
+	}
+
+	/**
+	 * 
+	 * @param constructor
+	 * @param typeNameToDeclMap
+	 *            Type name-to-decl mappings according to the types occurring in
+	 *            the parameters will be added to this map.
+	 * @return the list of parameters of the given constructor as
+	 *         ConcreteParameters
+	 */
+	private java.util.List<org.caesarj.runtime.constructors.ConcreteParameter> CjClassDecl.getConstructorParameters(
+			final List<ParameterDeclaration> constructor,
+			final Map<String, TypeDecl> typeNameToDeclMap) {
+		final java.util.List<org.caesarj.runtime.constructors.ConcreteParameter> calledConstructorParameters = new ArrayList<org.caesarj.runtime.constructors.ConcreteParameter>(
+				constructor.numChildren());
+		for (ParameterDeclaration declaration : constructor) {
+			final TypeDecl typeDecl = declaration.type();
+			final String typeName = typeDecl.fullName();
+			typeNameToDeclMap.put(typeName, typeDecl);
+			calledConstructorParameters
+					.add(new org.caesarj.runtime.constructors.ConcreteParameter(
+							declaration.name(), typeName));
+		}
+		return calledConstructorParameters;
+	}
+	
+	// Aspect goal (8)
+	private Collection<ConstructorDecl> CjClassInstanceExpr.dummyConcreteConstructorDecls() {
+		final CjClassDecl classDecl = (CjClassDecl) (hasTypeDecl() ? getTypeDecl()
+				: getAccess().type());
+		final java.util.List<ConstructorDecl> concreteConstructors = classDecl
+				.concreteConstructors(classDecl.getSortedParents());
+		/*
+		 * Add the parameter for the outer class which is contained in the
+		 * constructors returned by concreteConstructors(...):
+		 */
+		final Collection<ConstructorDecl> constructorsWithCjOuter = new ArrayList<ConstructorDecl>();
+		for (ConstructorDecl constructor : concreteConstructors) {
+			constructor = constructor.fullCopy();
+			constructor.getParameters()
+					.insertChild(
+							new ParameterDeclaration(new TypeAccess(
+									"org.caesarj.runtime", "CjObjectIfc"),
+									"$cj$outer"), 0);
+			constructorsWithCjOuter.add(constructor);
+		}
+		return constructorsWithCjOuter;
+	}
+	
+	// Aspect goal (9)
+	syn lazy SimpleSet CjClassInstanceExpr.decls() {
+		return chooseConstructor(dummyConcreteConstructorDecls(), getArgList());
 	}
 	
 }

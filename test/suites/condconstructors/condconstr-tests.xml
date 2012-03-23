@@ -243,4 +243,34 @@
         </code>
     </compile-run-->
 	
+    <!--compile-run id="test007" description="Call method from 2nd superclass">
+    	<test>
+    		new D().o();
+    	</test>
+        <code>
+        	public cclass A {	
+			   public void m() {
+			   }		   
+			}			
+			public cclass X {
+			   public void q() {
+			   }
+			}
+			public cclass B extends X {
+			   public void n() {
+			   }			   
+			}
+			public cclass C extends A {
+			   public void o() {
+			      m();
+			   }
+			}
+			public cclass D extends B &amp; C {
+			   public void p() {
+			      x();
+			   }
+			}
+        </code>
+    </compile-run-->
+	
 </testsuite>

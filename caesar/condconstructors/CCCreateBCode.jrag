@@ -33,11 +33,8 @@ aspect CCCreateBCode {
 			super(
 				decl.hostType().constantPool(),
 				org.caesarj.runtime.mixer.ConditionalConstructorAttribute.ATTRIBUTE_NAME);
-			Stmt constructorInvocation = decl.getConstructorInvocation();
-			if (!(constructorInvocation instanceof ExprStmt))
-				return;
-			Expr expr = ((ExprStmt) constructorInvocation).getExpr();
-			if (!(expr instanceof CondConstructorAccess))
+			ConstructorAccessIfc constructorAccess = decl.getConstructorAccess();
+			if (constructorAccess == null)
 				return;
 	
 			final ConstantPool pool = decl.hostType().constantPool();
@@ -59,7 +56,7 @@ aspect CCCreateBCode {
 			/*
 			 * Write argument pattern which is passed to the other constructor:
 			 */
-			CondConstructorAccess access = (CondConstructorAccess) expr;
+			CondConstructorAccess access = (CondConstructorAccess) constructorAccess;
 			u1(org.caesarj.runtime.mixer.ConditionalConstructorAttribute.PARAMETER_PATTERN_LIST);
 			numArg = access.getNumArg();
 			u1(numArg);
@@ -158,16 +155,18 @@ aspect CCCreateBCode {
 		type().emitNew(gen);
 		type().emitDup(gen);
 
-		for (int i = 0; i < getNumArg(); ++i)
-			emitArg(gen, i);
+		for (int i = 0; i < getNumArg(); ++i) {
+			getArg(i).createBCode(gen);
+			getArg(i).type().emitCastTo(gen, decl().getParameter(i).type()); // MethodInvocationConversion
+		}
 
-		int size = -1;
-		for (int i = 0; i < getNumArg(); i++)
-			size -= getArg(i).type().variableSize();
-		int index = gen.constantPool().addMethodref(type().constantPoolName(),
-				"<init>", constructorDesc());
-		gen.emit(Bytecode.INVOKESPECIAL, size).add2(index);
-  	}
+		if (decl().isPrivate() && type() != hostType()) {
+			gen.emit(Bytecode.ACONST_NULL);
+			decl().createAccessor().emitInvokeConstructor(gen);
+		} else {
+			decl().emitInvokeConstructor(gen);
+		}
+	}
   	
   	syn lazy String CjClassInstanceExpr.constructorDesc() {
 		StringBuffer b = new StringBuffer();

@@ -1,0 +1,25 @@
+/*
+ * Adapt the definition of the virtual superclass of a composed class for conditional
+ * constructors.
+ *
+ * (1) Add the constructor definitions of the direct superclass to the virtual superclass.
+ */
+aspect CCSuperType {
+
+	// Aspect goal (1)
+	refine MCSuperType private CjSuperType CjClassDecl.createCjSuperType() {
+		return new CjSuperType(new Modifiers(
+				new List().add(new Modifier("public"))), getID() + "$super",
+				new List(), new List(), getConstructorDecls(), this);
+	}
+	
+	private List<BodyDecl> CjClassDecl.getConstructorDecls() {
+		final List<BodyDecl> constructorDecls = new List<BodyDecl>();
+		for (ConstructorDecl constructorDecl : (Collection<ConstructorDecl>) ((CjClassDecl) getSortedParents()
+				.get(0)).constructors())
+			constructorDecls.add(constructorDecl.copy());
+		return constructorDecls;
+	}
+	
+	
+}

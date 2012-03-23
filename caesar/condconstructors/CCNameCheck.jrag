@@ -5,8 +5,9 @@
  *     the usual way.
  * (2) Make sure that constructor parameters are not assigned names which are already
  *     existing.
- * (3) Don't throw an error if there is no matching constructor for instantiating a class at
- *     compile time.
+ * (3) Produce an error if a normal constructor calls a conditional constructor.
+ * (4) If multiple constructors with the same signatures are defined within a class,
+ *     only throw an error if they call the same super constructor.
  */
 aspect CCNameCheck {
 
@@ -49,10 +50,35 @@ aspect CCNameCheck {
 			error("duplicate declaration of parameter " + name());
 		}
 	}
-	
-	// Aspect goal (3)
-	public void CjClassInstanceExpr.nameCheck() {
-		// TODO throw an error if no matching constructor can ever be generated during runtime
-	}
 
+	// Aspect goal (3)	 
+	refine NameCheck public void ConstructorAccess.nameCheck() {
+		refined();
+		if (decls().size() == 1 && decl() instanceof CondConstructorDecl)
+			error("A normal constructor may not call a conditional constructor because it is not guaranteed to be available at runtime.");
+	}
+	
+	// Aspect goal (4)
+	public void CondConstructorDecl.nameCheck() {
+		// 8.8
+		if (!hostType().name().equals(name()))
+			error("constructor "
+					+ name()
+					+ " does not have the same name as the simple name of the host class "
+					+ hostType().name());
+
+		// 8.8.2
+		ConstructorDecl thatConstructor = hostType().lookupConstructor(this);
+		if (thatConstructor != this
+				&& (getConstructorAccess() == null && thatConstructor.getConstructorAccess() == null ||
+				    getConstructorAccess() != null && getConstructorAccess()
+						.sameSignature(thatConstructor.getConstructorAccess())))
+			error("constructor with signature " + signature()
+					+ " is multiply declared in type " + hostType().typeName());
+
+		if (circularThisInvocation(this))
+			error("The constructor " + signature()
+					+ " may not directly or indirectly invoke itself");
+	}
+	
 }

@@ -223,4 +223,19 @@
         </code>
     </compile-run>
 
+    <!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-check-error id="javamisc013" error="CONSTRUCTOR_NOTFOUND" description="Test call non-existent superclass constructor">
+        <code>
+        	class A {
+        	    public A(int i) {
+        	    }
+			}
+			class B extends A {
+				public B() {
+					super("s");
+				}
+			}
+        </code>
+    </compile-check-error>
+
 </testsuite>

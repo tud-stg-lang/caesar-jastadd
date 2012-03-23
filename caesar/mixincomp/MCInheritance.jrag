@@ -35,8 +35,8 @@ aspect MCInheritance {
 	// the attribute is intended to be overridden for virtual classes
 	syn lazy Collection CjClassDecl.getExplicitParents() = getDirectParents();
 	
-	syn lazy Collection CjClassDecl.getSortedParents() {  
-		Collection parents = new ArrayList();
+	syn lazy java.util.List CjClassDecl.getSortedParents() {  
+		java.util.List parents = new ArrayList();
 		try {
 			// [0] is the subclass itself (i.e. "this")
 			// [1] is the next base class
@@ -59,9 +59,9 @@ aspect MCInheritance {
 	syn lazy Collection CjClassDecl.mixinList() = getSortedParents();
 	
 	// direct parents in the sorted order	
-	syn lazy Collection CjClassDecl.getSortedDirectParents() {
+	syn lazy java.util.List CjClassDecl.getSortedDirectParents() {
 		Collection direct = getDirectParents();			 
-		Collection sortedDirect = new ArrayList(direct.size());
+		java.util.List sortedDirect = new ArrayList(direct.size());
 		for (Iterator it = getSortedParents().iterator(); it.hasNext(); ) {
 			Object o = it.next();
 			if (direct.contains(o)) {
