@@ -16,13 +16,13 @@ import org.caesarj.util.ProgressTracker;
 import org.caesarj.util.VerboseProgress;
 
 public class CaesarCompiler {
-	static protected Program program = null;
+	static public Program program = null;
 	static protected Collection<String> errors = null;
 	static protected ProgressTracker progressTracker = null;
 	
 	public static void initialize() {
 		program = new Program();
-		Options options = program.options();
+		final Options options = program.options();
 		errors = new LinkedList<String>();
 		progressTracker = new ProgressTracker();
 		options.initOptions();
@@ -40,7 +40,7 @@ public class CaesarCompiler {
 		
 		program.initBytecodeReader(new BytecodeParser());
 		program.initJavaParser(new JavaParser() {
-          public CompilationUnit parse(java.io.InputStream is, String fileName) throws java.io.IOException, beaver.Parser.Exception {
+          public CompilationUnit parse(final java.io.InputStream is, final String fileName) throws java.io.IOException, beaver.Parser.Exception {
             return new parser.JavaParser().parse(is, fileName);
           }
         });
@@ -53,22 +53,22 @@ public class CaesarCompiler {
 		progressTracker = null;
 	}
 	
-	public static void addOptions(String args[]) {
+	public static void addOptions(final String args[]) {
 		program.options().addOptions(args);
 	}
 	
-	public static void setOption(String name) {
+	public static void setOption(final String name) {
 		program.options().setOption(name);
 	}
 	
-	public static void setValueForOption(String value, String option) {
+	public static void setValueForOption(final String value, final String option) {
 		program.options().setValueForOption(value, option);
 	}
 	
 	/**
 	 * Add a new source file
 	 */
-	public static void addSourceFile(String filename) {
+	public static void addSourceFile(final String filename) {
 		program.addSourceFile(filename);
 	}
 	
@@ -90,7 +90,7 @@ public class CaesarCompiler {
 	 * Change the progress tracker 
 	 * (should be called before initialization of compiler) 
 	 */
-	public static void setProgressTracker(ProgressTracker tracker) {
+	public static void setProgressTracker(final ProgressTracker tracker) {
 		progressTracker = tracker;
 	}
 	
@@ -116,21 +116,21 @@ public class CaesarCompiler {
 		
 		progressTracker.startPhase("collectSrc", "Collecting source files...", 0.05);
 		
-		Collection files = program.options().files();
+		final Collection files = program.options().files();
 		
 		if (files.isEmpty()) {
 			if (program.options().hasValueForOption("-sourcepath")) {
 				String spath = program.options().getValueForOption("-sourcepath");
 				if (spath.charAt(spath.length()-1) != File.separatorChar)
 					spath += File.separator;
-				File spathFile = new File(spath);
+				final File spathFile = new File(spath);
 				if (isValidDirectory(spathFile)) {
 					if (program.logCompiler()) {
 						System.out.println("Source directory : "+spath);
 					}
 					try {
 						scanDirectory(program, files, spath, spathFile);
-					} catch (IOException e) {
+					} catch (final IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -142,14 +142,14 @@ public class CaesarCompiler {
 			}
 		}
 		
-		for (Iterator iter = files.iterator(); iter.hasNext();) {
+		for (final Iterator iter = files.iterator(); iter.hasNext();) {
 			String name = (String) iter.next();
-			File file = new File(name);
+			final File file = new File(name);
 			if ((!file.exists()) && (program.options().hasValueForOption("-sourcepath"))) {
 				String spath = program.options().getValueForOption("-sourcepath");
 				if (spath.charAt(spath.length()-1) != File.separatorChar)
 					spath += File.separator;
-				File newFile = new File(spath+name);
+				final File newFile = new File(spath+name);
 				if (newFile.isFile())
 					name = newFile.getAbsolutePath();
 				System.out.println("check 1 file : "+name);
@@ -169,18 +169,18 @@ public class CaesarCompiler {
 		try {
 			//program.insertExternalizedVC();
 	
-			double step = 1.0 / countSourceCUs();
-			for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
-				CompilationUnit cu = (CompilationUnit)iter.next();
+			final double step = 1.0 / countSourceCUs();
+			for(final Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
+				final CompilationUnit cu = (CompilationUnit)iter.next();
 				if (cu.fromSource()) {
 					progressTracker.advanceProgress("Checking for errors: " + cu.relativeName(), step);
-					Collection cuErrors = cu.parseErrors();
-					Collection warnings = new LinkedList();
+					final Collection cuErrors = cu.parseErrors();
+					final Collection warnings = new LinkedList();
 		            
 					if (cuErrors.isEmpty())
 		            	cu.errorCheck(cuErrors, warnings);
 					
-					for (Object e: cuErrors) {
+					for (final Object e: cuErrors) {
 						if (e instanceof Problem) {
 							errors.add(((Problem)e).toString());
 						}
@@ -212,9 +212,9 @@ public class CaesarCompiler {
 		// estimated to take 45% of compilation time
 		progressTracker.startPhase("genBytecode", "Generating bytecode....", 0.45);
 		
-		double step = 1.0 / countSourceCUs();
-        for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
-        	CompilationUnit cu = (CompilationUnit)iter.next();
+		final double step = 1.0 / countSourceCUs();
+        for(final Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
+        	final CompilationUnit cu = (CompilationUnit)iter.next();
         	if (cu.fromSource()) {
 	        	progressTracker.advanceProgress("Generating bytecode: " + cu.relativeName(), step);
 	        	cu.transformation();
@@ -227,8 +227,8 @@ public class CaesarCompiler {
 	
 	private static int countSourceCUs() {
 		int count = 0;
-		for(Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
-        	CompilationUnit cu = (CompilationUnit)iter.next();
+		for(final Iterator iter = program.compilationUnitIterator(); iter.hasNext(); ) {
+        	final CompilationUnit cu = (CompilationUnit)iter.next();
         	if (cu.fromSource()) {
         		count++;        		
         	}
@@ -237,16 +237,16 @@ public class CaesarCompiler {
 	}
 
 	// Ignore directories named "test"
-	protected static boolean isValidDirectory(File spathFile) {
+	protected static boolean isValidDirectory(final File spathFile) {
 		return spathFile.isDirectory() && !spathFile.getName().equals("test");
 	}
 
-	protected static void scanDirectory (Program program, Collection files, String spath,
-			File spathFile) throws IOException {
-		String[] filelist = spathFile.list();
-		for (String filename: filelist) {
-			String fullname = spath+filename;
-			File f = new File(fullname);
+	protected static void scanDirectory (final Program program, final Collection files, final String spath,
+			final File spathFile) throws IOException {
+		final String[] filelist = spathFile.list();
+		for (final String filename: filelist) {
+			final String fullname = spath+filename;
+			final File f = new File(fullname);
 			if (f.isFile() && fullname.endsWith(".java")) {
 				if (program.logCompiler()) {
 					System.out.println("                   + "+filename);
@@ -283,7 +283,7 @@ public class CaesarCompiler {
 	}
 	
 	
-	public static void main(String args[]) {
+	public static void main(final String args[]) {
 		initialize();	
 		addOptions(args);
 		if (!compile()) {
@@ -321,7 +321,7 @@ public class CaesarCompiler {
 		
 		if (!typeCheck()) {
 			System.out.println("Errors:");
-			for (Iterator err = errors.iterator(); err.hasNext();) {
+			for (final Iterator err = errors.iterator(); err.hasNext();) {
 				System.out.println((String) err.next());
 			}
 			return false;

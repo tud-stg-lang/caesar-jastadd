@@ -1,0 +1,190 @@
+<testsuite name="Test Conditional Constructors" package="condconstructors.multinh2011">
+
+	<!-- *=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~=*=~~= -->
+    <compile-run id="DevelopingManager" description="Figure 1">
+    	<test>
+    		Employee e1 = new Employee(1);
+    		ProjectManager e2 = new ProjectManager((byte) 42);
+    		Developer e3 = new Developer("The First Project");
+    		DevelopingManager e4 = new DevelopingManager(2, "The Second Project", (byte) 84);
+    		VolunteerDeveloper e5 = new VolunteerDeveloper(
+    			"Gustav-Gans-Gasse 15, Entenhausen", "The Third Project");
+    	</test>
+        <code>
+        	public cclass Employee {
+        		private long id;
+        		public Employee(long id) {
+        			this.id = id;
+        		}
+        	}
+        	public cclass ProjectManager {
+        		private byte rating;
+        		public ? ProjectManager(p*, byte rating) {
+        			super(p*);
+        			this.rating = rating;
+        		}
+        	}
+        	public cclass Developer {
+        		private String currentProject;
+        		public ? Developer(p*, String currentProject) {
+        			super(p*);
+        			this.currentProject = currentProject;
+        		}
+        	}
+        	public cclass DevelopingManager extends ProjectManager &amp; Developer &amp; Employee {
+        	// or: extends Developer &amp; ProjectManager &amp; Employee
+        	// however, this would change the order of constructor parameters as
+        	// constructors are applied "from right to left", i.e., first Employee(id), then
+        	// Developer(id, currentProject), then ProjectManager(id, currProject, rating).
+        		public ? DevelopingManager(p*) {
+        			super(p*);
+        		}
+        	}
+        	public cclass Volunteer {
+        		private String address;
+        		public Volunteer(String address) {
+        			this.address = address;
+        		}
+        	}
+        	public cclass VolunteerDeveloper extends Developer &amp; Volunteer {
+        		public ? VolunteerDeveloper(p*) {
+        			super(p*);
+        		}
+        	}
+        </code>
+    </compile-run>
+	
+    <compile-run id="ChiefWorker" description="Figure 2">
+    	<test>
+    		Chief chief = new Chief();
+    		assertEquals(0., chief.chiefSalary, 1E-6);
+    		new Worker(chief);
+    		new Worker(chief);
+    		new Worker(chief);
+    		assertEquals(300., new Chief().chiefSalary, 1E-6);
+    		ChiefWorker chiefWorker = new ChiefWorker();
+    		assertEquals(1300., chiefWorker.chiefSalary, 1E-6);
+    		assertSame(chiefWorker, chiefWorker.chief);
+    		assertEquals(4000., Common.workerSalarySum, 1E-6);
+    	</test>
+        <code>
+        	public class Common {
+        		public static final double WORKER_SALARY = 1000;
+        		public static double workerSalarySum = 0;
+        	}
+        	public cclass Worker {
+        		public Chief chief;
+        		public Worker(Chief chief) {
+        			this.chief = chief;
+        			Common.workerSalarySum += Common.WORKER_SALARY;
+        			System.out.format("Worker(). salarySum' = %f%n", Common.workerSalarySum);
+        		}
+        	}
+        	public cclass Chief {
+        		public double chiefSalary;
+        		public Chief() {
+        			chiefSalary = Common.workerSalarySum / 10;
+        			System.out.format("Chief(). chiefSalary' = %f%n", chiefSalary);
+        		}
+        	}
+        	public cclass ChiefWorker extends Worker &amp; Chief {
+        		public ChiefWorker() {
+        			super(null);
+        			chief = this;
+        			chiefSalary += Common.WORKER_SALARY;
+        			System.out.format("ChiefWorker(). chiefSalary' = %f%n", chiefSalary);
+        		}
+        	}
+        </code>
+    </compile-run>
+    
+    <compile-run id="ChiefWorker2" description="With employee superclass">
+    	<test>
+Chief chief = new Chief();
+assertEquals(0., chief.salary, 1E-6);
+new Worker(chief);
+new Worker(chief);
+new Worker(chief);
+assertEquals(300., new Chief().salary, 1E-6);
+ChiefWorker chiefWorker = new ChiefWorker();
+assertEquals(1300., chiefWorker.salary, 1E-6);
+assertSame(chiefWorker, chiefWorker.chief);
+assertEquals(4000., Common.workerSalarySum, 1E-6);
+    	</test>
+    	<code>
+public class Common {
+	public static final double WORKER_SALARY = 1000;
+	public static double workerSalarySum = 0;
+}
+public abstract cclass Employee {
+	public double salary;
+	public Employee(double salary) {
+		this.salary = salary;
+	}
+}
+public cclass Worker extends Employee {
+	public Chief chief;
+	public Worker(Chief chief) {
+		super(Common.WORKER_SALARY);
+		this.chief = chief;
+		Common.workerSalarySum += Common.WORKER_SALARY;
+	}
+}
+public cclass Chief extends Employee {
+	public Chief(double bonusSalary) {
+		super(Common.workerSalarySum / 10 + bonusSalary);
+	}
+	public Chief() {
+		this(0);
+	}
+}
+public cclass ChiefWorker extends Worker &amp; Chief {
+	public ChiefWorker() {
+		super(null);
+		chief = this;
+	}
+}
+    	</code>
+    </compile-run>
+	
+    <compile-run id="ChiefWorker3" description="With conditional constructors">
+    	<test>
+assertEquals(Common.WORKER_SALARY, new Worker().salary, 1E-6);
+assertEquals(Common.CHIEF_SALARY, new Chief().salary, 1E-6);
+assertEquals(Common.CHIEF_SALARY + Common.WORKER_SALARY / 2, new ChiefWorker().salary, 1E-6);
+    	</test>
+    	<code>
+public class Common {
+	public static final double WORKER_SALARY = 1000;
+	public static final double CHIEF_SALARY = 5000;
+}
+public abstract cclass Employee {
+	public double salary;
+	public ? Employee(double salary) {
+		this.salary = salary;
+	}
+}
+public cclass Worker extends Employee {
+	public ? Worker() {
+		super(salary : Common.WORKER_SALARY);
+	}
+	public ? Worker() {
+		super(bonusSalary : Common.WORKER_SALARY / 2);
+	}
+}
+public cclass Chief extends Employee {
+	public ? Chief(double bonusSalary) {
+		super(Common.CHIEF_SALARY + bonusSalary);
+	}
+	public ? Chief() {
+		this(0.);
+	}
+}
+public cclass ChiefWorker extends Worker &amp; Chief {
+	public ? ChiefWorker() {
+	}
+}
+    	</code>
+    </compile-run>
+	
+</testsuite>
