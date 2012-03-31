@@ -116,6 +116,119 @@
         </code>
     </compile>
     
+    <compile-run id="condconstr_namecheck007" error="CTOR_NOT_FOUND" description="use non-conditional from conditional constructor">
+    	<test>
+    		new C();
+    	</test>
+        <code>
+        	public cclass A {
+			   public ? A() {
+			      super(5);
+			      System.out.format("A()%n");
+			   }
+			}
+			public cclass B {
+				public B(int i) {
+					System.out.format("B(%d)%n", i);
+				}
+			}
+			public cclass C extends A &amp; B {
+				public ? C() {
+					System.out.format("C()%n");
+				}
+			}
+        </code>
+    </compile-run>
+    
+    <compile-check-error id="condconstr_namecheck008" error="CONSTRUCTOR_NOTFOUND" description="normal constructor: one non-matching argument">
+        <code>
+        	public cclass A extends B {
+			   public A() {
+			      super(5);
+			      System.out.format("A()%n");
+			   }
+			}
+			public cclass B {
+				public B(int i) {
+					System.out.format("B(%d)%n", i);
+				}
+			}
+			public cclass C extends A &amp; D {
+				public C() {
+					System.out.format("C()%n");
+				}
+			}
+			public cclass D extends B {
+				public D() {
+					super(4);
+					System.out.format("D()%n");
+				}
+			}
+        </code>
+    </compile-check-error>
+    
+    <compile-run id="condconstr_namecheck009" description="normal constructor: allow dynamic binding of normal constructor">
+    	<test>
+    		assertEquals(6, new C().val);
+    	</test>
+        <code>
+        	public cclass A {
+			   public A() {
+			      System.out.format("A()%n");
+			   }
+			}
+			public cclass B {
+				public int val;
+				public B(int i) {
+					val = i;
+					System.out.format("B(%d)%n", i);
+				}
+			}
+			public cclass C extends A &amp; D {
+				public C() {
+					System.out.format("C()%n");
+				}
+			}
+			public cclass D extends B {
+				public D() {
+					super(6);
+					System.out.format("D()%n");
+				}
+			}
+        </code>
+    </compile-run>
+    
+    <compile id="condconstr_namecheck010" description="normal constructor: allow abstract mixins with non-matching constructors">
+        <code>
+        	public cclass A {
+			   public A() {
+			      System.out.format("A()%n");
+			   }
+			}
+			public cclass B {
+				public B(int i) {
+					System.out.format("B(%d)%n", i);
+				}
+			}
+			public abstract cclass C extends A &amp; B {
+				public C() {
+					System.out.format("C()%n");
+				}
+			}
+        </code>
+    </compile>
+    
+    <compile-check-error id="condconstr_namecheck011" error="CONSTRUCTOR_NOTFOUND" description="normal constructor: enforce super call check">
+        <code>
+        	public abstract cclass A {
+			   public A() {
+			      super(5);
+			      System.out.format("A()%n");
+			   }
+			}
+        </code>
+    </compile-check-error>
+    
     <!--compile-check-error id="condconstr_namecheck001" error="CTOR_NOT_FOUND" description="one non-matching argument">
         <code>
         	public cclass A {

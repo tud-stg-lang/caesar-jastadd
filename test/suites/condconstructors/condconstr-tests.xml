@@ -38,7 +38,7 @@
 			
 			public cclass BB extends D &amp; B {
 			
-				final public int v;
+				public int v;
 			
 				{
 					System.out.println("BB init");

@@ -8,6 +8,8 @@
  * (3) Produce an error if a normal constructor calls a conditional constructor.
  * (4) If multiple constructors with the same signatures are defined within a class,
  *     only throw an error if they call the same super constructor.
+ * (5) For non-abstract CJ classes, check that all non-conditional constructors in the
+ *     hierarchy reference an existing superclass constructor.
  */
 aspect CCNameCheck {
 
@@ -79,6 +81,47 @@ aspect CCNameCheck {
 		if (circularThisInvocation(this))
 			error("The constructor " + signature()
 					+ " may not directly or indirectly invoke itself");
+	}
+	
+	// Aspect goal (5)
+	refine MCErrorCheck public void CjClassDecl.nameCheck() {
+		refined();
+		if (isAbstract())
+			return;
+		final java.util.List<TypeDecl> parents = getSortedParents();
+		for (int i = 0; i <= parents.size(); i++)
+			checkConstructorsForClassWithParent(
+					i == 0 ? this : parents.get(i - 1),
+					i < parents.size() ? parents.get(i) : typeCjObject());
+	}
+	
+	private void CjClassDecl.checkConstructorsForClassWithParent(
+			final TypeDecl currentClass, final TypeDecl directParent) {
+		for (ConstructorDecl constructor : (Collection<ConstructorDecl>) currentClass
+				.constructors()) {
+			final ConstructorAccessIfc constructorAccess = constructor
+					.getConstructorAccess();
+			if (!(constructorAccess instanceof SuperConstructorAccess))
+				continue;
+			final SuperConstructorAccess superConstructorAccess = (SuperConstructorAccess) constructorAccess;
+			final SimpleSet decls = superConstructorAccess.chooseConstructor(
+					directParent.constructors(),
+					superConstructorAccess.getArgList());
+			if (decls.isEmpty())
+				error("no constructor in " + directParent.name() + " matches "
+						+ superConstructorAccess
+						+ " for invocation from class " + currentClass.name());
+			if (decls.size() > 1 && superConstructorAccess.validArgs()) {
+				error("several most specific constructors in "
+						+ directParent.name() + " for "
+						+ superConstructorAccess
+						+ " for invocation from class " + currentClass.name());
+				for (final Iterator iter = decls.iterator(); iter.hasNext();) {
+					error("         "
+							+ ((ConstructorDecl) iter.next()).signature());
+				}
+			}
+		}
 	}
 	
 }
